@@ -17,6 +17,7 @@ function Router() {
       <Route path="/" component={SaasDashboardUi} />
       <Route path="/agents" component={AgentsPage} />
       <Route path="/evaluations" component={EvaluationsResultsPage} />
+      <Route path="/results" component={EvaluationsResultsPage} />
       <Route path="/settings" component={SettingsPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />

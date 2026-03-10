@@ -8,66 +8,73 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "wouter";
 
 const navigationItems = [
   {
     icon: LayoutDashboardIcon,
     label: "Dashboard",
-    isActive: true,
+    href: "/",
   },
   {
     icon: UsersIcon,
     label: "Agents",
-    isActive: false,
+    href: "/agents",
   },
   {
     icon: ClipboardCheckIcon,
     label: "Evaluations",
-    isActive: false,
+    href: "/evaluations",
   },
   {
     icon: FileTextIcon,
     label: "Results",
-    isActive: false,
+    href: "/results",
   },
   {
     icon: SettingsIcon,
     label: "Settings",
-    isActive: false,
+    href: "/settings",
   },
 ];
 
 export const SidebarSection = (): JSX.Element => {
+  const [location] = useLocation();
+
   return (
     <aside className="flex flex-col w-64 min-h-screen items-start bg-[#3c0366]">
       <header className="flex w-full h-16 items-center px-4">
-        <div className="flex items-center gap-2">
-          <ShieldCheckIcon className="w-6 h-6 text-white" />
-          <h1 className="[font-family:'Inter',Helvetica] font-bold text-white text-base tracking-[-0.40px] leading-6 whitespace-nowrap">
-            SafeAI Eval
-          </h1>
-        </div>
+        <Link href="/">
+          <div className="flex items-center gap-2 cursor-pointer">
+            <ShieldCheckIcon className="w-6 h-6 text-white" />
+            <h1 className="[font-family:'Inter',Helvetica] font-bold text-white text-base tracking-[-0.40px] leading-6 whitespace-nowrap">
+              SafeAI Eval
+            </h1>
+          </div>
+        </Link>
       </header>
 
       <nav className="flex flex-col w-full items-start pt-4 flex-1">
         <div className="flex flex-col items-start gap-1 px-2 w-full">
           {navigationItems.map((item, index) => {
             const Icon = item.icon;
+            const isActive = location === item.href;
             return (
-              <Button
-                key={index}
-                variant="ghost"
-                className={`w-full h-10 justify-start gap-3 px-3 rounded-[10px] hover:bg-[#59168b] ${
-                  item.isActive
-                    ? "bg-[#59168b] text-white"
-                    : "bg-transparent text-[#e9d4ff] hover:text-white"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="[font-family:'Inter',Helvetica] font-normal text-base tracking-[0] leading-6">
-                  {item.label}
-                </span>
-              </Button>
+              <Link key={index} href={item.href}>
+                <Button
+                  variant="ghost"
+                  className={`w-full h-10 justify-start gap-3 px-3 rounded-[10px] hover:bg-[#59168b] ${
+                    isActive
+                      ? "bg-[#59168b] text-white"
+                      : "bg-transparent text-[#e9d4ff] hover:text-white"
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="[font-family:'Inter',Helvetica] font-normal text-base tracking-[0] leading-6">
+                    {item.label}
+                  </span>
+                </Button>
+              </Link>
             );
           })}
         </div>

@@ -139,7 +139,7 @@ export const DashboardMainSection = (): JSX.Element => {
           <div className="relative">
             <SearchIcon className="absolute top-2.5 left-3 w-4 h-4 text-[#09090b80]" />
             <Input
-              placeholder="SearchIcon evaluations, agents..."
+              placeholder="Search evaluations, agents..."
               className="w-full h-9 pl-9 pr-4 bg-zinc-100 border-0 [font-family:'Inter',Helvetica] font-normal text-sm"
             />
           </div>
@@ -170,7 +170,7 @@ export const DashboardMainSection = (): JSX.Element => {
                 className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
               >
                 <UploadIcon className="w-4 h-4 mr-2" />
-                UploadIcon Agent
+                Upload Agent
               </Button>
 
               <Button className="h-10 bg-[#4f39f6] hover:bg-[#4f39f6]/90 [font-family:'Inter',Helvetica] font-medium text-white text-sm">
