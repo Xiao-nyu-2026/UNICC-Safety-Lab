@@ -42,7 +42,7 @@ export const SidebarSection = (): JSX.Element => {
   const [location] = useLocation();
 
   return (
-    <aside className="flex flex-col w-64 h-screen sticky top-0 items-start bg-[#3c0366] flex-shrink-0">
+    <aside className="flex flex-col w-64 h-full items-start bg-[#3c0366] flex-shrink-0">
       <header className="flex w-full h-16 items-center px-4">
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer">

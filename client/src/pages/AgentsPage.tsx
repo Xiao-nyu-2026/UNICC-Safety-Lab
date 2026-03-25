@@ -134,12 +134,10 @@ const agents = [
 
 export const AgentsPage = (): JSX.Element => {
   return (
-    <div className="bg-white overflow-x-hidden w-full flex">
-      <div className="flex w-full relative flex-col items-start bg-white">
-        <div className="flex items-start relative self-stretch w-full bg-neutral-50 min-h-screen">
-          <SidebarSection />
-
-          <div className="flex flex-col items-start flex-1 w-full">
+    <div className="flex h-screen overflow-hidden bg-neutral-50">
+      <SidebarSection />
+      <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col items-start w-full">
             {/* Top header bar */}
             <header className="flex w-full h-16 items-center justify-between px-8 bg-white border-b border-zinc-200">
               <div className="relative flex-1 max-w-[448px]">
@@ -323,6 +321,5 @@ export const AgentsPage = (): JSX.Element => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
