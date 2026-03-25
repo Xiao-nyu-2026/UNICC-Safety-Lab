@@ -7,19 +7,18 @@ import NotFound from "@/pages/not-found";
 
 import { SaasDashboardUi } from "@/pages/SaasDashboardUi";
 import { AgentsPage } from "@/pages/AgentsPage";
-import { EvaluationsResultsPage } from "@/pages/EvaluationsResultsPage";
+import { EvaluationsPage } from "@/pages/EvaluationsPage";
+import { ResultsPage } from "@/pages/ResultsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
       <Route path="/" component={SaasDashboardUi} />
       <Route path="/agents" component={AgentsPage} />
-      <Route path="/evaluations" component={EvaluationsResultsPage} />
-      <Route path="/results" component={EvaluationsResultsPage} />
+      <Route path="/evaluations" component={EvaluationsPage} />
+      <Route path="/results" component={ResultsPage} />
       <Route path="/settings" component={SettingsPage} />
-      {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
   );
