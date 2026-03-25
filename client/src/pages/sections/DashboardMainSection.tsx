@@ -309,7 +309,7 @@ export const DashboardMainSection = (): JSX.Element => {
                   <div className="flex items-center gap-2">
                     <ActivityIcon className="w-5 h-5" />
                     <h2 className="[font-family:'Inter',Helvetica] font-normal text-zinc-950 text-lg tracking-[-0.45px] leading-[18px]">
-                      ActivityIcon Feed
+                      Activity Feed
                     </h2>
                   </div>
                   <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm tracking-[0] leading-5">
