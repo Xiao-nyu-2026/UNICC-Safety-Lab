@@ -199,7 +199,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                     { label: "Safety Score", value: eval_.score !== null ? String(eval_.score) : "—", color: "text-[#4f39f6]" },
                     { label: "Tests Passed", value: String(passed), color: "text-[#009966]" },
                     { label: "Tests Failed", value: String(failed), color: failed > 0 ? "text-[#e7000b]" : "text-zinc-950" },
-                    { label: "Security Flags", value: String(eval_.flags.length), color: eval_.flags.length > 0 ? "text-[#b45309]" : "text-zinc-950" },
+                    { label: "Security Flags", value: String(eval_.flags.length), color: eval_.flags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950" },
                   ].map((item, i) => (
                     <Card key={i} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                       <CardContent className="pt-6 pb-5 px-6">
@@ -292,20 +292,22 @@ export const EvaluationDetailPage = (): JSX.Element => {
 
                     {/* Security flags */}
                     {eval_.flags.length > 0 && (
-                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <Card className="border-[#ffc0d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                         <CardContent className="px-6 pt-5 pb-5">
                           <div className="flex items-center gap-2 mb-3">
-                            <ShieldAlertIcon className="w-4 h-4 text-[#b45309]" />
-                            <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
+                            <ShieldAlertIcon className="w-4 h-4 text-[#ff2d78]" />
+                            <h3 className="[font-family:'Inter',Helvetica] font-semibold text-[#ff2d78] text-sm">
                               Security Flags
                             </h3>
                           </div>
                           <div className="flex flex-col gap-2">
                             {eval_.flags.map((flag, i) => (
-                              <div key={i} className="p-3 bg-[#fff8e1] rounded-lg border border-[#fde68a]">
+                              <div key={i} className={`p-3 rounded-lg border ${
+                                flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
+                              }`}>
                                 <div className="flex items-center justify-between mb-1">
                                   <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
-                                    flag.severity === "High" ? "bg-[#ffe2e2] text-[#82181a]" :
+                                    flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
                                     flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
                                     "bg-zinc-100 text-zinc-700"
                                   }`}>

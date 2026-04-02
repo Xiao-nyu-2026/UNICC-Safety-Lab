@@ -62,10 +62,10 @@ const evalStats = [
     iconColor: "text-[#82181a]",
   },
   {
-    title: "Active Flags",
+    title: "Security Flags",
     value: "3",
     change: "Requires attention",
-    changeColor: "text-[#e7000b]",
+    changeColor: "text-[#ff2d78]",
     Icon: ShieldAlertIcon,
     iconBg: "bg-[#fff8e1]",
     iconColor: "text-[#b45309]",

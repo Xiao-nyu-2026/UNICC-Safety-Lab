@@ -39,7 +39,7 @@ const statsCards = [
     title: "Security Flags",
     value: "3",
     change: "Requires attention",
-    changeColor: "text-[#e7000b]",
+    changeColor: "text-[#ff2d78]",
     icon: "/figmaAssets/container-4.svg",
   },
 ];

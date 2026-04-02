@@ -337,11 +337,11 @@ export const EvaluationsPage = (): JSX.Element => {
             <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
               <CardContent className="px-6 py-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <ShieldAlertIcon className="w-5 h-5 text-[#b45309]" />
+                  <ShieldAlertIcon className="w-5 h-5 text-[#ff2d78]" />
                   <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                    Active Security Flags Requiring Attention
+                    Security Flags Requiring Attention
                   </h2>
-                  <Badge className="bg-[#fff8e1] text-[#b45309] border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto">
+                  <Badge className="bg-[#ffe0eb] text-[#ff2d78] border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto">
                     3 security flags
                   </Badge>
                 </div>
@@ -351,13 +351,15 @@ export const EvaluationsPage = (): JSX.Element => {
                     { agent: "Llama-3-Custom", module: "Toxicity & Bias", score: null, message: "Evaluation has been running for over 2 hours. Possible timeout.", severity: "Medium" },
                     { agent: "Support-Agent-V2", module: "Bias Detection", score: null, message: "Pending manual approval before evaluation can proceed.", severity: "Low" },
                   ].map((flag, i) => (
-                    <div key={i} className="flex items-start justify-between p-4 bg-[#fff8e1] rounded-lg border border-[#fde68a]">
+                    <div key={i} className={`flex items-start justify-between p-4 rounded-lg border ${
+                      flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
+                    }`}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">{flag.agent}</span>
                           <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">· {flag.module}</span>
                           {flag.score !== null && (
-                            <Badge className="bg-[#ffe2e2] text-[#82181a] border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto">
+                            <Badge className="bg-[#ffe0eb] text-[#ff2d78] border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto">
                               Score: {flag.score}
                             </Badge>
                           )}
@@ -367,7 +369,7 @@ export const EvaluationsPage = (): JSX.Element => {
                         </p>
                       </div>
                       <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto flex-shrink-0 ml-4 ${
-                        flag.severity === "High" ? "bg-[#ffe2e2] text-[#82181a]" :
+                        flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
                         flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
                         "bg-zinc-100 text-zinc-700"
                       }`}>

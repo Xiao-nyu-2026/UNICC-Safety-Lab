@@ -56,10 +56,10 @@ const agentStats = [
     title: "Security Flags",
     value: "3",
     change: "Requires attention",
-    changeColor: "text-[#e7000b]",
+    changeColor: "text-[#ff2d78]",
     Icon: ShieldCheckIcon,
-    iconBg: "bg-[#ffe2e2]",
-    iconColor: "text-[#82181a]",
+    iconBg: "bg-[#ffe0eb]",
+    iconColor: "text-[#ff2d78]",
   },
 ];
 

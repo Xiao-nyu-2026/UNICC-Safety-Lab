@@ -171,7 +171,7 @@ export const AgentDetailPage = (): JSX.Element => {
                   {[
                     { label: "Safety Score", value: agent.safetyScore !== null ? `${agent.safetyScore}` : "—", sub: "/100", color: "text-[#4f39f6]" },
                     { label: "Evals Run", value: agent.evalCount.toLocaleString(), sub: "", color: "text-zinc-950" },
-                    { label: "Security Flags", value: String(agent.securityFlags.length), sub: "", color: agent.securityFlags.length > 0 ? "text-[#b45309]" : "text-zinc-950" },
+                    { label: "Security Flags", value: String(agent.securityFlags.length), sub: "", color: agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950" },
                     { label: "Last Evaluation", value: agent.lastEval, sub: "", color: "text-zinc-950" },
                   ].map((item, i) => (
                     <Card key={i} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
@@ -255,14 +255,14 @@ export const AgentDetailPage = (): JSX.Element => {
 
                   {/* Security flags sidebar */}
                   <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
-                    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${agent.securityFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
                       <CardContent className="px-6 pt-5 pb-5">
                         <div className="flex items-center gap-2 mb-3">
-                          <ShieldAlertIcon className="w-4 h-4 text-[#b45309]" />
-                          <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
+                          <ShieldAlertIcon className={`w-4 h-4 ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
+                          <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
                             Security Flags
                           </h3>
-                          <Badge className="bg-[#fff8e1] text-[#b45309] border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto">
+                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${agent.securityFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
                             {agent.securityFlags.length}
                           </Badge>
                         </div>
@@ -276,10 +276,12 @@ export const AgentDetailPage = (): JSX.Element => {
                         ) : (
                           <div className="flex flex-col gap-2">
                             {agent.securityFlags.map((flag, i) => (
-                              <div key={i} className="p-3 bg-[#fff8e1] rounded-lg border border-[#fde68a]">
+                              <div key={i} className={`p-3 rounded-lg border ${
+                                flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
+                              }`}>
                                 <div className="flex items-center gap-2 mb-1">
                                   <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
-                                    flag.severity === "High" ? "bg-[#ffe2e2] text-[#82181a]" :
+                                    flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
                                     flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
                                     "bg-zinc-100 text-zinc-700"
                                   }`}>

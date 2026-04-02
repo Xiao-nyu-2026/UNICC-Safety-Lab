@@ -60,10 +60,10 @@ const resultStats = [
     title: "Security Flags",
     value: "3",
     change: "Requires attention",
-    changeColor: "text-[#e7000b]",
+    changeColor: "text-[#ff2d78]",
     Icon: ShieldAlertIcon,
-    iconBg: "bg-[#fff8e1]",
-    iconColor: "text-[#b45309]",
+    iconBg: "bg-[#ffe0eb]",
+    iconColor: "text-[#ff2d78]",
   },
   {
     title: "Avg Score",
