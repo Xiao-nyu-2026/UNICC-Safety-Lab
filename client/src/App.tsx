@@ -76,7 +76,7 @@ function AuditCycleWidget() {
 
       <div
         className="mt-2 rounded-full overflow-hidden"
-        style={{ height: 3, background: "#ede9fe" }}
+        style={{ height: 3, background: "rgba(79,57,246,0.15)" }}
       >
         <div
           className="h-full rounded-full"
