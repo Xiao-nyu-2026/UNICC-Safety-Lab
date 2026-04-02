@@ -250,23 +250,44 @@ const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) 
   return (
     <div
       ref={scrollRef}
-      className="flex flex-col gap-0.5 overflow-y-auto bg-[#0e0012] rounded-lg p-3 font-mono text-[11px] leading-5"
-      style={{ height: 220, scrollBehavior: "smooth" }}
+      className="flex flex-col gap-1 overflow-y-auto rounded-lg p-3"
+      style={{
+        height: 220,
+        scrollBehavior: "smooth",
+        background: "#fff",
+        border: "1px solid #f4f4f5",
+      }}
     >
       {visibleLogs.map((log, i) => (
         <div key={i} className="flex gap-1.5 items-start flex-wrap">
-          <span className="text-zinc-500 flex-shrink-0">{log.ts}</span>
-          <span className="text-[#b085f5] flex-shrink-0">[{log.module}]</span>
-          <span className={log.risk ? "text-[#ffcc00] font-medium" : "text-[#86efac]"}>
+          <span
+            className="flex-shrink-0"
+            style={{ fontFamily: "'Inter',Helvetica", fontSize: 11, color: "#a1a1aa" }}
+          >
+            {log.ts}
+          </span>
+          <span
+            className="flex-shrink-0"
+            style={{ fontFamily: "'Inter',Helvetica", fontSize: 11, fontWeight: 600, color: "#4f39f6" }}
+          >
+            [{log.module}]
+          </span>
+          <span
+            style={{
+              fontFamily: "'Inter',Helvetica",
+              fontSize: 11,
+              color: log.risk ? "#b45309" : "#52525c",
+              fontWeight: log.risk ? 500 : 400,
+            }}
+          >
             {log.risk && "⚠ "}
             {log.msg}
           </span>
         </div>
       ))}
       {!done && (
-        <div className="flex gap-1 items-center mt-1">
-          <span className="text-zinc-500">—</span>
-          <span className="w-1.5 h-3.5 bg-[#a855f7] animate-pulse inline-block rounded-sm" />
+        <div className="flex gap-1 items-center mt-0.5">
+          <span className="w-1.5 h-3 bg-[#4f39f6] animate-pulse inline-block rounded-sm opacity-60" />
         </div>
       )}
     </div>
