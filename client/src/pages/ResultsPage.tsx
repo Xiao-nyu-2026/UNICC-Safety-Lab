@@ -8,6 +8,7 @@ import {
   ShieldAlertIcon,
   XCircleIcon,
 } from "lucide-react";
+import { useLocation } from "wouter";
 import { SidebarSection } from "./sections/SidebarSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,7 @@ const resultStats = [
     iconColor: "text-[#82181a]",
   },
   {
-    title: "Active Flags",
+    title: "Security Flags",
     value: "3",
     change: "Requires attention",
     changeColor: "text-[#e7000b]",
@@ -198,6 +199,7 @@ const results = [
 ];
 
 export const ResultsPage = (): JSX.Element => {
+  const [, navigate] = useLocation();
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
@@ -452,7 +454,8 @@ export const ResultsPage = (): JSX.Element => {
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Status</TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Score</TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Date</TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6">Time</TableHead>
+                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Time</TableHead>
+                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -498,8 +501,19 @@ export const ResultsPage = (): JSX.Element => {
                           <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
                             {result.date}
                           </TableCell>
-                          <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-right pr-6">
+                          <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm">
                             {result.time}
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              data-testid={`button-view-result-${index}`}
+                              onClick={() => navigate(`/evaluations/${result.evalId}`)}
+                              className="h-8 px-3 text-[#4f39f6] hover:text-[#4f39f6] hover:bg-[#f0f4ff] [font-family:'Inter',Helvetica] font-medium text-xs"
+                            >
+                              View
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}

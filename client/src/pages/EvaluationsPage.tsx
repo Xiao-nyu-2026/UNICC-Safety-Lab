@@ -339,10 +339,10 @@ export const EvaluationsPage = (): JSX.Element => {
                 <div className="flex items-center gap-3 mb-4">
                   <ShieldAlertIcon className="w-5 h-5 text-[#b45309]" />
                   <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                    Active Flags Requiring Attention
+                    Active Security Flags Requiring Attention
                   </h2>
                   <Badge className="bg-[#fff8e1] text-[#b45309] border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto">
-                    3 flags
+                    3 security flags
                   </Badge>
                 </div>
                 <div className="flex flex-col gap-3">

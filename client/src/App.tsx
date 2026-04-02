@@ -8,7 +8,9 @@ import NotFound from "@/pages/not-found";
 
 import { SaasDashboardUi } from "@/pages/SaasDashboardUi";
 import { AgentsPage } from "@/pages/AgentsPage";
+import { AgentDetailPage } from "@/pages/AgentDetailPage";
 import { EvaluationsPage } from "@/pages/EvaluationsPage";
+import { EvaluationDetailPage } from "@/pages/EvaluationDetailPage";
 import { ResultsPage } from "@/pages/ResultsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 
@@ -96,7 +98,9 @@ function Router() {
     <Switch>
       <Route path="/" component={SaasDashboardUi} />
       <Route path="/agents" component={AgentsPage} />
+      <Route path="/agents/:id" component={AgentDetailPage} />
       <Route path="/evaluations" component={EvaluationsPage} />
+      <Route path="/evaluations/:id" component={EvaluationDetailPage} />
       <Route path="/results" component={ResultsPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />

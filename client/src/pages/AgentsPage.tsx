@@ -8,6 +8,7 @@ import {
   ShieldCheckIcon,
   UploadIcon,
 } from "lucide-react";
+import { useLocation } from "wouter";
 import { SidebarSection } from "./sections/SidebarSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ const agentStats = [
     iconColor: "text-[#4f39f6]",
   },
   {
-    title: "Critical Flags",
+    title: "Critical Security Flags",
     value: "3",
     change: "Requires attention",
     changeColor: "text-[#e7000b]",
@@ -133,6 +134,7 @@ const agents = [
 ];
 
 export const AgentsPage = (): JSX.Element => {
+  const [, navigate] = useLocation();
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
@@ -252,14 +254,18 @@ export const AgentsPage = (): JSX.Element => {
                       {agents.map((agent, index) => (
                         <TableRow key={index} className="border-[#0000001a]">
                           <TableCell className="pl-6">
-                            <div className="flex flex-col">
-                              <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
+                            <button
+                              onClick={() => navigate(`/agents/${agent.id}`)}
+                              className="flex flex-col text-left hover:opacity-70 transition-opacity"
+                              data-testid={`button-agent-detail-${agent.id}`}
+                            >
+                              <span className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm underline-offset-2 hover:underline">
                                 {agent.name}
                               </span>
                               <span className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs">
                                 {agent.id}
                               </span>
-                            </div>
+                            </button>
                           </TableCell>
                           <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
                             {agent.type}
