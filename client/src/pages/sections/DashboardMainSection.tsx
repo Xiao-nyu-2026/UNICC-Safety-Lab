@@ -2,15 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ClockIcon,
   PlayIcon,
-  SearchIcon,
   ShieldCheckIcon,
   UploadIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { PageHeader } from "./PageHeader";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -222,6 +222,8 @@ const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) 
 export const DashboardMainSection = (): JSX.Element => {
   const [auditDone, setAuditDone] = useState(false);
   const [pulsing, setPulsing] = useState(false);
+  const { toast } = useToast();
+  const uploadRef = useRef<HTMLInputElement>(null);
 
   const handleAuditComplete = useCallback(() => {
     setPulsing(true);
@@ -229,20 +231,19 @@ export const DashboardMainSection = (): JSX.Element => {
     setAuditDone(true);
   }, []);
 
+  const handleUploadAgent = (file: File) => {
+    const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    if (ext !== ".json" && ext !== ".py") {
+      toast({ title: "Invalid file type", description: "Only .json or .py files are accepted.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Agent script uploaded", description: `"${file.name}" queued for safety audit.`, duration: 4000 });
+    if (uploadRef.current) uploadRef.current.value = "";
+  };
+
   return (
     <div className="flex flex-col items-start flex-1 w-full">
-      <header className="flex w-full h-16 items-center justify-between px-8 py-0 bg-white border-b border-zinc-200 sticky top-0 z-10">
-        <div className="relative flex-1 max-w-[448px]">
-          <div className="relative">
-            <SearchIcon className="absolute top-2.5 left-3 w-4 h-4 text-[#09090b80]" />
-            <Input
-              placeholder="Search evaluations, agents..."
-              className="w-full h-9 pl-9 pr-4 bg-zinc-100 border-0 [font-family:'Inter',Helvetica] font-normal text-sm"
-            />
-          </div>
-        </div>
-        <img className="w-[84px] h-9" alt="User menu" src="/figmaAssets/div.svg" />
-      </header>
+      <PageHeader placeholder="Search evaluations, agents..." />
 
       <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6">
         {/* Title + actions */}
@@ -256,9 +257,17 @@ export const DashboardMainSection = (): JSX.Element => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <input
+              ref={uploadRef}
+              type="file"
+              accept=".json,.py"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadAgent(f); }}
+            />
             <Button
               variant="outline"
               className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
+              onClick={() => uploadRef.current?.click()}
             >
               <UploadIcon className="w-4 h-4 mr-2" />
               Upload Agent

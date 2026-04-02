@@ -4,16 +4,15 @@ import {
   MoreHorizontalIcon,
   PlayIcon,
   PlusIcon,
-  SearchIcon,
   ShieldCheckIcon,
   UploadIcon,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { SidebarSection } from "./sections/SidebarSection";
+import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -140,17 +139,7 @@ export const AgentsPage = (): JSX.Element => {
       <SidebarSection />
       <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col items-start w-full">
-            {/* Top header bar */}
-            <header className="flex w-full h-16 items-center justify-between px-8 bg-white border-b border-zinc-200">
-              <div className="relative flex-1 max-w-[448px]">
-                <SearchIcon className="absolute top-2.5 left-3 w-4 h-4 text-[#09090b80]" />
-                <Input
-                  placeholder="Search agents..."
-                  className="w-full h-9 pl-9 pr-4 bg-zinc-100 border-0 [font-family:'Inter',Helvetica] font-normal text-sm"
-                />
-              </div>
-              <img className="w-[84px] h-9" alt="User menu" src="/figmaAssets/div.svg" />
-            </header>
+            <PageHeader placeholder="Search agents..." />
 
             <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6">
               {/* Page title + actions */}
@@ -160,7 +149,7 @@ export const AgentsPage = (): JSX.Element => {
                     Agents
                   </h1>
                   <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-1">
-                    Manage and monitor all AI agents connected to SafeAI Eval.
+                    Manage and monitor all AI agents connected to AI Safety Lab.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   BellIcon,
   KeyIcon,
-  SearchIcon,
   ShieldIcon,
   UserIcon,
   UsersIcon,
@@ -11,6 +10,7 @@ import {
   CopyIcon,
 } from "lucide-react";
 import { SidebarSection } from "./sections/SidebarSection";
+import { PageHeader } from "./sections/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -56,17 +56,7 @@ export const SettingsPage = (): JSX.Element => {
       <SidebarSection />
       <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col items-start w-full">
-            {/* Top header bar */}
-            <header className="flex w-full h-16 items-center justify-between px-8 bg-white border-b border-zinc-200">
-              <div className="relative flex-1 max-w-[448px]">
-                <SearchIcon className="absolute top-2.5 left-3 w-4 h-4 text-[#09090b80]" />
-                <Input
-                  placeholder="Search settings..."
-                  className="w-full h-9 pl-9 pr-4 bg-zinc-100 border-0 [font-family:'Inter',Helvetica] font-normal text-sm"
-                />
-              </div>
-              <img className="w-[84px] h-9" alt="User menu" src="/figmaAssets/div.svg" />
-            </header>
+            <PageHeader placeholder="Search settings..." />
 
             <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6">
               {/* Page title */}

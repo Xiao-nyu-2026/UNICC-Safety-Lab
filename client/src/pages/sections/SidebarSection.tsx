@@ -43,15 +43,18 @@ export const SidebarSection = (): JSX.Element => {
 
   return (
     <aside className="flex flex-col w-64 h-full items-start bg-[#3c0366] flex-shrink-0">
-      <header className="flex w-full h-16 items-center px-4">
+      <header className="flex w-full flex-col items-start px-4 pt-4 pb-3 border-b border-[#59168b80]">
         <Link href="/">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <ShieldCheckIcon className="w-6 h-6 text-white" />
-            <h1 className="[font-family:'Inter',Helvetica] font-bold text-white text-base tracking-[-0.40px] leading-6 whitespace-nowrap">
-              SafeAI Eval
+          <div className="flex items-center gap-2 cursor-pointer mb-2">
+            <ShieldCheckIcon className="w-5 h-5 text-[#d0aaff] flex-shrink-0" />
+            <h1 className="[font-family:'Inter',Helvetica] font-bold text-white text-sm tracking-[-0.30px] leading-5 whitespace-nowrap">
+              AI Safety Lab
             </h1>
           </div>
         </Link>
+        <p className="[font-family:'Inter',Helvetica] font-normal text-[#c4a0e8] text-[10px] leading-[14px] tracking-[0.01em]">
+          UNICC AI Safety Lab: An automated governance platform for AI script auditing and agentic observability.
+        </p>
       </header>
 
       <nav className="flex flex-col w-full items-start pt-4 flex-1">

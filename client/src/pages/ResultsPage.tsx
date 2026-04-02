@@ -1,19 +1,21 @@
+import { useState } from "react";
 import {
   CalendarIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ClockIcon,
   DownloadIcon,
   FilterIcon,
-  SearchIcon,
   ShieldAlertIcon,
   XCircleIcon,
+  XIcon,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { SidebarSection } from "./sections/SidebarSection";
+import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -198,25 +200,61 @@ const results = [
   },
 ];
 
+const STATUS_OPTIONS = ["Passed", "Failed", "Running"] as const;
+type StatusOption = typeof STATUS_OPTIONS[number];
+
+const SCORE_RANGES = [
+  { label: "All scores", min: 0, max: 100 },
+  { label: "90 – 100 (Excellent)", min: 90, max: 100 },
+  { label: "70 – 89 (Good)", min: 70, max: 89 },
+  { label: "Below 70 (At risk)", min: 0, max: 69 },
+] as const;
+
 export const ResultsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<StatusOption[]>([]);
+  const [scoreRangeIdx, setScoreRangeIdx] = useState(0);
+
+  const toggleStatus = (s: StatusOption) =>
+    setSelectedStatuses((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+
+  const activeRange = SCORE_RANGES[scoreRangeIdx];
+  const isFiltered = selectedStatuses.length > 0 || scoreRangeIdx !== 0;
+
+  const filteredResults = results.filter((r) => {
+    const statusOk = selectedStatuses.length === 0 || selectedStatuses.includes(r.status as StatusOption);
+    const scoreOk = r.score === null || (r.score >= activeRange.min && r.score <= activeRange.max);
+    return statusOk && scoreOk;
+  });
+
+  const handleExport = () => {
+    const data = filteredResults.map((r) => ({
+      evalId: r.evalId,
+      agent: r.agent,
+      agentId: r.agentId,
+      module: r.module,
+      status: r.status,
+      score: r.score,
+      date: r.date,
+    }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ai-safety-lab-results-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col items-start w-full">
-          {/* Top header bar */}
-          <header className="flex w-full h-16 items-center justify-between px-8 bg-white border-b border-zinc-200 sticky top-0 z-10">
-            <div className="relative flex-1 max-w-[448px]">
-              <SearchIcon className="absolute top-2.5 left-3 w-4 h-4 text-[#09090b80]" />
-              <Input
-                data-testid="input-search-results"
-                placeholder="Search results, agents..."
-                className="w-full h-9 pl-9 pr-4 bg-zinc-100 border-0 [font-family:'Inter',Helvetica] font-normal text-sm"
-              />
-            </div>
-            <img className="w-[84px] h-9" alt="User menu" src="/figmaAssets/div.svg" />
-          </header>
+          <PageHeader placeholder="Search results, agents..." />
 
           <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6">
             {/* Page title + actions */}
@@ -241,14 +279,25 @@ export const ResultsPage = (): JSX.Element => {
                 <Button
                   variant="outline"
                   data-testid="button-filter-results"
-                  className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
+                  onClick={() => setShowFilter((v) => !v)}
+                  className={`h-10 [font-family:'Inter',Helvetica] font-medium text-sm ${
+                    isFiltered
+                      ? "border-[#4f39f6] text-[#4f39f6] bg-[#f0f4ff]"
+                      : "text-zinc-950"
+                  }`}
                 >
                   <FilterIcon className="w-4 h-4 mr-2" />
                   Filter
+                  {isFiltered && (
+                    <span className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4f39f6] text-white text-[10px] font-bold">
+                      {selectedStatuses.length + (scoreRangeIdx !== 0 ? 1 : 0)}
+                    </span>
+                  )}
                 </Button>
                 <Button
                   variant="outline"
                   data-testid="button-export-results"
+                  onClick={handleExport}
                   className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
                 >
                   <DownloadIcon className="w-4 h-4 mr-2" />
@@ -256,6 +305,75 @@ export const ResultsPage = (): JSX.Element => {
                 </Button>
               </div>
             </section>
+
+            {/* Filter panel */}
+            {showFilter && (
+              <section className="w-full bg-white border border-zinc-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
+                    Filter Results
+                  </span>
+                  <button
+                    onClick={() => { setSelectedStatuses([]); setScoreRangeIdx(0); }}
+                    className="[font-family:'Inter',Helvetica] text-xs text-[#4f39f6] hover:underline font-medium"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="flex gap-8 flex-wrap">
+                  {/* Status filter */}
+                  <div className="flex flex-col gap-2">
+                    <p className="[font-family:'Inter',Helvetica] font-medium text-zinc-500 text-xs uppercase tracking-wider">
+                      Status
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {STATUS_OPTIONS.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => toggleStatus(s)}
+                          className={`h-7 px-3 rounded-full text-xs font-medium [font-family:'Inter',Helvetica] border transition-colors ${
+                            selectedStatuses.includes(s)
+                              ? s === "Passed"
+                                ? "bg-[#d0fae5] text-[#004f3b] border-[#00bc7d]"
+                                : s === "Failed"
+                                ? "bg-[#ffe2e2] text-[#82181a] border-[#fb2c36]"
+                                : "bg-zinc-100 text-zinc-900 border-zinc-400"
+                              : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400"
+                          }`}
+                        >
+                          {selectedStatuses.includes(s) && <XIcon className="w-2.5 h-2.5 inline mr-1" />}
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Score range filter */}
+                  <div className="flex flex-col gap-2">
+                    <p className="[font-family:'Inter',Helvetica] font-medium text-zinc-500 text-xs uppercase tracking-wider">
+                      Score Range
+                    </p>
+                    <div className="relative">
+                      <select
+                        value={scoreRangeIdx}
+                        onChange={(e) => setScoreRangeIdx(Number(e.target.value))}
+                        className="h-7 pl-3 pr-8 rounded-full text-xs font-medium [font-family:'Inter',Helvetica] border border-zinc-200 bg-white text-zinc-700 appearance-none cursor-pointer focus:outline-none focus:border-[#4f39f6]"
+                      >
+                        {SCORE_RANGES.map((r, i) => (
+                          <option key={i} value={i}>{r.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDownIcon className="absolute right-2 top-1.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+                {isFiltered && (
+                  <p className="[font-family:'Inter',Helvetica] text-xs text-zinc-500">
+                    Showing <strong className="text-zinc-900">{filteredResults.length}</strong> of {results.length} results
+                  </p>
+                )}
+              </section>
+            )}
 
             {/* Stats cards */}
             <section className="grid grid-cols-4 gap-4 w-full">
@@ -459,7 +577,14 @@ export const ResultsPage = (): JSX.Element => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {results.map((result, index) => (
+                      {filteredResults.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="py-10 text-center [font-family:'Inter',Helvetica] text-sm text-zinc-400 italic">
+                            No results match the current filters.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {filteredResults.map((result, index) => (
                         <TableRow key={index} className="border-[#0000001a]" data-testid={`row-result-${index}`}>
                           <TableCell className="pl-6">
                             <div className="flex flex-col">
