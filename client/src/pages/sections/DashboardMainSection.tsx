@@ -120,96 +120,21 @@ const ALL_AUDIT_LOGS = [
 
 const SafetyScoreGauge = ({ pulsing }: { pulsing: boolean }) => {
   const score = 96.4;
-  const radius = 54;
-  const strokeWidth = 11;
-  const cx = 72;
-  const cy = 72;
-  const circumference = 2 * Math.PI * radius;
-  const progressOffset = circumference - (score / 100) * circumference;
-
   return (
-    <div className="flex flex-col items-center gap-2 py-2">
-      <div className="relative flex items-center justify-center">
-        {pulsing && (
-          <>
-            <div
-              className="absolute rounded-full border-2 border-[#cc00ff] animate-ping"
-              style={{ width: 144 + 20, height: 144 + 20, opacity: 0.35 }}
-            />
-            <div
-              className="absolute rounded-full border border-[#a855f7] animate-ping"
-              style={{ width: 144 + 36, height: 144 + 36, opacity: 0.15, animationDelay: "0.15s" }}
-            />
-          </>
-        )}
-        <svg width="144" height="144" viewBox="0 0 144 144">
-          <defs>
-            <linearGradient id="gaugeGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#2d0052" />
-              <stop offset="45%" stopColor="#7b00d4" />
-              <stop offset="100%" stopColor="#cc00ff" />
-            </linearGradient>
-            <filter id="glowFilter">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          {/* Track */}
-          <circle
-            cx={cx} cy={cy} r={radius}
-            fill="none"
-            stroke="#ede9fe"
-            strokeWidth={strokeWidth}
-          />
-          {/* Progress arc */}
-          <circle
-            cx={cx} cy={cy} r={radius}
-            fill="none"
-            stroke="url(#gaugeGrad)"
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={progressOffset}
-            transform={`rotate(-90 ${cx} ${cy})`}
-            style={{
-              filter: pulsing ? "drop-shadow(0 0 6px #cc00ff) drop-shadow(0 0 12px #7b00d4)" : "none",
-              transition: "filter 0.3s ease",
-            }}
-          />
-        </svg>
-        <div className="absolute flex flex-col items-center select-none">
-          <span
-            className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-tight"
-            style={pulsing ? { animation: "heartbeat 0.6s ease-in-out 3" } : {}}
-          >
-            {score}
-          </span>
-          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[11px] mt-0.5">
-            / 100
-          </span>
-        </div>
-      </div>
-      <div className="flex flex-col items-center gap-0.5">
-        <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
-          Avg Safety Score
-        </p>
-        <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-          {pulsing ? "✓ Audit complete" : "-0.2% vs last period"}
-        </p>
-      </div>
-      <style>{`
-        @keyframes heartbeat {
-          0%   { transform: scale(1); }
-          20%  { transform: scale(1.18); }
-          40%  { transform: scale(1); }
-          60%  { transform: scale(1.10); }
-          80%  { transform: scale(1); }
-          100% { transform: scale(1); }
-        }
-      `}</style>
+    <div className="flex flex-col gap-1 w-full">
+      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm tracking-[0] leading-5">
+        Avg Safety Score
+      </p>
+      <p
+        className="[font-family:'Inter',Helvetica] font-bold text-2xl tracking-[0] leading-8"
+        style={{ color: "#4f39f6" }}
+      >
+        {score}
+        <span className="[font-family:'Inter',Helvetica] font-medium text-[#a1a1aa] text-base ml-0.5">/100</span>
+      </p>
+      <p className="[font-family:'Inter',Helvetica] font-normal text-sm tracking-[0] leading-5 text-[#71717b]">
+        {pulsing ? "✓ Audit complete" : "-0.2% vs last period"}
+      </p>
     </div>
   );
 };
@@ -371,16 +296,9 @@ export const DashboardMainSection = (): JSX.Element => {
             </Card>
           ))}
 
-          {/* Safety Score Gauge card */}
-          <Card
-            className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] overflow-hidden"
-            style={
-              pulsing
-                ? { boxShadow: "0 0 0 2px #cc00ff44, 0px 1px 2px -1px #0000001a, 0px 1px 3px #0000001a" }
-                : {}
-            }
-          >
-            <CardContent className="py-4 px-4 flex items-center justify-center">
+          {/* Safety Score card */}
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="pt-6 pb-5 px-6">
               <SafetyScoreGauge pulsing={pulsing} />
             </CardContent>
           </Card>
