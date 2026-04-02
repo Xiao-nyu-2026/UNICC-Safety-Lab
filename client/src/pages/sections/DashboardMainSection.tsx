@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ClockIcon,
   PlayIcon,
@@ -218,23 +218,28 @@ const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visibleLogs, setVisibleLogs] = useState<typeof ALL_AUDIT_LOGS>([]);
   const [done, setDone] = useState(false);
+  const callbackRef = useRef(onAuditComplete);
+  callbackRef.current = onAuditComplete;
 
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
       if (i < ALL_AUDIT_LOGS.length) {
-        setVisibleLogs((prev) => [...prev, ALL_AUDIT_LOGS[i]]);
+        const entry = ALL_AUDIT_LOGS[i];
+        if (entry) setVisibleLogs((prev) => [...prev, entry]);
         i++;
-        if (i === ALL_AUDIT_LOGS.length) {
+        if (i >= ALL_AUDIT_LOGS.length) {
+          clearInterval(interval);
           setDone(true);
-          onAuditComplete();
+          callbackRef.current();
         }
       } else {
         clearInterval(interval);
       }
     }, 650);
     return () => clearInterval(interval);
-  }, [onAuditComplete]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -272,11 +277,11 @@ export const DashboardMainSection = (): JSX.Element => {
   const [auditDone, setAuditDone] = useState(false);
   const [pulsing, setPulsing] = useState(false);
 
-  const handleAuditComplete = () => {
+  const handleAuditComplete = useCallback(() => {
     setPulsing(true);
     setTimeout(() => setPulsing(false), 4000);
     setAuditDone(true);
-  };
+  }, []);
 
   return (
     <div className="flex flex-col items-start flex-1 w-full">
