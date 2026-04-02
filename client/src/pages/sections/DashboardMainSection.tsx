@@ -177,7 +177,7 @@ const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) 
       ref={scrollRef}
       className="flex flex-col gap-1 overflow-y-auto rounded-lg p-3"
       style={{
-        height: 220,
+        height: 288,
         scrollBehavior: "smooth",
         background: "#fff",
         border: "1px solid #f4f4f5",
@@ -406,17 +406,8 @@ export const DashboardMainSection = (): JSX.Element => {
                 </span>
               </div>
 
-              <div className="px-4 py-4">
+              <div className="px-4 py-4 pb-4">
                 <AuditLogTerminal onAuditComplete={handleAuditComplete} />
-              </div>
-
-              <div className="px-4 pb-4">
-                <Button
-                  variant="outline"
-                  className="w-full h-9 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm border-zinc-200"
-                >
-                  View Full Event Log
-                </Button>
               </div>
             </CardContent>
           </Card>
