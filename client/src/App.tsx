@@ -23,10 +23,7 @@ function AuditCycleWidget() {
     if (current >= TOTAL) return;
     const id = setInterval(() => {
       setCurrent((n) => {
-        if (n >= TOTAL) {
-          clearInterval(id);
-          return n;
-        }
+        if (n >= TOTAL) { clearInterval(id); return n; }
         return n + 1;
       });
       setTicked(true);
@@ -38,77 +35,59 @@ function AuditCycleWidget() {
   const pct = Math.round((current / TOTAL) * 100);
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        .digital-font {
-          font-family: 'Share Tech Mono', 'Courier New', monospace;
-        }
-        .neon-violet {
-          color: #cc00ff;
-          text-shadow:
-            0 0 6px #cc00ff,
-            0 0 14px #9b00cc,
-            0 0 28px #6600aa;
-        }
-        .neon-violet-dim {
-          color: #9b5fc0;
-          text-shadow: 0 0 4px #7b00d440;
-        }
-        @keyframes digit-tick {
-          0%   { opacity: 0.4; transform: translateY(-3px); }
-          100% { opacity: 1;   transform: translateY(0);    }
-        }
-        .digit-tick {
-          animation: digit-tick 0.25s ease-out;
-        }
-      `}</style>
+    <div
+      className="fixed bottom-5 right-5 z-50 select-none"
+      style={{
+        background: "#fff",
+        border: "1px solid #e4e4e7",
+        borderRadius: 10,
+        boxShadow: "0px 1px 2px -1px #0000001a, 0px 1px 3px #0000001a",
+        padding: "10px 14px 11px",
+      }}
+    >
+      <div className="flex items-baseline gap-2">
+        <span
+          style={{
+            fontFamily: "'Inter', Helvetica",
+            fontSize: 11,
+            fontWeight: 500,
+            color: "#71717b",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Audit Cycle
+        </span>
+        <span
+          style={{
+            fontFamily: "'Inter', Helvetica",
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#4f39f6",
+            letterSpacing: "-0.01em",
+            lineHeight: 1,
+            transition: "opacity 0.2s",
+            opacity: ticked ? 0.6 : 1,
+          }}
+        >
+          {current}
+          <span style={{ fontWeight: 500, color: "#a1a1aa", fontSize: 13 }}>/{TOTAL}</span>
+        </span>
+      </div>
 
       <div
-        className="fixed bottom-5 right-5 z-50 select-none"
-        style={{
-          background: "#0e0012dd",
-          border: "1px solid #7b00d440",
-          borderRadius: 10,
-          boxShadow: "0 4px 20px #00000044, inset 0 1px 0 #cc00ff12",
-          padding: "9px 14px 10px",
-          backdropFilter: "blur(12px)",
-        }}
+        className="mt-2 rounded-full overflow-hidden"
+        style={{ height: 3, background: "#ede9fe" }}
       >
-        {/* Single line: label + counter */}
-        <div className="flex items-baseline gap-2">
-          <span
-            className="digital-font neon-violet-dim"
-            style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase" }}
-          >
-            Audit Cycle
-          </span>
-          <span
-            className={`digital-font neon-violet leading-none ${ticked ? "digit-tick" : ""}`}
-            style={{ fontSize: 18, letterSpacing: "0.06em" }}
-          >
-            {String(current).padStart(2, "0")}
-            <span className="neon-violet-dim" style={{ fontSize: 13 }}>/{TOTAL}</span>
-          </span>
-        </div>
-
-        {/* Progress track only, no text */}
         <div
-          className="mt-2 rounded-full overflow-hidden"
-          style={{ height: 2, background: "#cc00ff18" }}
-        >
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${pct}%`,
-              background: "linear-gradient(90deg, #6600aa, #cc00ff)",
-              boxShadow: "0 0 5px #cc00ff77",
-              transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
-            }}
-          />
-        </div>
+          className="h-full rounded-full"
+          style={{
+            width: `${pct}%`,
+            background: "#4f39f6",
+            transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
+          }}
+        />
       </div>
-    </>
+    </div>
   );
 }
 
