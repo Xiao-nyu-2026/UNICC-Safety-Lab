@@ -53,7 +53,7 @@ const agentStats = [
     iconColor: "text-[#4f39f6]",
   },
   {
-    title: "Critical Security Flags",
+    title: "Security Flags",
     value: "3",
     change: "Requires attention",
     changeColor: "text-[#e7000b]",
