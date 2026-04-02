@@ -177,7 +177,7 @@ const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) 
       ref={scrollRef}
       className="flex flex-col gap-1 overflow-y-auto rounded-lg p-3"
       style={{
-        height: 340,
+        height: 420,
         scrollBehavior: "smooth",
         background: "#fff",
         border: "1px solid #f4f4f5",
