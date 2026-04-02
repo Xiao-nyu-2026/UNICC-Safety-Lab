@@ -67,62 +67,46 @@ function AuditCycleWidget() {
       <div
         className="fixed bottom-5 right-5 z-50 select-none"
         style={{
-          background: "linear-gradient(135deg, #0e0012ee 0%, #1a0030ee 100%)",
-          border: "1px solid #7b00d455",
-          borderRadius: 14,
-          boxShadow: "0 0 0 1px #cc00ff18, 0 8px 32px #00000055, inset 0 1px 0 #cc00ff15",
-          padding: "12px 16px 11px",
-          minWidth: 148,
+          background: "#0e0012dd",
+          border: "1px solid #7b00d440",
+          borderRadius: 10,
+          boxShadow: "0 4px 20px #00000044, inset 0 1px 0 #cc00ff12",
+          padding: "9px 14px 10px",
           backdropFilter: "blur(12px)",
         }}
       >
-        {/* Label */}
-        <p
-          className="digital-font neon-violet-dim"
-          style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", marginBottom: 6 }}
-        >
-          Audit Cycle
-        </p>
-
-        {/* Counter */}
-        <div className="flex items-end gap-0.5">
+        {/* Single line: label + counter */}
+        <div className="flex items-baseline gap-2">
           <span
-            className={`digital-font neon-violet leading-none ${ticked ? "digit-tick" : ""}`}
-            style={{ fontSize: 36, letterSpacing: "0.04em" }}
+            className="digital-font neon-violet-dim"
+            style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase" }}
           >
-            {String(current).padStart(2, "0")}
+            Audit Cycle
           </span>
           <span
-            className="digital-font neon-violet-dim leading-none mb-1"
-            style={{ fontSize: 18, letterSpacing: "0.02em" }}
+            className={`digital-font neon-violet leading-none ${ticked ? "digit-tick" : ""}`}
+            style={{ fontSize: 18, letterSpacing: "0.06em" }}
           >
-            /{TOTAL}
+            {String(current).padStart(2, "0")}
+            <span className="neon-violet-dim" style={{ fontSize: 13 }}>/{TOTAL}</span>
           </span>
         </div>
 
-        {/* Progress track */}
+        {/* Progress track only, no text */}
         <div
-          className="mt-2.5 rounded-full overflow-hidden"
-          style={{ height: 3, background: "#cc00ff18" }}
+          className="mt-2 rounded-full overflow-hidden"
+          style={{ height: 2, background: "#cc00ff18" }}
         >
           <div
             className="h-full rounded-full"
             style={{
               width: `${pct}%`,
               background: "linear-gradient(90deg, #6600aa, #cc00ff)",
-              boxShadow: "0 0 6px #cc00ff88",
+              boxShadow: "0 0 5px #cc00ff77",
               transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
             }}
           />
         </div>
-
-        {/* Footer */}
-        <p
-          className="digital-font neon-violet-dim mt-1.5"
-          style={{ fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase" }}
-        >
-          {pct}% · Trial Progress
-        </p>
       </div>
     </>
   );
