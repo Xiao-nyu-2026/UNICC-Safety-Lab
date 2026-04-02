@@ -175,8 +175,9 @@ const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) 
   return (
     <div
       ref={scrollRef}
-      className="flex flex-col gap-1 overflow-y-auto rounded-lg p-3 flex-1"
+      className="flex flex-col gap-1 overflow-y-auto rounded-lg p-3"
       style={{
+        height: 340,
         scrollBehavior: "smooth",
         background: "#fff",
         border: "1px solid #f4f4f5",
@@ -386,9 +387,9 @@ export const DashboardMainSection = (): JSX.Element => {
           </Card>
 
           {/* Right sidebar: Audit Log */}
-          <Card className="w-[340px] flex-shrink-0 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] flex flex-col">
-            <CardContent className="p-0 flex flex-col flex-1 min-h-0">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 flex-shrink-0">
+          <Card className="w-[340px] flex-shrink-0 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
                 <div className="flex items-center gap-2">
                   <ShieldCheckIcon className="w-4 h-4 text-[#7b00d4]" />
                   <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.3px]">
@@ -405,7 +406,7 @@ export const DashboardMainSection = (): JSX.Element => {
                 </span>
               </div>
 
-              <div className="px-4 py-4 pb-4 flex-1 min-h-0 flex flex-col">
+              <div className="px-4 py-4 pb-4">
                 <AuditLogTerminal onAuditComplete={handleAuditComplete} />
               </div>
             </CardContent>
