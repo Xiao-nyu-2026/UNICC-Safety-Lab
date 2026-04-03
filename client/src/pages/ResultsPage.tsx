@@ -1,6 +1,5 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
-  CalendarIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   ClockIcon,
@@ -225,11 +224,9 @@ const parseResultDate = (dateStr: string): Date => {
 export const ResultsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
   const [showFilter, setShowFilter] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<StatusOption[]>([]);
   const [scoreRangeIdx, setScoreRangeIdx] = useState(0);
-  const [dateRangeIdx, setDateRangeIdx] = useState(2);
-  const dateRef = useRef<HTMLDivElement>(null);
+  const [dateRangeIdx, setDateRangeIdx] = useState(4);
 
   const toggleStatus = (s: StatusOption) =>
     setSelectedStatuses((prev) =>
@@ -239,7 +236,9 @@ export const ResultsPage = (): JSX.Element => {
   const activeRange = SCORE_RANGES[scoreRangeIdx];
   const activeDateRange = DATE_RANGES[dateRangeIdx];
   const now = new Date("2026-04-03");
-  const isFiltered = selectedStatuses.length > 0 || scoreRangeIdx !== 0;
+  const dateFiltered = dateRangeIdx !== 4;
+  const isFiltered = selectedStatuses.length > 0 || scoreRangeIdx !== 0 || dateFiltered;
+  const filterCount = selectedStatuses.length + (scoreRangeIdx !== 0 ? 1 : 0) + (dateFiltered ? 1 : 0);
 
   const filteredResults = results.filter((r) => {
     const statusOk = selectedStatuses.length === 0 || selectedStatuses.includes(r.status as StatusOption);
@@ -290,37 +289,6 @@ export const ResultsPage = (): JSX.Element => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                {/* Date range picker */}
-                <div ref={dateRef} className="relative">
-                  <Button
-                    variant="outline"
-                    data-testid="button-date-results"
-                    onClick={() => setShowDatePicker((v) => !v)}
-                    className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
-                  >
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {activeDateRange.label}
-                    <ChevronDownIcon className="w-3.5 h-3.5 ml-2 text-zinc-400" />
-                  </Button>
-                  {showDatePicker && (
-                    <div className="absolute top-11 right-0 z-50 bg-white border border-zinc-200 rounded-xl shadow-lg py-1.5 w-44"
-                      style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}>
-                      {DATE_RANGES.map((range, i) => (
-                        <button
-                          key={i}
-                          onClick={() => { setDateRangeIdx(i); setShowDatePicker(false); }}
-                          className={`w-full text-left px-4 py-2 text-sm [font-family:'Inter',Helvetica] transition-colors ${
-                            dateRangeIdx === i
-                              ? "text-[#4f39f6] font-semibold bg-[#f0f4ff]"
-                              : "text-zinc-700 hover:bg-zinc-50"
-                          }`}
-                        >
-                          {range.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
                 <Button
                   variant="outline"
                   data-testid="button-filter-results"
@@ -335,7 +303,7 @@ export const ResultsPage = (): JSX.Element => {
                   Filter
                   {isFiltered && (
                     <span className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4f39f6] text-white text-[10px] font-bold">
-                      {selectedStatuses.length + (scoreRangeIdx !== 0 ? 1 : 0)}
+                      {filterCount}
                     </span>
                   )}
                 </Button>
@@ -359,7 +327,7 @@ export const ResultsPage = (): JSX.Element => {
                     Filter Results
                   </span>
                   <button
-                    onClick={() => { setSelectedStatuses([]); setScoreRangeIdx(0); }}
+                    onClick={() => { setSelectedStatuses([]); setScoreRangeIdx(0); setDateRangeIdx(4); }}
                     className="[font-family:'Inter',Helvetica] text-xs text-[#4f39f6] hover:underline font-medium"
                   >
                     Clear all
@@ -409,6 +377,28 @@ export const ResultsPage = (): JSX.Element => {
                         ))}
                       </select>
                       <ChevronDownIcon className="absolute right-2 top-1.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Date range filter */}
+                  <div className="flex flex-col gap-2">
+                    <p className="[font-family:'Inter',Helvetica] font-medium text-zinc-500 text-xs uppercase tracking-wider">
+                      Time Period
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {DATE_RANGES.map((range, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setDateRangeIdx(i)}
+                          className={`h-7 px-3 rounded-full text-xs font-medium [font-family:'Inter',Helvetica] border transition-colors ${
+                            dateRangeIdx === i
+                              ? "bg-[#f0f4ff] text-[#4f39f6] border-[#4f39f6]"
+                              : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400"
+                          }`}
+                        >
+                          {range.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
