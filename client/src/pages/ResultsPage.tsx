@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   CalendarIcon,
   CheckCircleIcon,
@@ -210,11 +210,26 @@ const SCORE_RANGES = [
   { label: "Below 70 (At risk)", min: 0, max: 69 },
 ] as const;
 
+const DATE_RANGES = [
+  { label: "Last 7 days", days: 7 },
+  { label: "Last 14 days", days: 14 },
+  { label: "Last 30 days", days: 30 },
+  { label: "Last 90 days", days: 90 },
+  { label: "All time", days: Infinity },
+] as const;
+
+const parseResultDate = (dateStr: string): Date => {
+  return new Date(dateStr + ", 2026");
+};
+
 export const ResultsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
   const [showFilter, setShowFilter] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<StatusOption[]>([]);
   const [scoreRangeIdx, setScoreRangeIdx] = useState(0);
+  const [dateRangeIdx, setDateRangeIdx] = useState(2);
+  const dateRef = useRef<HTMLDivElement>(null);
 
   const toggleStatus = (s: StatusOption) =>
     setSelectedStatuses((prev) =>
@@ -222,12 +237,19 @@ export const ResultsPage = (): JSX.Element => {
     );
 
   const activeRange = SCORE_RANGES[scoreRangeIdx];
+  const activeDateRange = DATE_RANGES[dateRangeIdx];
+  const now = new Date("2026-04-03");
   const isFiltered = selectedStatuses.length > 0 || scoreRangeIdx !== 0;
 
   const filteredResults = results.filter((r) => {
     const statusOk = selectedStatuses.length === 0 || selectedStatuses.includes(r.status as StatusOption);
     const scoreOk = r.score === null || (r.score >= activeRange.min && r.score <= activeRange.max);
-    return statusOk && scoreOk;
+    const dateOk = activeDateRange.days === Infinity || (() => {
+      const d = parseResultDate(r.date);
+      const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays <= activeDateRange.days;
+    })();
+    return statusOk && scoreOk && dateOk;
   });
 
   const handleExport = () => {
@@ -268,14 +290,37 @@ export const ResultsPage = (): JSX.Element => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  data-testid="button-date-results"
-                  className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  Last 30 days
-                </Button>
+                {/* Date range picker */}
+                <div ref={dateRef} className="relative">
+                  <Button
+                    variant="outline"
+                    data-testid="button-date-results"
+                    onClick={() => setShowDatePicker((v) => !v)}
+                    className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    {activeDateRange.label}
+                    <ChevronDownIcon className="w-3.5 h-3.5 ml-2 text-zinc-400" />
+                  </Button>
+                  {showDatePicker && (
+                    <div className="absolute top-11 right-0 z-50 bg-white border border-zinc-200 rounded-xl shadow-lg py-1.5 w-44"
+                      style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}>
+                      {DATE_RANGES.map((range, i) => (
+                        <button
+                          key={i}
+                          onClick={() => { setDateRangeIdx(i); setShowDatePicker(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm [font-family:'Inter',Helvetica] transition-colors ${
+                            dateRangeIdx === i
+                              ? "text-[#4f39f6] font-semibold bg-[#f0f4ff]"
+                              : "text-zinc-700 hover:bg-zinc-50"
+                          }`}
+                        >
+                          {range.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Button
                   variant="outline"
                   data-testid="button-filter-results"
