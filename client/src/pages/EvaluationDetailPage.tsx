@@ -676,95 +676,194 @@ export const EvaluationDetailPage = (): JSX.Element => {
                     </div>
                   </section>
 
-                  {/* Expert Evaluation Breakdown */}
-                  <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]" data-testid="card-expert-breakdown">
-                    <CardContent className="p-0">
-                      <div className="px-6 py-5 border-b border-zinc-100">
-                        <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                          Expert Evaluation Breakdown
-                        </h2>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                          Independent scores and rationale from each expert reviewer
-                        </p>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full" data-testid="table-expert-scores">
-                          <thead>
-                            <tr className="border-b border-zinc-100 bg-zinc-50">
-                              <th className="text-left px-6 py-3 [font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide w-[200px]">
-                                Test Case
-                              </th>
-                              {EXPERTS.map((expertName) => {
-                                const expertData = eval_.expertScores.find((e) => e.expert === expertName);
-                                return (
-                                  <th
-                                    key={expertName}
-                                    className="text-left px-6 py-3 [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm"
-                                    data-testid={`th-expert-${expertName.replace(/\s+/g, "-").toLowerCase()}`}
-                                  >
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="cursor-help border-b border-dashed border-zinc-400 pb-0.5">
-                                          {expertName}
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="max-w-[220px] text-xs">
-                                        {expertData?.focusArea ?? expertFocusAreas[expertName]}
-                                      </TooltipContent>
-                                    </Tooltip>
+                  {/* Expert Evaluation Breakdown — rows = all evals for same agent */}
+                  {(() => {
+                    const agentEvals = Object.values(evalData).filter(
+                      (e) => e.agentId === eval_.agentId
+                    ).sort((a, b) => b.evalId.localeCompare(a.evalId));
+
+                    return (
+                      <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]" data-testid="card-expert-breakdown">
+                        <CardContent className="p-0">
+                          <div className="px-6 py-5 border-b border-zinc-100">
+                            <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
+                              Expert Evaluation Breakdown
+                            </h2>
+                            <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                              All evaluations for <span className="font-medium text-zinc-800">{eval_.agent}</span> — independent scores from each expert reviewer
+                            </p>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full" data-testid="table-expert-scores">
+                              <thead>
+                                <tr className="border-b border-zinc-100 bg-zinc-50">
+                                  <th className="text-left px-6 py-3 [font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide w-[200px] min-w-[180px]">
+                                    Evaluation
                                   </th>
-                                );
-                              })}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {eval_.tests.map((test, rowIdx) => (
-                              <tr
-                                key={rowIdx}
-                                className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50 transition-colors"
-                                data-testid={`row-expert-test-${rowIdx}`}
-                              >
-                                <td className="px-6 py-4 [font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
-                                  {test.name}
-                                </td>
-                                {EXPERTS.map((expertName) => {
-                                  const expertData = eval_.expertScores.find((e) => e.expert === expertName);
-                                  const scoreEntry = expertData?.testScores.find((ts) => ts.testName === test.name);
-                                  if (!scoreEntry) {
-                                    return (
-                                      <td key={expertName} className="px-6 py-4">
-                                        <span className="[font-family:'Inter',Helvetica] text-xs text-[#71717b]">—</span>
-                                      </td>
-                                    );
-                                  }
-                                  return (
-                                    <td
+                                  {EXPERTS.map((expertName) => (
+                                    <th
                                       key={expertName}
-                                      className="px-6 py-4"
-                                      data-testid={`cell-expert-${rowIdx}-${expertName.replace(/\s+/g, "-").toLowerCase()}`}
+                                      className="text-left px-6 py-3 [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm min-w-[260px]"
+                                      data-testid={`th-expert-${expertName.replace(/\s+/g, "-").toLowerCase()}`}
                                     >
-                                      <div className="flex flex-col gap-1.5">
-                                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto w-fit ${
-                                          scoreEntry.result === "pass"
-                                            ? "bg-[#d0fae5] text-[#004f3b]"
-                                            : "bg-[#ffe2e2] text-[#82181a]"
-                                        }`}>
-                                          {scoreEntry.result === "pass" ? "Pass" : "Fail"}
-                                        </Badge>
-                                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs leading-4">
-                                          {scoreEntry.rationale}
+                                      <div className="flex flex-col gap-0.5">
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="cursor-help border-b border-dashed border-zinc-400 pb-0.5 w-fit">
+                                              {expertName}
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="max-w-[240px] text-xs">
+                                            {expertFocusAreas[expertName]}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
+                                          {expertFocusAreas[expertName]}
                                         </span>
                                       </div>
-                                    </td>
+                                    </th>
+                                  ))}
+                                  <th className="text-left px-6 py-3 [font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide min-w-[100px]">
+                                    Total Score
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {agentEvals.map((ev, rowIdx) => {
+                                  const isCurrent = ev.evalId === eval_.evalId;
+                                  const passCounts = EXPERTS.map((expertName) => {
+                                    const expertData = ev.expertScores.find((e) => e.expert === expertName);
+                                    const passes = expertData?.testScores.filter((ts) => ts.result === "pass").length ?? 0;
+                                    const total = expertData?.testScores.length ?? 0;
+                                    return { passes, total };
+                                  });
+                                  const totalPasses = passCounts.reduce((acc, c) => acc + c.passes, 0);
+                                  const totalTests = passCounts.reduce((acc, c) => acc + c.total, 0);
+
+                                  return (
+                                    <tr
+                                      key={ev.evalId}
+                                      className={`border-b border-zinc-100 last:border-0 transition-colors ${
+                                        isCurrent ? "bg-[#f5f3ff]" : "hover:bg-zinc-50"
+                                      }`}
+                                      data-testid={`row-expert-eval-${rowIdx}`}
+                                    >
+                                      {/* Evaluation info cell */}
+                                      <td className="px-6 py-5 align-top">
+                                        <div className="flex flex-col gap-1">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${isCurrent ? "text-[#4f39f6]" : "text-zinc-900"}`}>
+                                              {ev.evalId}
+                                            </span>
+                                            {isCurrent && (
+                                              <span className="[font-family:'Inter',Helvetica] text-[10px] font-medium bg-[#ede9fe] text-[#4f39f6] rounded-full px-2 py-0.5">
+                                                Current
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
+                                            {ev.module}
+                                          </span>
+                                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
+                                            {ev.date}
+                                          </span>
+                                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-[10px] px-2 py-0.5 h-auto w-fit mt-1 ${ev.statusColor}`}>
+                                            {ev.status}
+                                          </Badge>
+                                        </div>
+                                      </td>
+
+                                      {/* Expert columns */}
+                                      {EXPERTS.map((expertName) => {
+                                        const expertData = ev.expertScores.find((e) => e.expert === expertName);
+                                        if (!expertData) {
+                                          return (
+                                            <td key={expertName} className="px-6 py-5 align-top">
+                                              <span className="text-xs text-[#71717b]">—</span>
+                                            </td>
+                                          );
+                                        }
+                                        const passes = expertData.testScores.filter((ts) => ts.result === "pass").length;
+                                        const total = expertData.testScores.length;
+                                        return (
+                                          <td
+                                            key={expertName}
+                                            className="px-6 py-5 align-top"
+                                            data-testid={`cell-expert-${rowIdx}-${expertName.replace(/\s+/g, "-").toLowerCase()}`}
+                                          >
+                                            <div className="flex flex-col gap-2">
+                                              {/* Overall verdict */}
+                                              <div className="flex items-center gap-2">
+                                                <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto w-fit ${
+                                                  expertData.overallVerdict === "pass"
+                                                    ? "bg-[#d0fae5] text-[#004f3b]"
+                                                    : "bg-[#ffe2e2] text-[#82181a]"
+                                                }`}>
+                                                  {expertData.overallVerdict === "pass" ? "Pass" : "Fail"}
+                                                </Badge>
+                                                <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">
+                                                  {passes}/{total} tests
+                                                </span>
+                                              </div>
+                                              {/* Overall reason */}
+                                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
+                                                {expertData.overallReason}
+                                              </p>
+                                              {/* Per-test scores */}
+                                              <div className="flex flex-col gap-1 pt-1 border-t border-zinc-100">
+                                                {expertData.testScores.map((ts, ti) => (
+                                                  <div key={ti} className="flex items-start gap-2" data-testid={`cell-test-${rowIdx}-${ti}`}>
+                                                    <span className={`mt-0.5 flex-shrink-0 text-[10px] font-bold leading-none ${
+                                                      ts.result === "pass" ? "text-[#00bc7d]" : "text-[#fb2c36]"
+                                                    }`}>
+                                                      {ts.result === "pass" ? "✓" : "✗"}
+                                                    </span>
+                                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                                      <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-800 text-[11px] leading-4 truncate" title={ts.testName}>
+                                                        {ts.testName}
+                                                      </span>
+                                                      <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[10px] leading-3.5">
+                                                        {ts.rationale}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          </td>
+                                        );
+                                      })}
+
+                                      {/* Total score cell */}
+                                      <td className="px-6 py-5 align-top">
+                                        <div className="flex flex-col gap-1.5">
+                                          {ev.score !== null ? (
+                                            <>
+                                              <span className={`[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 ${
+                                                ev.score >= 80 ? "text-[#009966]" : "text-[#e7000b]"
+                                              }`}>
+                                                {ev.score}
+                                                <span className="[font-family:'Inter',Helvetica] font-medium text-[#a1a1aa] text-sm ml-0.5">/100</span>
+                                              </span>
+                                              <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">
+                                                {totalPasses}/{totalTests} expert tests passed
+                                              </span>
+                                            </>
+                                          ) : (
+                                            <span className="[font-family:'Inter',Helvetica] font-bold text-2xl text-zinc-400">—</span>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
                                   );
                                 })}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
+                              </tbody>
+                            </table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
 
                   {/* "Why this result?" Dialog */}
                   <Dialog open={whyOpen} onOpenChange={setWhyOpen}>
