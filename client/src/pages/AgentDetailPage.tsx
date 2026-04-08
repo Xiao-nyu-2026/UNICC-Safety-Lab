@@ -12,6 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const agentData: Record<string, {
   name: string; id: string; type: string; status: string; statusColor: string;
@@ -196,48 +204,84 @@ export const AgentDetailPage = (): JSX.Element => {
                       <CardContent className="p-0">
                         <div className="px-6 py-5 border-b border-zinc-100">
                           <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                            Recent Evaluations
+                            Council of Experts Assessment
                           </h2>
                           <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                            Latest evaluation runs for this agent
+                            Independent expert verdicts for this agent
                           </p>
                         </div>
-                        <div className="flex flex-col divide-y divide-zinc-100">
-                          {agent.recentEvals.map((ev, i) => (
-                            <div key={i} className="flex items-center justify-between px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
-                                    {ev.evalId}
-                                  </span>
-                                  <Badge className={`${ev.statusColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs h-auto px-2 py-0.5`}>
-                                    {ev.status}
-                                  </Badge>
-                                </div>
-                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs flex items-center gap-1">
-                                  <ClockIcon className="w-3 h-3" />
-                                  {ev.module} · {ev.date}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                {ev.score !== null && (
-                                  <div className="flex items-center gap-2">
-                                    <Progress value={ev.score} className="w-16 h-2 bg-zinc-100" indicatorClassName="bg-[#00bc7d]" />
-                                    <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm w-6 text-right">{ev.score}</span>
-                                  </div>
-                                )}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 px-3 text-[#4f39f6] hover:bg-[#f0f4ff] [font-family:'Inter',Helvetica] font-medium text-xs"
-                                  onClick={() => navigate(`/evaluations/${ev.evalId}`)}
-                                  data-testid={`button-view-eval-${ev.evalId}`}
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-zinc-50 hover:bg-zinc-50">
+                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[260px]">
+                                  Expert Role
+                                </TableHead>
+                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3">
+                                  Evaluation Framework
+                                </TableHead>
+                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 text-center w-[100px]">
+                                  Findings
+                                </TableHead>
+                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[120px]">
+                                  Verdict
+                                </TableHead>
+                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[110px]">
+                                  Action
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {[
+                                { expert_name: "Expert A — Safety & Harm Assessment", framework: "AI safety / harmful output risk", recommendation: "REVIEW", findings_count: 3 },
+                                { expert_name: "Expert B — Governance & Compliance", framework: "Governance / policy / institutional control", recommendation: "APPROVE", findings_count: 2 },
+                                { expert_name: "Expert C — Security & Attack Surface", framework: "Application security / attack surface review", recommendation: "REJECT", findings_count: 3 },
+                              ].map((row, i) => (
+                                <TableRow
+                                  key={i}
+                                  className="hover:bg-zinc-50 transition-colors border-zinc-100"
+                                  data-testid={`row-expert-council-${i}`}
                                 >
-                                  View
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
+                                  <TableCell className="px-6 py-4">
+                                    <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
+                                      {row.expert_name}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="px-6 py-4">
+                                    <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
+                                      {row.framework}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="px-6 py-4 text-center">
+                                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
+                                      {row.findings_count}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="px-6 py-4">
+                                    <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto ${
+                                      row.recommendation === "APPROVE"
+                                        ? "bg-[#009966] text-white"
+                                        : row.recommendation === "REVIEW"
+                                        ? "bg-[#f59e0b] text-white"
+                                        : "bg-[#e7000b] text-white"
+                                    }`}
+                                    data-testid={`badge-verdict-${i}`}>
+                                      {row.recommendation}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="px-6 py-4">
+                                    <button
+                                      className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline underline-offset-2 transition-colors"
+                                      data-testid={`button-view-report-${i}`}
+                                      onClick={() => navigate(`/evaluations/${agent.recentEvals[0]?.evalId ?? ""}`)}
+                                    >
+                                      View Report
+                                    </button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
                       </CardContent>
                     </Card>
