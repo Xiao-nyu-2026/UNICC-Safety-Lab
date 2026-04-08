@@ -332,24 +332,56 @@ export const AgentDetailPage = (): JSX.Element => {
                     </CardContent>
                   </Card>
 
-                  {/* Remaining stat cards */}
-                  {[
-                    { label: "Evals Run", value: agent.evalCount.toLocaleString(), sub: "", color: "text-zinc-950" },
-                    { label: "Security Flags", value: String(agent.securityFlags.length), sub: "", color: agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950" },
-                    { label: "Last Evaluation", value: agent.lastEval, sub: "", color: "text-zinc-950" },
-                  ].map((item, i) => (
-                    <Card key={i} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                      <CardContent className="pt-6 pb-5 px-6">
-                        <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
-                          {item.label}
+                  {/* Artifacts Scanned */}
+                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="pt-6 pb-5 px-6">
+                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                        Artifacts Scanned
+                      </p>
+                      <div className="mt-1">
+                        <p className="[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 text-zinc-950">
+                          14 Files
                         </p>
-                        <p className={`[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 mt-1 ${item.color}`}>
-                          {item.value}
-                          {item.sub && <span className="[font-family:'Inter',Helvetica] font-medium text-[#a1a1aa] text-base ml-0.5">{item.sub}</span>}
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
+                          1.2k Lines of Code
                         </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Total Findings */}
+                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="pt-6 pb-5 px-6">
+                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                        Total Findings
+                      </p>
+                      <div className="mt-1">
+                        <p className="[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 text-[#c2410c]">
+                          5 Issues
+                        </p>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
+                          Across 3 Expert Modules
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Execution Time */}
+                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="pt-6 pb-5 px-6">
+                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                        Execution Time
+                      </p>
+                      <div className="mt-1">
+                        <p className="[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 text-zinc-950">
+                          12.4s
+                        </p>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
+                          Powered by DGX Spark
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </section>
 
                 <section className="flex gap-6 w-full">
