@@ -1,5 +1,8 @@
+import { useState } from "react";
 import {
   ArrowLeftIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ClockIcon,
   PlayIcon,
   ShieldAlertIcon,
@@ -115,6 +118,34 @@ export const AgentDetailPage = (): JSX.Element => {
   const fromEval = new URLSearchParams(search).get("from");
 
   const agent = agentData[id ?? ""] ?? null;
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  const councilData = [
+    {
+      expert_name: "Expert A — Safety & Harm Assessment",
+      framework: "AI safety / harmful output risk",
+      recommendation: "REVIEW",
+      findings_count: 3,
+      findings_details: ["Lack of guardrails for prompt injection", "Potential to generate biased text", "No rate limiting implemented"],
+      rationale: "Needs manual review to ensure output filters are properly configured to prevent harmful generations.",
+    },
+    {
+      expert_name: "Expert B — Governance & Compliance",
+      framework: "Governance / policy / institutional control",
+      recommendation: "APPROVE",
+      findings_count: 0,
+      findings_details: ["No compliance violations detected."],
+      rationale: "The repository includes proper AI usage policies and adheres to UNICC governance standards.",
+    },
+    {
+      expert_name: "Expert C — Security & Attack Surface",
+      framework: "Application security / attack surface review",
+      recommendation: "REJECT",
+      findings_count: 2,
+      findings_details: ["Hardcoded API keys found in main.py", "Unrestricted file upload vulnerability detected"],
+      rationale: "Critical security flaws present. Hardcoded secrets must be migrated to os.getenv() before any deployment.",
+    },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
@@ -226,60 +257,112 @@ export const AgentDetailPage = (): JSX.Element => {
                                 <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[120px]">
                                   Verdict
                                 </TableHead>
-                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[110px]">
-                                  Action
+                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[60px]">
+                                  Details
                                 </TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {[
-                                { expert_name: "Expert A — Safety & Harm Assessment", framework: "AI safety / harmful output risk", recommendation: "REVIEW", findings_count: 3 },
-                                { expert_name: "Expert B — Governance & Compliance", framework: "Governance / policy / institutional control", recommendation: "APPROVE", findings_count: 2 },
-                                { expert_name: "Expert C — Security & Attack Surface", framework: "Application security / attack surface review", recommendation: "REJECT", findings_count: 3 },
-                              ].map((row, i) => (
-                                <TableRow
-                                  key={i}
-                                  className="hover:bg-zinc-50 transition-colors border-zinc-100"
-                                  data-testid={`row-expert-council-${i}`}
-                                >
-                                  <TableCell className="px-6 py-4">
-                                    <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
-                                      {row.expert_name}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell className="px-6 py-4">
-                                    <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                                      {row.framework}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell className="px-6 py-4 text-center">
-                                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
-                                      {row.findings_count}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell className="px-6 py-4">
-                                    <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto ${
-                                      row.recommendation === "APPROVE"
-                                        ? "bg-[#009966] text-white"
-                                        : row.recommendation === "REVIEW"
-                                        ? "bg-[#f59e0b] text-white"
-                                        : "bg-[#e7000b] text-white"
-                                    }`}
-                                    data-testid={`badge-verdict-${i}`}>
-                                      {row.recommendation}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="px-6 py-4">
-                                    <button
-                                      className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline underline-offset-2 transition-colors"
-                                      data-testid={`button-view-report-${i}`}
-                                      onClick={() => navigate(`/evaluations/${agent.recentEvals[0]?.evalId ?? ""}`)}
+                              {councilData.map((row, i) => {
+                                const isOpen = expandedRow === i;
+                                return (
+                                  <>
+                                    <TableRow
+                                      key={`row-${i}`}
+                                      className={`transition-colors border-zinc-100 cursor-pointer select-none ${isOpen ? "bg-zinc-50" : "hover:bg-zinc-50"}`}
+                                      onClick={() => setExpandedRow(isOpen ? null : i)}
+                                      data-testid={`row-expert-council-${i}`}
                                     >
-                                      View Report
-                                    </button>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                                      <TableCell className="px-6 py-4">
+                                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
+                                          {row.expert_name}
+                                        </span>
+                                      </TableCell>
+                                      <TableCell className="px-6 py-4">
+                                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
+                                          {row.framework}
+                                        </span>
+                                      </TableCell>
+                                      <TableCell className="px-6 py-4 text-center">
+                                        <span className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${
+                                          row.findings_count === 0 ? "text-[#009966]" : row.recommendation === "REJECT" ? "text-[#e7000b]" : "text-[#b45309]"
+                                        }`}>
+                                          {row.findings_count}
+                                        </span>
+                                      </TableCell>
+                                      <TableCell className="px-6 py-4">
+                                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto ${
+                                          row.recommendation === "APPROVE"
+                                            ? "bg-[#009966] text-white"
+                                            : row.recommendation === "REVIEW"
+                                            ? "bg-[#f59e0b] text-white"
+                                            : "bg-[#e7000b] text-white"
+                                        }`} data-testid={`badge-verdict-${i}`}>
+                                          {row.recommendation}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className="px-6 py-4">
+                                        <button
+                                          className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-zinc-200 transition-colors text-[#71717b] hover:text-zinc-900"
+                                          data-testid={`button-toggle-row-${i}`}
+                                          onClick={(e) => { e.stopPropagation(); setExpandedRow(isOpen ? null : i); }}
+                                          aria-label={isOpen ? "Collapse" : "Expand"}
+                                        >
+                                          {isOpen
+                                            ? <ChevronUpIcon className="w-4 h-4" />
+                                            : <ChevronDownIcon className="w-4 h-4" />
+                                          }
+                                        </button>
+                                      </TableCell>
+                                    </TableRow>
+
+                                    {isOpen && (
+                                      <TableRow key={`detail-${i}`} className="bg-zinc-50 border-zinc-100">
+                                        <TableCell colSpan={5} className="px-0 py-0">
+                                          <div
+                                            className="mx-6 my-4 rounded-lg border border-zinc-200 bg-white overflow-hidden"
+                                            style={{ borderLeft: `3px solid ${
+                                              row.recommendation === "APPROVE" ? "#009966"
+                                              : row.recommendation === "REVIEW" ? "#f59e0b"
+                                              : "#e7000b"
+                                            }` }}
+                                          >
+                                            <div className="px-5 py-4 flex flex-col gap-4">
+                                              <div>
+                                                <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs uppercase tracking-wide mb-2">
+                                                  Specific Findings
+                                                </p>
+                                                <ul className="flex flex-col gap-1.5 pl-1">
+                                                  {row.findings_details.map((f, fi) => (
+                                                    <li key={fi} className="flex items-start gap-2">
+                                                      <span className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                                        row.findings_count === 0 ? "bg-[#009966]"
+                                                        : row.recommendation === "REJECT" ? "bg-[#e7000b]"
+                                                        : "bg-[#f59e0b]"
+                                                      }`} />
+                                                      <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
+                                                        {f}
+                                                      </span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                              <div className="pt-3 border-t border-zinc-100">
+                                                <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs uppercase tracking-wide mb-2">
+                                                  Expert Rationale
+                                                </p>
+                                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5 italic">
+                                                  "{row.rationale}"
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
+                                  </>
+                                );
+                              })}
                             </TableBody>
                           </Table>
                         </div>
