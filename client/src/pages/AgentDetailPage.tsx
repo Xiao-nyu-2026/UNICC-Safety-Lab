@@ -315,8 +315,25 @@ export const AgentDetailPage = (): JSX.Element => {
 
                 {/* Stats */}
                 <section className="grid grid-cols-4 gap-4 w-full">
+                  {/* Overall Assessment card */}
+                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="pt-6 pb-5 px-6">
+                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                        Overall Assessment
+                      </p>
+                      <div className="mt-2">
+                        <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto bg-[#fff7ed] text-[#c2410c] ring-1 ring-inset ring-[#fed7aa]">
+                          REVIEW REQUIRED
+                        </Badge>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-2">
+                          Triggered by 1 Critical Failure (Expert C)
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Remaining stat cards */}
                   {[
-                    { label: "Safety Score", value: agent.safetyScore !== null ? `${agent.safetyScore}` : "—", sub: "/100", color: "text-[#4f39f6]" },
                     { label: "Evals Run", value: agent.evalCount.toLocaleString(), sub: "", color: "text-zinc-950" },
                     { label: "Security Flags", value: String(agent.securityFlags.length), sub: "", color: agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950" },
                     { label: "Last Evaluation", value: agent.lastEval, sub: "", color: "text-zinc-950" },
