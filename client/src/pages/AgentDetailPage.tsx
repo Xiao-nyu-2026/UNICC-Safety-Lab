@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   ArrowLeftIcon,
   ChevronDownIcon,
@@ -218,7 +218,7 @@ export const AgentDetailPage = (): JSX.Element => {
                 </section>
 
                 <section className="flex gap-6 w-full">
-                  {/* Description + eval history */}
+                  {/* Description */}
                   <div className="flex flex-col gap-4 flex-1">
                     <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                       <CardContent className="px-6 pt-5 pb-5">
@@ -230,8 +230,61 @@ export const AgentDetailPage = (): JSX.Element => {
                         </p>
                       </CardContent>
                     </Card>
+                  </div>
 
-                    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                  {/* Security flags sidebar */}
+                  <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
+                    <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${agent.securityFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
+                      <CardContent className="px-6 pt-5 pb-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ShieldAlertIcon className={`w-4 h-4 ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
+                          <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
+                            Security Flags
+                          </h3>
+                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${agent.securityFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
+                            {agent.securityFlags.length}
+                          </Badge>
+                        </div>
+                        {agent.securityFlags.length === 0 ? (
+                          <div className="flex items-center gap-2 py-2">
+                            <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
+                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
+                              No active security flags
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            {agent.securityFlags.map((flag, i) => (
+                              <div key={i} className={`p-3 rounded-lg border ${
+                                flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
+                              }`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
+                                    flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
+                                    flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
+                                    "bg-zinc-100 text-zinc-700"
+                                  }`}>
+                                    {flag.severity}
+                                  </Badge>
+                                  <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
+                                    {flag.module}
+                                  </span>
+                                </div>
+                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
+                                  {flag.message}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </section>
+
+                {/* Council of Experts Assessment — full width */}
+                <section className="w-full">
+                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                       <CardContent className="p-0">
                         <div className="px-6 py-5 border-b border-zinc-100">
                           <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
@@ -266,9 +319,8 @@ export const AgentDetailPage = (): JSX.Element => {
                               {councilData.map((row, i) => {
                                 const isOpen = expandedRow === i;
                                 return (
-                                  <>
+                                  <Fragment key={i}>
                                     <TableRow
-                                      key={`row-${i}`}
                                       className={`transition-colors border-zinc-100 cursor-pointer select-none ${isOpen ? "bg-zinc-50" : "hover:bg-zinc-50"}`}
                                       onClick={() => setExpandedRow(isOpen ? null : i)}
                                       data-testid={`row-expert-council-${i}`}
@@ -360,7 +412,7 @@ export const AgentDetailPage = (): JSX.Element => {
                                         </TableCell>
                                       </TableRow>
                                     )}
-                                  </>
+                                  </Fragment>
                                 );
                               })}
                             </TableBody>
@@ -368,56 +420,6 @@ export const AgentDetailPage = (): JSX.Element => {
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
-
-                  {/* Security flags sidebar */}
-                  <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
-                    <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${agent.securityFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
-                      <CardContent className="px-6 pt-5 pb-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <ShieldAlertIcon className={`w-4 h-4 ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
-                          <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
-                            Security Flags
-                          </h3>
-                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${agent.securityFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
-                            {agent.securityFlags.length}
-                          </Badge>
-                        </div>
-                        {agent.securityFlags.length === 0 ? (
-                          <div className="flex items-center gap-2 py-2">
-                            <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
-                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                              No active security flags
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col gap-2">
-                            {agent.securityFlags.map((flag, i) => (
-                              <div key={i} className={`p-3 rounded-lg border ${
-                                flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
-                              }`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
-                                    flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
-                                    flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
-                                    "bg-zinc-100 text-zinc-700"
-                                  }`}>
-                                    {flag.severity}
-                                  </Badge>
-                                  <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                                    {flag.module}
-                                  </span>
-                                </div>
-                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
-                                  {flag.message}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
                 </section>
               </>
             )}
