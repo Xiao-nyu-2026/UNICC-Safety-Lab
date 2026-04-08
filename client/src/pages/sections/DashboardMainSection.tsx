@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   ClockIcon,
   PlayIcon,
-  ShieldCheckIcon,
   UploadIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -98,27 +97,7 @@ const evaluationsData = [
   },
 ];
 
-const ALL_AUDIT_LOGS = [
-  { ts: "10:42:01", module: "SafeAI_Orchestrator", msg: "Starting audit session for GPT-4-Turbo-Prod (EV-1029)", risk: false },
-  { ts: "10:42:03", module: "Injection_Scanner_v4", msg: "Initializing AST parser — loading grammar rules", risk: false },
-  { ts: "10:42:05", module: "Injection_Scanner_v4", msg: "Analyzing AST for recursive call patterns", risk: false },
-  { ts: "10:42:07", module: "Injection_Scanner_v4", msg: "Potential prompt injection vector in input layer", risk: true },
-  { ts: "10:42:09", module: "Toxicity_Filter_v2", msg: "Loading embedding model: toxbert-large-en", risk: false },
-  { ts: "10:42:11", module: "Toxicity_Filter_v2", msg: "Running cosine similarity on 240 test vectors", risk: false },
-  { ts: "10:42:13", module: "Toxicity_Filter_v2", msg: "All toxicity vectors within safe threshold (p < 0.05)", risk: false },
-  { ts: "10:42:15", module: "Jailbreak_Detector_v3", msg: "Scanning 320 adversarial prompt templates", risk: false },
-  { ts: "10:42:17", module: "Jailbreak_Detector_v3", msg: "Threshold breach: confidence 0.94 > limit 0.80", risk: true },
-  { ts: "10:42:19", module: "Data_Exfil_Guard_v1", msg: "Inspecting output channels for PII leakage", risk: false },
-  { ts: "10:42:21", module: "Data_Exfil_Guard_v1", msg: "Regex hit: SSN-like token pattern in response buffer", risk: true },
-  { ts: "10:42:23", module: "Bias_Analyzer_v2", msg: "Computing fairness metrics across 6 demographic groups", risk: false },
-  { ts: "10:42:25", module: "Bias_Analyzer_v2", msg: "Disparate impact ratio: 0.96 — within bounds", risk: false },
-  { ts: "10:42:27", module: "MalCode_Guard_v1", msg: "Decompiling 200 code-generation outputs", risk: false },
-  { ts: "10:42:29", module: "MalCode_Guard_v1", msg: "No executable payloads detected in sample set", risk: false },
-  { ts: "10:42:31", module: "SafetyScore_Engine", msg: "Aggregating module scores — weighting by severity", risk: false },
-  { ts: "10:42:33", module: "SafetyScore_Engine", msg: "Audit complete. Final safety score: 96.4 / 100", risk: false },
-];
-
-const SafetyScoreGauge = ({ pulsing }: { pulsing: boolean }) => {
+const SafetyScoreGauge = () => {
   const score = 96.4;
   return (
     <div className="flex flex-col gap-1 w-full">
@@ -133,103 +112,15 @@ const SafetyScoreGauge = ({ pulsing }: { pulsing: boolean }) => {
         <span className="[font-family:'Inter',Helvetica] font-medium text-[#a1a1aa] text-base ml-0.5">/100</span>
       </p>
       <p className="[font-family:'Inter',Helvetica] font-normal text-sm tracking-[0] leading-5 text-[#71717b]">
-        {pulsing ? "✓ Audit complete" : "-0.2% vs last period"}
+        -0.2% vs last period
       </p>
     </div>
   );
 };
 
-const AuditLogTerminal = ({ onAuditComplete }: { onAuditComplete: () => void }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [visibleLogs, setVisibleLogs] = useState<typeof ALL_AUDIT_LOGS>([]);
-  const [done, setDone] = useState(false);
-  const callbackRef = useRef(onAuditComplete);
-  callbackRef.current = onAuditComplete;
-
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < ALL_AUDIT_LOGS.length) {
-        const entry = ALL_AUDIT_LOGS[i];
-        if (entry) setVisibleLogs((prev) => [...prev, entry]);
-        i++;
-        if (i >= ALL_AUDIT_LOGS.length) {
-          clearInterval(interval);
-          setDone(true);
-          callbackRef.current();
-        }
-      } else {
-        clearInterval(interval);
-      }
-    }, 650);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [visibleLogs]);
-
-  return (
-    <div
-      ref={scrollRef}
-      className="flex flex-col gap-1 overflow-y-auto rounded-lg p-3"
-      style={{
-        height: 420,
-        scrollBehavior: "smooth",
-        background: "#fff",
-        border: "1px solid #f4f4f5",
-      }}
-    >
-      {visibleLogs.map((log, i) => (
-        <div key={i} className="flex gap-1.5 items-start flex-wrap">
-          <span
-            className="flex-shrink-0"
-            style={{ fontFamily: "'Inter',Helvetica", fontSize: 11, color: "#a1a1aa" }}
-          >
-            {log.ts}
-          </span>
-          <span
-            className="flex-shrink-0"
-            style={{ fontFamily: "'Inter',Helvetica", fontSize: 11, fontWeight: 600, color: "#4f39f6" }}
-          >
-            [{log.module}]
-          </span>
-          <span
-            style={{
-              fontFamily: "'Inter',Helvetica",
-              fontSize: 11,
-              color: log.risk ? "#b45309" : "#52525c",
-              fontWeight: log.risk ? 500 : 400,
-            }}
-          >
-            {log.risk && "⚠ "}
-            {log.msg}
-          </span>
-        </div>
-      ))}
-      {!done && (
-        <div className="flex gap-1 items-center mt-0.5">
-          <span className="w-1.5 h-3 bg-[#4f39f6] animate-pulse inline-block rounded-sm opacity-60" />
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const DashboardMainSection = (): JSX.Element => {
-  const [auditDone, setAuditDone] = useState(false);
-  const [pulsing, setPulsing] = useState(false);
   const { toast } = useToast();
   const uploadRef = useRef<HTMLInputElement>(null);
-
-  const handleAuditComplete = useCallback(() => {
-    setPulsing(true);
-    setTimeout(() => setPulsing(false), 4000);
-    setAuditDone(true);
-  }, []);
 
   const handleUploadAgent = (file: File) => {
     const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
@@ -308,7 +199,7 @@ export const DashboardMainSection = (): JSX.Element => {
           {/* Safety Score card */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="pt-6 pb-5 px-6">
-              <SafetyScoreGauge pulsing={pulsing} />
+              <SafetyScoreGauge />
             </CardContent>
           </Card>
         </section>
@@ -395,31 +286,6 @@ export const DashboardMainSection = (): JSX.Element => {
             </CardContent>
           </Card>
 
-          {/* Right sidebar: Audit Log */}
-          <Card className="w-[340px] flex-shrink-0 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
-                <div className="flex items-center gap-2">
-                  <ShieldCheckIcon className="w-4 h-4 text-[#7b00d4]" />
-                  <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.3px]">
-                    Audit Log
-                  </h2>
-                  {auditDone && (
-                    <span className="ml-1 inline-flex items-center gap-1 text-[10px] font-mono font-medium text-[#00bc7d] bg-[#d0fae5] rounded-full px-2 py-0.5">
-                      ✓ DONE
-                    </span>
-                  )}
-                </div>
-                <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                  EV-1029
-                </span>
-              </div>
-
-              <div className="px-4 py-4 pb-4">
-                <AuditLogTerminal onAuditComplete={handleAuditComplete} />
-              </div>
-            </CardContent>
-          </Card>
         </section>
       </main>
     </div>
