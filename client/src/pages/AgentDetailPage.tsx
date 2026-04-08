@@ -207,13 +207,6 @@ export const AgentDetailPage = (): JSX.Element => {
                       {agent.id} · {agent.type} · {agent.evalCount.toLocaleString()} evals run
                     </p>
                   </div>
-                  <Button
-                    className="h-10 bg-[#4f39f6] hover:bg-[#3d2bc4] text-white [font-family:'Inter',Helvetica] font-medium text-sm gap-2"
-                    data-testid="button-run-eval-agent"
-                  >
-                    <PlayIcon className="w-4 h-4" />
-                    Run Evaluation
-                  </Button>
                 </section>
 
                 {/* Audit Intake */}
