@@ -480,9 +480,9 @@ export const DashboardMainSection = (): JSX.Element => {
                             {/* Tooltip bubble — drops downward to avoid table-header clipping */}
                             <div className="pointer-events-none absolute top-full left-0 mt-2 z-[9999] hidden group-hover:flex w-64 flex-col gap-0">
                               {/* Arrow */}
-                              <div className="ml-3 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[5px] border-b-[#1e1533]" />
-                              <div className="rounded-lg bg-[#1e1533] border border-white/10 px-3 py-2.5 shadow-xl">
-                                <p className="[font-family:'Inter',Helvetica] text-[11px] text-white/85 leading-[1.5]">
+                              <div className="ml-3 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[5px] border-b-[#3c0366]" />
+                              <div className="rounded-lg bg-[#3c0366] border border-white/10 px-3 py-2.5 shadow-xl">
+                                <p className="[font-family:'Inter',Helvetica] text-[11px] text-white/90 leading-[1.5]">
                                   {ev.tooltip}
                                 </p>
                               </div>
