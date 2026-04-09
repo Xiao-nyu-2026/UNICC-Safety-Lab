@@ -404,8 +404,8 @@ export const DashboardMainSection = (): JSX.Element => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-[#0000001a]">
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[200px]">Module</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Target Agent</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[200px]">Target Agent</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Module</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[200px]">Verdict</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6 w-[140px]">Date</TableHead>
                   </TableRow>
@@ -414,25 +414,25 @@ export const DashboardMainSection = (): JSX.Element => {
                   {evaluationsData.map((ev, index) => (
                     <TableRow key={index} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors" data-testid={`row-evaluation-${ev.id}`}>
 
-                      {/* Module — deep link to evaluations */}
+                      {/* Target Agent — 主键，加粗，跳转至 agents */}
                       <TableCell className="pl-6">
                         <button
-                          onClick={() => setLocation("/evaluations")}
-                          className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left"
-                          data-testid={`link-module-${ev.id}`}
-                        >
-                          {ev.module}
-                        </button>
-                      </TableCell>
-
-                      {/* Target Agent — link to agents */}
-                      <TableCell>
-                        <button
                           onClick={() => setLocation("/agents")}
-                          className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left"
+                          className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm hover:underline text-left"
                           data-testid={`link-agent-${ev.id}`}
                         >
                           {ev.target}
+                        </button>
+                      </TableCell>
+
+                      {/* Module — 次要信息，muted 颜色，跳转至 evaluations */}
+                      <TableCell>
+                        <button
+                          onClick={() => setLocation("/evaluations")}
+                          className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm hover:text-[#4f39f6] hover:underline text-left transition-colors"
+                          data-testid={`link-module-${ev.id}`}
+                        >
+                          {ev.module}
                         </button>
                       </TableCell>
 
