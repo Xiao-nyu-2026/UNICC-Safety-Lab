@@ -1,8 +1,8 @@
 import {
   BotIcon,
   ClockIcon,
+  FileBarChart2Icon,
   MoreHorizontalIcon,
-  PlayIcon,
   PlusIcon,
   ShieldCheckIcon,
   UploadIcon,
@@ -227,18 +227,14 @@ export const AgentsPage = (): JSX.Element => {
                       {agents.map((agent, index) => (
                         <TableRow key={index} className="border-[#0000001a]">
                           <TableCell className="pl-6">
-                            <button
-                              onClick={() => navigate(`/agents/${agent.id}`)}
-                              className="flex flex-col text-left hover:opacity-70 transition-opacity"
-                              data-testid={`button-agent-detail-${agent.id}`}
-                            >
-                              <span className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm underline-offset-2 hover:underline">
+                            <div className="flex flex-col text-left">
+                              <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm">
                                 {agent.name}
                               </span>
                               <span className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs">
                                 {agent.id}
                               </span>
-                            </button>
+                            </div>
                           </TableCell>
                           <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
                             {agent.type}
@@ -263,9 +259,11 @@ export const AgentsPage = (): JSX.Element => {
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 px-3 text-[#4f39f6] hover:text-[#4f39f6] hover:bg-[#f0f4ff] text-xs font-medium"
+                                onClick={() => navigate(`/agents/${agent.id}`)}
+                                data-testid={`button-view-report-${agent.id}`}
                               >
-                                <PlayIcon className="w-3 h-3 mr-1" />
-                                Run Eval
+                                <FileBarChart2Icon className="w-3 h-3 mr-1" />
+                                View Report
                               </Button>
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                 <MoreHorizontalIcon className="w-4 h-4 text-[#71717b]" />
