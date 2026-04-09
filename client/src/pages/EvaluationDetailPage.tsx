@@ -648,7 +648,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-3">
                         <h1 className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[-0.60px] leading-8">
-                          {eval_.evalId}
+                          {eval_.module}
                         </h1>
                         <Badge
                           className={`${eval_.statusColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs h-auto px-3 py-1`}
@@ -669,7 +669,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         )}
                       </div>
                       <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                        {eval_.module} · {eval_.agent} · {eval_.date}
+                        {eval_.agent} · {eval_.date}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
