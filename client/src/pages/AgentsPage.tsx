@@ -4,7 +4,6 @@ import {
   ClockIcon,
   FileBarChart2Icon,
   FilterIcon,
-  MoreHorizontalIcon,
   SearchIcon,
   ShieldCheckIcon,
 } from "lucide-react";
@@ -258,7 +257,7 @@ export const AgentsPage = (): JSX.Element => {
                             {agent.lastEval}
                           </TableCell>
                           <TableCell className="text-center pr-6">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -268,9 +267,6 @@ export const AgentsPage = (): JSX.Element => {
                               >
                                 <FileBarChart2Icon className="w-3 h-3 mr-1" />
                                 View Report
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontalIcon className="w-4 h-4 text-[#71717b]" />
                               </Button>
                             </div>
                           </TableCell>
