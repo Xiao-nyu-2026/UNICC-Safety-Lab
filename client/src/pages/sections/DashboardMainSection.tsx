@@ -429,7 +429,7 @@ export const DashboardMainSection = (): JSX.Element => {
                       <TableCell className="ml-[6px] mr-[6px]">
                         <button
                           onClick={() => setLocation("/evaluations")}
-                          className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm hover:text-[#4f39f6] hover:underline text-left transition-colors"
+                          className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline text-left transition-colors"
                           data-testid={`link-module-${ev.id}`}
                         >
                           {ev.module}
