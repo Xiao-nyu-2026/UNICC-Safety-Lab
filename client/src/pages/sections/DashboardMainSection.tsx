@@ -17,29 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const statsCards = [
-  {
-    title: "Agents Monitored",
-    value: "14",
-    change: "+2 this month",
-    changeColor: "text-[#009966]",
-    icon: "/figmaAssets/container-3.svg",
-  },
-  {
-    title: "Evals Run (30d)",
-    value: "2,408",
-    change: "+14.5% vs last",
-    changeColor: "text-[#009966]",
-    icon: "/figmaAssets/container-7.svg",
-  },
-  {
-    title: "Security Flags",
-    value: "3",
-    change: "Requires attention",
-    changeColor: "text-[#ff2d78]",
-    icon: "/figmaAssets/container-4.svg",
-  },
-];
 
 const evaluationsData = [
   {
@@ -72,26 +49,6 @@ const evaluationsData = [
   },
 ];
 
-const SafetyScoreGauge = () => {
-  const score = 96.4;
-  return (
-    <div className="flex flex-col gap-1 w-full">
-      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm tracking-[0] leading-5">
-        Avg Safety Score
-      </p>
-      <p
-        className="[font-family:'Inter',Helvetica] font-bold text-2xl tracking-[0] leading-8"
-        style={{ color: "#4f39f6" }}
-      >
-        {score}
-        <span className="[font-family:'Inter',Helvetica] font-medium text-[#a1a1aa] text-base ml-0.5">/100</span>
-      </p>
-      <p className="[font-family:'Inter',Helvetica] font-normal text-sm tracking-[0] leading-5 text-[#71717b]">
-        -0.2% vs last period
-      </p>
-    </div>
-  );
-};
 
 export const DashboardMainSection = (): JSX.Element => {
   const { toast } = useToast();
@@ -145,36 +102,68 @@ export const DashboardMainSection = (): JSX.Element => {
           </div>
         </section>
 
-        {/* Stats row: 3 regular cards + Safety Score gauge card */}
+        {/* Stats row */}
         <section className="grid grid-cols-4 gap-4 w-full">
-          {statsCards.map((card, index) => (
-            <Card
-              key={index}
-              className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]"
-            >
-              <CardContent className="pt-6 pb-5 px-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex flex-col gap-1">
-                    <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm tracking-[0] leading-5">
-                      {card.title}
-                    </p>
-                    <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[0] leading-8">
-                      {card.value}
-                    </p>
-                  </div>
-                  <img className="w-11 h-11" alt="Icon" src={card.icon} />
-                </div>
-                <p className={`[font-family:'Inter',Helvetica] font-normal text-sm tracking-[0] leading-5 ${card.changeColor}`}>
-                  {card.change}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Safety Score card */}
+          {/* System Pass Rate */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="pt-6 pb-5 px-6">
-              <SafetyScoreGauge />
+              <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                System Pass Rate
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl leading-8 mt-1">
+                82%
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
+                Last 30 days
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Evaluations */}
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="pt-6 pb-5 px-6">
+              <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                Total Evaluations
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl leading-8 mt-1">
+                1,284
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
+                AI Agents Audited
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Pending Reviews */}
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="pt-6 pb-5 px-6">
+              <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                Pending Reviews
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-bold text-[#f59e0b] text-2xl leading-8 mt-1">
+                14
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
+                Requires Human Arbiter
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Expert Council Status */}
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="pt-6 pb-5 px-6">
+              <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
+                Expert Council Status
+              </p>
+              <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl leading-8 mt-1">
+                3 / 3
+              </p>
+              <div className="flex items-center gap-1.5 mt-2">
+                <span className="w-2 h-2 rounded-full bg-[#009966] flex-shrink-0" />
+                <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
+                  All LLM Modules Online
+                </p>
+              </div>
             </CardContent>
           </Card>
         </section>
