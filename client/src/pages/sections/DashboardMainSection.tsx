@@ -286,12 +286,12 @@ export const DashboardMainSection = (): JSX.Element => {
                     </p>
                   </div>
                   {/* NIST — PASSED */}
-                  <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 hover:border-[#60a5fa] transition-colors cursor-default">
+                  <div className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3 hover:border-[#4ade80] transition-colors cursor-default">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
                         NIST AI RMF
                       </span>
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#dbeafe] text-[#1e40af]">
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#d1fae5] text-[#065f46]">
                         PASSED
                       </span>
                     </div>
