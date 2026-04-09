@@ -488,9 +488,6 @@ export const DashboardMainSection = (): JSX.Element => {
                               </div>
                             </div>
                           </div>
-                          <span className={`[font-family:'Inter',Helvetica] text-[11px] leading-4 ${ev.reason.color}`}>
-                            {ev.reason.text}
-                          </span>
                         </div>
                       </TableCell>
 
