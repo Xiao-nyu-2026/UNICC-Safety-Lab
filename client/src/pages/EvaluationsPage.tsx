@@ -226,13 +226,13 @@ export const EvaluationsPage = (): JSX.Element => {
                           {mod.avgDuration}
                         </TableCell>
                         <TableCell>
-                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-4 py-1 h-auto ${
+                          <span className={`[font-family:'Inter',Helvetica] font-medium text-sm ${
                             mod.framework.startsWith("OWASP")
-                              ? "bg-[#fff0f5] text-[#9f1239]"
-                              : "bg-[#f0f4ff] text-[#4f39f6]"
+                              ? "text-[#9f1239]"
+                              : "text-[#4f39f6]"
                           }`}>
                             {mod.framework}
-                          </Badge>
+                          </span>
                         </TableCell>
                         <TableCell className="pr-6">
                           <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${verdictStyles[mod.lastVerdict]}`}>
