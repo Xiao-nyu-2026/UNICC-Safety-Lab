@@ -61,9 +61,9 @@ const evaluationsData = [
     date: "Today",
     reason: { text: "High bias variance detected", color: "text-[#92400e]" },
     experts: [
-      { name: "Security Probe", score: 62, note: "Prompt boundary bypass possible under adversarial input." },
-      { name: "Governance Workflow", score: 71, note: "Policy controls partially enforced; 3 edge cases unhandled." },
-      { name: "Risk Arbiter", score: 68, note: "Escalated for manual review — borderline threshold exceeded." },
+      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Prompt boundary bypass possible under adversarial input." },
+      { name: "Governance Workflow", status: "PARTIAL", statusColor: "bg-[#fef3c7] text-[#92400e]", note: "Policy controls partially enforced; 3 edge cases unhandled." },
+      { name: "Risk Arbiter", status: "ESCALATED", statusColor: "bg-[#fef3c7] text-[#92400e]", note: "Escalated for manual review — borderline threshold exceeded." },
     ],
   },
   {
@@ -75,9 +75,9 @@ const evaluationsData = [
     date: "Yesterday",
     reason: { text: "Violated LLM02 (Insecure Output)", color: "text-[#9f1239]" },
     experts: [
-      { name: "Security Probe", score: 24, note: "Direct jailbreak via role-play prompt succeeded in 4/5 test cases." },
-      { name: "Governance Workflow", score: 31, note: "Output filter entirely bypassed; PII leaked in 2 responses." },
-      { name: "Risk Arbiter", score: 19, note: "Critical failure — model violates OWASP LLM02 & LLM06." },
+      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Direct jailbreak via role-play prompt succeeded in 4/5 test cases." },
+      { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Output filter entirely bypassed; PII leaked in 2 responses." },
+      { name: "Risk Arbiter", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Critical failure — model violates OWASP LLM02 & LLM06." },
     ],
   },
   {
@@ -89,9 +89,9 @@ const evaluationsData = [
     date: "Oct 24, 2023",
     reason: { text: "Met all NIST AI RMF controls", color: "text-[#71717b]" },
     experts: [
-      { name: "Security Probe", score: 93, note: "No toxic outputs detected across all 500 test prompts." },
-      { name: "Governance Workflow", score: 89, note: "Bias variance within acceptable NIST AI RMF thresholds." },
-      { name: "Risk Arbiter", score: 91, note: "Full compliance confirmed; approved for production deployment." },
+      { name: "Security Probe", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "No toxic outputs detected across all 500 test prompts." },
+      { name: "Governance Workflow", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Bias variance within acceptable NIST AI RMF thresholds." },
+      { name: "Risk Arbiter", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Full compliance confirmed; approved for production deployment." },
     ],
   },
   {
@@ -103,9 +103,9 @@ const evaluationsData = [
     date: "Oct 22, 2023",
     reason: { text: "Met all NIST AI RMF controls", color: "text-[#71717b]" },
     experts: [
-      { name: "Security Probe", score: 95, note: "No sensitive data exfiltration paths found during fuzzing." },
-      { name: "Governance Workflow", score: 88, note: "Data handling policies enforced at all API boundaries." },
-      { name: "Risk Arbiter", score: 92, note: "Low residual risk; cleared under OWASP LLM06 guidelines." },
+      { name: "Security Probe", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "No sensitive data exfiltration paths found during fuzzing." },
+      { name: "Governance Workflow", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Data handling policies enforced at all API boundaries." },
+      { name: "Risk Arbiter", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Low residual risk; cleared under OWASP LLM06 guidelines." },
     ],
   },
 ];
@@ -478,18 +478,14 @@ export const DashboardMainSection = (): JSX.Element => {
                             <TableCell colSpan={5} className="px-6 py-4">
                               <div className="grid grid-cols-3 gap-4">
                                 {ev.experts.map((expert, ei) => {
-                                  const scoreColor =
-                                    expert.score >= 80 ? "text-[#065f46] bg-[#d1fae5]" :
-                                    expert.score >= 55 ? "text-[#92400e] bg-[#fef3c7]" :
-                                    "text-[#9f1239] bg-[#ffe4e6]";
                                   return (
                                     <div key={ei} className="flex flex-col gap-1.5 p-3 rounded-lg border border-zinc-200 bg-white">
                                       <div className="flex items-center justify-between">
                                         <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">
                                           {expert.name}
                                         </span>
-                                        <span className={`[font-family:'Inter',Helvetica] font-bold text-xs px-2 py-0.5 rounded-full ${scoreColor}`}>
-                                          {expert.score}/100
+                                        <span className={`[font-family:'Inter',Helvetica] font-bold text-[10px] px-2 py-0.5 rounded-full tracking-wide ${expert.statusColor}`}>
+                                          {expert.status}
                                         </span>
                                       </div>
                                       <p className="[font-family:'Inter',Helvetica] text-xs text-zinc-500 leading-4">
