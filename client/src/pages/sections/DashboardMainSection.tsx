@@ -1,13 +1,11 @@
 import { useRef, useState } from "react";
 import {
-  ClockIcon,
   PlayIcon,
   UploadIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "./PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -45,55 +43,32 @@ const statsCards = [
 
 const evaluationsData = [
   {
-    agent: "GPT-4-Turbo-Prod",
+    id: "EV-1030",
+    target: "UNICC-Chatbot-V2",
+    verdict: "REVIEW",
+    verdictColor: "bg-[#f59e0b] text-white",
+    date: "Today",
+  },
+  {
     id: "EV-1029",
-    module: "Prompt Injection V2",
-    status: "Passed",
-    statusColor: "bg-[#d0fae5] text-[#004f3b]",
-    score: 99,
-    scoreColor: "bg-[#00bc7d]",
-    time: "10 mins ago",
+    target: "Core-NLP-Model",
+    verdict: "REJECT",
+    verdictColor: "bg-[#e7000b] text-white",
+    date: "Yesterday",
   },
   {
-    agent: "Llama-3-Custom",
     id: "EV-1028",
-    module: "Toxicity & Bias",
-    status: "Running",
-    statusColor: "bg-zinc-100 text-zinc-900",
-    score: null,
-    scoreColor: "",
-    time: "1 hr ago",
-    hasIcon: true,
+    target: "HR-Data-Processor",
+    verdict: "APPROVE",
+    verdictColor: "bg-[#009966] text-white",
+    date: "Oct 24, 2023",
   },
   {
-    agent: "Customer-Bot-V1",
     id: "EV-1027",
-    module: "Jailbreak Attempts",
-    status: "Failed",
-    statusColor: "bg-[#ffe2e2] text-[#82181a]",
-    score: 45,
-    scoreColor: "bg-[#fb2c36]",
-    time: "3 hrs ago",
-  },
-  {
-    agent: "GPT-4-Turbo-Prod",
-    id: "EV-1026",
-    module: "Data Exfiltration",
-    status: "Passed",
-    statusColor: "bg-[#d0fae5] text-[#004f3b]",
-    score: 100,
-    scoreColor: "bg-[#00bc7d]",
-    time: "5 hrs ago",
-  },
-  {
-    agent: "Code-Gen-Agent",
-    id: "EV-1025",
-    module: "Malicious Code Gen",
-    status: "Passed",
-    statusColor: "bg-[#d0fae5] text-[#004f3b]",
-    score: 95,
-    scoreColor: "bg-[#00bc7d]",
-    time: "1 day ago",
+    target: "Image-Gen-API",
+    verdict: "APPROVE",
+    verdictColor: "bg-[#009966] text-white",
+    date: "Oct 22, 2023",
   },
 ];
 
@@ -229,55 +204,30 @@ export const DashboardMainSection = (): JSX.Element => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-[#0000001a]">
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6">Agent</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Evaluation Module</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Status</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Score</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6">Time</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[120px]">ID</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">AI Agent Repository</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[160px]">Verdict</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6 w-[140px]">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {evaluationsData.map((evaluation, index) => (
                     <TableRow key={index} className="border-[#0000001a]">
                       <TableCell className="pl-6">
-                        <div className="flex flex-col">
-                          <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
-                            {evaluation.agent}
-                          </span>
-                          <span className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs">
-                            {evaluation.id}
-                          </span>
-                        </div>
+                        <span className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm">
+                          {evaluation.id}
+                        </span>
                       </TableCell>
-                      <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                        {evaluation.module}
+                      <TableCell className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
+                        {evaluation.target}
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${evaluation.statusColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs h-auto px-3 py-1`}>
-                          {evaluation.hasIcon && <ClockIcon className="w-3 h-3 mr-1" />}
-                          {evaluation.status}
+                        <Badge className={`${evaluation.verdictColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs h-auto px-3 py-1 tracking-wide`}>
+                          {evaluation.verdict}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {evaluation.score !== null ? (
-                          <div className="flex items-center gap-2">
-                            <Progress
-                              value={evaluation.score}
-                              className="w-16 h-2 bg-zinc-100"
-                              indicatorClassName={evaluation.scoreColor}
-                            />
-                            <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm">
-                              {evaluation.score}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="[font-family:'Inter',Helvetica] font-normal italic text-[#9f9fa9] text-sm">
-                            Pending
-                          </span>
-                        )}
-                      </TableCell>
                       <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-right pr-6">
-                        {evaluation.time}
+                        {evaluation.date}
                       </TableCell>
                     </TableRow>
                   ))}
