@@ -50,6 +50,7 @@ const assessmentTrend = [
 const evaluationsData = [
   {
     id: "EV-1030",
+    module: "Prompt Injection V2",
     target: "UNICC-Chatbot-V2",
     verdict: "REVIEW",
     verdictColor: "bg-[#fef3c7] text-[#92400e]",
@@ -57,6 +58,7 @@ const evaluationsData = [
   },
   {
     id: "EV-1029",
+    module: "Jailbreak Attempts",
     target: "Core-NLP-Model",
     verdict: "REJECT",
     verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
@@ -64,6 +66,7 @@ const evaluationsData = [
   },
   {
     id: "EV-1028",
+    module: "Toxicity & Bias",
     target: "HR-Data-Processor",
     verdict: "APPROVE",
     verdictColor: "bg-[#d1fae5] text-[#065f46]",
@@ -71,6 +74,7 @@ const evaluationsData = [
   },
   {
     id: "EV-1027",
+    module: "Data Exfiltration",
     target: "Image-Gen-API",
     verdict: "APPROVE",
     verdictColor: "bg-[#d1fae5] text-[#065f46]",
@@ -334,8 +338,8 @@ export const DashboardMainSection = (): JSX.Element => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-[#0000001a]">
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[120px]">ID</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">AI Agent Repository</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[160px]">ID</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Target Agent</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[160px]">Verdict</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6 w-[140px]">Date</TableHead>
                   </TableRow>
@@ -344,9 +348,14 @@ export const DashboardMainSection = (): JSX.Element => {
                   {evaluationsData.map((evaluation, index) => (
                     <TableRow key={index} className="border-[#0000001a]">
                       <TableCell className="pl-6">
-                        <span className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm">
-                          {evaluation.id}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm">
+                            {evaluation.id}
+                          </span>
+                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs mt-0.5">
+                            via {evaluation.module}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
                         {evaluation.target}
