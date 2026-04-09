@@ -51,9 +51,9 @@ const stats = [
     iconColor: "text-[#b45309]",
   },
   {
-    title: "Failed (30d)",
+    title: "Rejected Audits (30d)",
     value: "87",
-    change: "3.6% failure rate",
+    change: "3.6% rejection rate",
     changeColor: "text-[#e7000b]",
     Icon: XCircleIcon,
     iconBg: "bg-[#ffe2e2]",
