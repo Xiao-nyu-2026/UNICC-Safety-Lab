@@ -335,20 +335,20 @@ export const EvaluationsPage = (): JSX.Element => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {[
-                    { agent: "Customer-Bot-V1", module: "Jailbreak Attempts", score: 45, message: "Score below threshold (80). Manual review required before next deployment.", severity: "High" },
-                    { agent: "Llama-3-Custom", module: "Toxicity & Bias", score: null, message: "Evaluation has been running for over 2 hours. Possible timeout.", severity: "Medium" },
-                    { agent: "Support-Agent-V2", module: "Bias Detection", score: null, message: "Pending manual approval before evaluation can proceed.", severity: "Low" },
+                    { agent: "Customer-Bot-V1", module: "Jailbreak Attempts", badge: "OWASP Violated", message: "Critical vulnerability (LLM02: Insecure Output) detected by Security Probe. Human Arbiter intervention required before deployment.", severity: "High" },
+                    { agent: "Llama-3-Custom", module: "Toxicity & Bias", badge: null, message: "Evaluation pipeline has been running for over 2 hours. Possible LLM API timeout from Project 2 backend.", severity: "Medium" },
+                    { agent: "Support-Agent-V2", module: "Bias Detection", badge: null, message: "Pending human arbiter sign-off for NIST GOVERN 1.1 compliance checklist.", severity: "Low" },
                   ].map((flag, i) => (
                     <div key={i} className={`flex items-start justify-between p-4 rounded-lg border ${
-                      flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
+                      flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : flag.severity === "Medium" ? "bg-[#fff8e1] border-[#fde68a]" : "bg-zinc-50 border-zinc-200"
                     }`}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">{flag.agent}</span>
                           <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">· {flag.module}</span>
-                          {flag.score !== null && (
-                            <Badge className="bg-[#ffe0eb] text-[#ff2d78] border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto">
-                              Score: {flag.score}
+                          {flag.badge !== null && (
+                            <Badge className="bg-[#ffe0eb] text-[#ff2d78] border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2 py-0.5 h-auto">
+                              {flag.badge}
                             </Badge>
                           )}
                         </div>
