@@ -13,6 +13,12 @@ import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -120,9 +126,21 @@ const agents = [
   },
 ];
 
+const STATUS_OPTIONS = ["All Agents", "APPROVED", "REJECTED", "Running Eval"] as const;
+type StatusOption = typeof STATUS_OPTIONS[number];
+
 export const AgentsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<StatusOption>("All Agents");
+
+  const filteredAgents = agents.filter((agent) => {
+    const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus =
+      filterStatus === "All Agents" || agent.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
@@ -152,14 +170,29 @@ export const AgentsPage = (): JSX.Element => {
                       data-testid="input-search-agents"
                     />
                   </div>
-                  <Button
-                    variant="outline"
-                    className="h-10 px-4 border-zinc-200 bg-white/80 backdrop-blur-sm [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950 rounded-lg"
-                    data-testid="button-filter-agents"
-                  >
-                    <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
-                    Filter by Status
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-10 px-4 border-zinc-200 bg-white/80 backdrop-blur-sm [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950 rounded-lg"
+                        data-testid="button-filter-agents"
+                      >
+                        <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
+                        {filterStatus === "All Agents" ? "Filter by Status" : `Status: ${filterStatus}`}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      {STATUS_OPTIONS.map((opt) => (
+                        <DropdownMenuItem
+                          key={opt}
+                          onClick={() => setFilterStatus(opt)}
+                          className={`[font-family:'Inter',Helvetica] text-sm cursor-pointer ${filterStatus === opt ? "font-semibold text-[#4f39f6]" : "text-zinc-700"}`}
+                        >
+                          {opt}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </section>
 
@@ -230,7 +263,14 @@ export const AgentsPage = (): JSX.Element => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {agents.map((agent, index) => (
+                      {filteredAgents.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-10 [font-family:'Inter',Helvetica] text-sm text-[#71717b]">
+                            No agents match the selected filter.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {filteredAgents.map((agent, index) => (
                         <TableRow key={index} className="border-[#0000001a]">
                           <TableCell className="pl-6">
                             <div className="flex flex-col text-left">
