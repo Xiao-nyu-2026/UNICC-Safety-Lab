@@ -40,18 +40,18 @@ import {
 
 const resultStats = [
   {
-    title: "Passed",
+    title: "Approved Agents",
     value: "2,301",
-    change: "95.6% pass rate",
+    change: "95.6% approval rate",
     changeColor: "text-[#009966]",
     Icon: CheckCircleIcon,
     iconBg: "bg-[#d0fae5]",
     iconColor: "text-[#004f3b]",
   },
   {
-    title: "Failed",
+    title: "Rejected Agents",
     value: "87",
-    change: "3.6% failure rate",
+    change: "3.6% rejection rate",
     changeColor: "text-[#e7000b]",
     Icon: XCircleIcon,
     iconBg: "bg-[#ffe2e2]",
@@ -67,36 +67,36 @@ const resultStats = [
     iconColor: "text-[#ff2d78]",
   },
   {
-    title: "Avg Score",
-    value: "96.4",
-    change: "+2.1 vs last period",
-    changeColor: "text-[#009966]",
-    Icon: CheckCircleIcon,
-    iconBg: "bg-[#f0f4ff]",
-    iconColor: "text-[#4f39f6]",
+    title: "Top Risk Framework",
+    value: "OWASP LLM02",
+    change: "Needs immediate attention",
+    changeColor: "text-[#e7000b]",
+    Icon: ShieldAlertIcon,
+    iconBg: "bg-[#ffe2e2]",
+    iconColor: "text-[#82181a]",
   },
 ];
 
 const scoreByModule = [
-  { module: "Prompt Inj.", score: 97 },
-  { module: "Toxicity", score: 91 },
-  { module: "Jailbreak", score: 72 },
-  { module: "Data Exfil.", score: 99 },
-  { module: "Malicious Code", score: 94 },
-  { module: "Bias", score: 85 },
-  { module: "PII Leakage", score: 96 },
+  { module: "Prompt Inj.", score: 42 },
+  { module: "Toxicity", score: 18 },
+  { module: "Jailbreak", score: 35 },
+  { module: "Data Exfil.", score: 15 },
+  { module: "Malicious Code", score: 27 },
+  { module: "Bias", score: 22 },
+  { module: "PII Leakage", score: 11 },
 ];
 
-const BAR_COLORS = ["#4f39f6", "#4f39f6", "#fb2c36", "#4f39f6", "#4f39f6", "#f59e0b", "#4f39f6"];
+const BAR_COLORS = ["#e7000b", "#f59e0b", "#e7000b", "#4f39f6", "#f59e0b", "#f59e0b", "#4f39f6"];
 
 const trendData = [
-  { day: "Mar 1", passed: 94, failed: 6 },
-  { day: "Mar 5", passed: 96, failed: 4 },
-  { day: "Mar 8", passed: 93, failed: 7 },
-  { day: "Mar 12", passed: 97, failed: 3 },
-  { day: "Mar 15", passed: 95, failed: 5 },
-  { day: "Mar 19", passed: 98, failed: 2 },
-  { day: "Mar 22", passed: 96, failed: 4 },
+  { day: "Mar 1", approved: 94, rejected: 6 },
+  { day: "Mar 5", approved: 96, rejected: 4 },
+  { day: "Mar 8", approved: 93, rejected: 7 },
+  { day: "Mar 12", approved: 97, rejected: 3 },
+  { day: "Mar 15", approved: 95, rejected: 5 },
+  { day: "Mar 19", approved: 98, rejected: 2 },
+  { day: "Mar 22", approved: 96, rejected: 4 },
 ];
 
 const results = [
@@ -443,10 +443,10 @@ export const ResultsPage = (): JSX.Element => {
                 <CardContent className="px-6 pt-6 pb-6">
                   <div className="flex flex-col mb-6">
                     <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                      Avg Score by Evaluation Module
+                      Vulnerabilities by OWASP Category
                     </h2>
                     <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-1">
-                      Average safety score per module over the last 30 days.
+                      Total flags raised per risk category
                     </p>
                   </div>
                   <ResponsiveContainer width="100%" height={200}>
@@ -459,7 +459,7 @@ export const ResultsPage = (): JSX.Element => {
                         tickLine={false}
                       />
                       <YAxis
-                        domain={[60, 100]}
+                        domain={[0, 50]}
                         tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
                         axisLine={false}
                         tickLine={false}
@@ -471,7 +471,7 @@ export const ResultsPage = (): JSX.Element => {
                           fontFamily: "Inter, Helvetica",
                           fontSize: 12,
                         }}
-                        formatter={(value: number) => [`${value}`, "Avg Score"]}
+                        formatter={(value: number) => [`${value}`, "Vulnerabilities"]}
                       />
                       <Bar dataKey="score" radius={[4, 4, 0, 0]}>
                         {scoreByModule.map((_, index) => (
@@ -488,10 +488,10 @@ export const ResultsPage = (): JSX.Element => {
                 <CardContent className="px-6 pt-6 pb-6">
                   <div className="flex flex-col mb-6">
                     <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                      Pass / Fail Trend
+                      Approval vs Rejection Trend
                     </h2>
                     <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-1">
-                      Daily pass and fail rates over the last 30 days.
+                      Daily approval and rejection rates over the last 30 days.
                     </p>
                   </div>
                   <ResponsiveContainer width="100%" height={200}>
@@ -516,14 +516,14 @@ export const ResultsPage = (): JSX.Element => {
                           fontFamily: "Inter, Helvetica",
                           fontSize: 12,
                         }}
-                        formatter={(value: number, name: string) => [`${value}%`, name === "passed" ? "Passed" : "Failed"]}
+                        formatter={(value: number, name: string) => [`${value}%`, name === "approved" ? "Approved" : "Rejected"]}
                       />
                       <Legend
-                        formatter={(value) => value === "passed" ? "Passed" : "Failed"}
+                        formatter={(value) => value === "approved" ? "Approved" : "Rejected"}
                         wrapperStyle={{ fontFamily: "Inter, Helvetica", fontSize: 12 }}
                       />
-                      <Line type="monotone" dataKey="passed" stroke="#00bc7d" strokeWidth={2} dot={{ fill: "#00bc7d", r: 3 }} />
-                      <Line type="monotone" dataKey="failed" stroke="#fb2c36" strokeWidth={2} dot={{ fill: "#fb2c36", r: 3 }} />
+                      <Line type="monotone" dataKey="approved" stroke="#00bc7d" strokeWidth={2} dot={{ fill: "#00bc7d", r: 3 }} />
+                      <Line type="monotone" dataKey="rejected" stroke="#fb2c36" strokeWidth={2} dot={{ fill: "#fb2c36", r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
