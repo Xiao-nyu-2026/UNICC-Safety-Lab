@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CalendarIcon,
   ClipboardCheckIcon,
@@ -141,6 +142,16 @@ const categoryColors: Record<string, string> = {
 };
 
 export const EvaluationsPage = (): JSX.Element => {
+  const [exportingPDF, setExportingPDF] = useState(false);
+
+  const handleExportPDF = () => {
+    setExportingPDF(true);
+    setTimeout(() => {
+      setExportingPDF(false);
+      window.print();
+    }, 1800);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
@@ -170,11 +181,25 @@ export const EvaluationsPage = (): JSX.Element => {
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={handleExportPDF}
+                  disabled={exportingPDF}
                   data-testid="button-export-standards-pdf"
-                  className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4]"
+                  className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] disabled:opacity-70"
                 >
-                  <FileTextIcon className="w-4 h-4 mr-2" />
-                  Export Standards PDF
+                  {exportingPDF ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                      Generating PDF…
+                    </>
+                  ) : (
+                    <>
+                      <FileTextIcon className="w-4 h-4 mr-2" />
+                      Export Standards PDF
+                    </>
+                  )}
                 </Button>
               </div>
             </section>

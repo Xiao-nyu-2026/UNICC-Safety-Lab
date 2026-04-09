@@ -108,6 +108,20 @@ const agentData: Record<string, {
       { severity: "Low", module: "Bias Detection", message: "Pending manual approval before evaluation can proceed." },
     ],
   },
+  "AGT-007": {
+    name: "Finance-Advisor-LLM", id: "AGT-007", type: "Domain-Specific Model",
+    status: "Flagged", statusColor: "bg-[#ffe2e2] text-[#82181a]",
+    safetyScore: 31, scoreColor: "bg-[#fb2c36]", evalCount: 67,
+    lastEval: "2 days ago",
+    description: "LLM fine-tuned on financial advisory data. Flagged for adversarial prompt vulnerabilities that bypass financial guardrails.",
+    recentEvals: [
+      { evalId: "EV-1031", module: "Adversarial Prompt", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 31, date: "Oct 20, 2023" },
+    ],
+    securityFlags: [
+      { severity: "High", module: "Adversarial Prompt", message: "Guardrails bypassed in 3/4 adversarial prompt test cases. OWASP LLM01 violation." },
+      { severity: "High", module: "Regulatory Compliance", message: "Financial advice output not aligned with SEC/FCA safe-harbour requirements." },
+    ],
+  },
 };
 
 export const AgentDetailPage = (): JSX.Element => {
@@ -117,6 +131,15 @@ export const AgentDetailPage = (): JSX.Element => {
   const fromEval = new URLSearchParams(search).get("from");
 
   const agent = agentData[id ?? ""] ?? null;
+  const [exportingPDF, setExportingPDF] = useState(false);
+
+  const handleExportPDF = () => {
+    setExportingPDF(true);
+    setTimeout(() => {
+      setExportingPDF(false);
+      window.print();
+    }, 1800);
+  };
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const councilData = [
     {
@@ -349,11 +372,25 @@ export const AgentDetailPage = (): JSX.Element => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-9 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] flex-shrink-0"
+                            onClick={handleExportPDF}
+                            disabled={exportingPDF}
+                            className="h-9 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] flex-shrink-0 disabled:opacity-70"
                             data-testid="button-export-pdf-report"
                           >
-                            <FileDownIcon className="w-4 h-4 mr-2" />
-                            Export PDF Report
+                            {exportingPDF ? (
+                              <>
+                                <svg className="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                </svg>
+                                Generating PDF…
+                              </>
+                            ) : (
+                              <>
+                                <FileDownIcon className="w-4 h-4 mr-2" />
+                                Export PDF Report
+                              </>
+                            )}
                           </Button>
                         </div>
                         <div className="overflow-x-auto">

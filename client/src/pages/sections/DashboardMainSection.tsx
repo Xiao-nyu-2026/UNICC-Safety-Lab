@@ -53,6 +53,7 @@ const assessmentTrend = [
 const evaluationsData = [
   {
     id: "EV-1030",
+    agentId: "AGT-003",
     module: "Prompt Injection V2",
     target: "UNICC-Chatbot-V2",
     verdict: "REVIEW",
@@ -68,6 +69,7 @@ const evaluationsData = [
   },
   {
     id: "EV-1029",
+    agentId: "AGT-001",
     module: "Jailbreak Attempts",
     target: "Core-NLP-Model",
     verdict: "REJECT",
@@ -83,6 +85,7 @@ const evaluationsData = [
   },
   {
     id: "EV-1028",
+    agentId: "AGT-002",
     module: "Toxicity & Bias",
     target: "HR-Data-Processor",
     verdict: "APPROVE",
@@ -98,6 +101,7 @@ const evaluationsData = [
   },
   {
     id: "EV-1027",
+    agentId: "AGT-004",
     module: "Data Exfiltration",
     target: "Image-Gen-API",
     verdict: "APPROVE",
@@ -109,6 +113,38 @@ const evaluationsData = [
       { name: "Security Probe", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "No sensitive data exfiltration paths found during fuzzing." },
       { name: "Governance Workflow", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Data handling policies enforced at all API boundaries." },
       { name: "Risk Arbiter", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Low residual risk; cleared under OWASP LLM06 guidelines." },
+    ],
+  },
+  {
+    id: "EV-1031",
+    agentId: "AGT-007",
+    module: "Adversarial Prompt",
+    target: "Finance-Advisor-LLM",
+    verdict: "REJECT",
+    verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
+    date: "Oct 20, 2023",
+    reason: { text: "Violated OWASP LLM01 (Prompt Injection)", color: "text-[#9f1239]" },
+    tooltip: "Security Probe: Adversarial prompt injection bypassed financial guardrails in 3/4 test cases. OWASP LLM01 violation — deployment blocked.",
+    experts: [
+      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Adversarial prompt bypassed financial guardrails in 3/4 cases." },
+      { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Regulatory controls for financial advice AI were not enforced." },
+      { name: "Risk Arbiter", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "High-risk output possible; violates OWASP LLM01 baseline." },
+    ],
+  },
+  {
+    id: "EV-1032",
+    agentId: "AGT-006",
+    module: "PII Extraction",
+    target: "Support-Agent-V2",
+    verdict: "REJECT",
+    verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
+    date: "Oct 19, 2023",
+    reason: { text: "PII leaked in 2/3 extraction attempts", color: "text-[#9f1239]" },
+    tooltip: "Risk Arbiter: PII extraction succeeded in 2/3 test cases. Critical OWASP LLM06 violation — immediate remediation required.",
+    experts: [
+      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "PII extraction succeeded in 2 of 3 test scenarios." },
+      { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Data privacy controls failed to prevent PII disclosure." },
+      { name: "Risk Arbiter", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "OWASP LLM06 critical violation; deployment halted." },
     ],
   },
 ];
@@ -254,21 +290,18 @@ export const DashboardMainSection = (): JSX.Element => {
             </CardContent>
           </Card>
 
-          {/* Expert Council Status */}
+          {/* Requires Attention — derived from REJECT count in evaluationsData */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="pt-6 pb-5 px-6">
               <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
-                Expert Council Status
+                Requires Attention
               </p>
-              <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl leading-8 mt-1">
-                3 / 3
+              <p className="[font-family:'Inter',Helvetica] font-bold text-[#e7000b] text-2xl leading-8 mt-1">
+                {evaluationsData.filter((e) => e.verdict === "REJECT").length}
               </p>
-              <div className="flex items-center gap-1.5 mt-2">
-                <span className="w-2 h-2 rounded-full bg-[#009966] flex-shrink-0" />
-                <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                  All LLM Modules Online
-                </p>
-              </div>
+              <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
+                Critical REJECTs pending fix
+              </p>
             </CardContent>
           </Card>
         </section>
@@ -414,10 +447,10 @@ export const DashboardMainSection = (): JSX.Element => {
                   {evaluationsData.map((ev, index) => (
                     <TableRow key={index} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors" data-testid={`row-evaluation-${ev.id}`}>
 
-                      {/* Target Agent — 主键，加粗，跳转至 agents */}
+                      {/* Target Agent — deep link to /agents/:agentId */}
                       <TableCell className="pl-6">
                         <button
-                          onClick={() => setLocation("/agents")}
+                          onClick={() => setLocation(`/agents/${ev.agentId}`)}
                           className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm hover:underline text-left"
                           data-testid={`link-agent-${ev.id}`}
                         >
@@ -425,10 +458,10 @@ export const DashboardMainSection = (): JSX.Element => {
                         </button>
                       </TableCell>
 
-                      {/* Module — 次要信息，muted 颜色，跳转至 evaluations */}
+                      {/* Module — deep link to /evaluations/:evalId */}
                       <TableCell className="ml-[6px] mr-[6px]">
                         <button
-                          onClick={() => setLocation("/evaluations")}
+                          onClick={() => setLocation(`/evaluations/${ev.id}`)}
                           className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline text-left transition-colors"
                           data-testid={`link-module-${ev.id}`}
                         >
