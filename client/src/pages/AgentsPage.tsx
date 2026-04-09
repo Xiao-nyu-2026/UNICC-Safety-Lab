@@ -13,7 +13,6 @@ import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -43,10 +42,10 @@ const agentStats = [
     iconColor: "text-[#004f3b]",
   },
   {
-    title: "Avg Safety Score",
-    value: "96.4%",
-    change: "-0.2% vs last period",
-    changeColor: "text-[#71717b]",
+    title: "System Compliance Rate",
+    value: "82%",
+    change: "Fully aligned with NIST RMF",
+    changeColor: "text-[#009966]",
     Icon: ShieldCheckIcon,
     iconBg: "bg-[#f0f4ff]",
     iconColor: "text-[#4f39f6]",
@@ -67,11 +66,9 @@ const agents = [
     name: "GPT-4-Turbo-Prod",
     id: "AGT-001",
     type: "Language Model",
-    status: "Active",
-    statusColor: "bg-[#d0fae5] text-[#004f3b]",
+    status: "APPROVED",
+    statusColor: "bg-[#d1fae5] text-[#065f46]",
     lastEval: "10 mins ago",
-    safetyScore: 99,
-    scoreColor: "bg-[#00bc7d]",
     evalCount: 1029,
   },
   {
@@ -81,8 +78,6 @@ const agents = [
     status: "Running Eval",
     statusColor: "bg-zinc-100 text-zinc-900",
     lastEval: "1 hr ago",
-    safetyScore: null,
-    scoreColor: "",
     evalCount: 412,
     hasIcon: true,
   },
@@ -90,33 +85,27 @@ const agents = [
     name: "Customer-Bot-V1",
     id: "AGT-003",
     type: "Conversational AI",
-    status: "Flagged",
-    statusColor: "bg-[#ffe2e2] text-[#82181a]",
+    status: "REJECTED",
+    statusColor: "bg-[#ffe4e6] text-[#9f1239]",
     lastEval: "3 hrs ago",
-    safetyScore: 45,
-    scoreColor: "bg-[#fb2c36]",
     evalCount: 887,
   },
   {
     name: "Code-Gen-Agent",
     id: "AGT-004",
     type: "Code Generation",
-    status: "Active",
-    statusColor: "bg-[#d0fae5] text-[#004f3b]",
+    status: "APPROVED",
+    statusColor: "bg-[#d1fae5] text-[#065f46]",
     lastEval: "1 day ago",
-    safetyScore: 95,
-    scoreColor: "bg-[#00bc7d]",
     evalCount: 234,
   },
   {
     name: "Data-Pipeline-Bot",
     id: "AGT-005",
     type: "Data Processing",
-    status: "Active",
-    statusColor: "bg-[#d0fae5] text-[#004f3b]",
+    status: "APPROVED",
+    statusColor: "bg-[#d1fae5] text-[#065f46]",
     lastEval: "2 days ago",
-    safetyScore: 100,
-    scoreColor: "bg-[#00bc7d]",
     evalCount: 567,
   },
   {
@@ -126,8 +115,6 @@ const agents = [
     status: "Inactive",
     statusColor: "bg-zinc-100 text-zinc-500",
     lastEval: "5 days ago",
-    safetyScore: 88,
-    scoreColor: "bg-[#00bc7d]",
     evalCount: 103,
   },
 ];
@@ -226,9 +213,6 @@ export const AgentsPage = (): JSX.Element => {
                           Status
                         </TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">
-                          Safety Score
-                        </TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">
                           Evals Run
                         </TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">
@@ -266,24 +250,6 @@ export const AgentsPage = (): JSX.Element => {
                               {agent.hasIcon && <ClockIcon className="w-3 h-3 mr-1" />}
                               {agent.status}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {agent.safetyScore !== null ? (
-                              <div className="flex items-center gap-2">
-                                <Progress
-                                  value={agent.safetyScore}
-                                  className="w-16 h-2 bg-zinc-100"
-                                  indicatorClassName={agent.scoreColor}
-                                />
-                                <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm">
-                                  {agent.safetyScore}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="[font-family:'Inter',Helvetica] font-normal italic text-[#9f9fa9] text-sm">
-                                Pending
-                              </span>
-                            )}
                           </TableCell>
                           <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
                             {agent.evalCount.toLocaleString()}
