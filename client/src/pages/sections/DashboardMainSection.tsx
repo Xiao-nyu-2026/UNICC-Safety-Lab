@@ -152,8 +152,11 @@ const evaluationsData = [
 
 const TEST_MODULES = [
   { id: "prompt-injection", label: "Prompt Injection V2", tag: "LLM01" },
+  { id: "jailbreak-attempts", label: "Jailbreak Attempts", tag: "LLM01" },
   { id: "data-exfiltration", label: "Data Exfiltration", tag: "LLM06" },
-  { id: "toxicity", label: "Toxicity Detection", tag: "" },
+  { id: "toxicity", label: "Toxicity & Bias", tag: "NIST RMF" },
+  { id: "adversarial-prompt", label: "Adversarial Prompt", tag: "LLM02" },
+  { id: "pii-extraction", label: "PII Extraction", tag: "Privacy" },
 ];
 
 const STANDARDS = [
@@ -167,7 +170,7 @@ export const DashboardMainSection = (): JSX.Element => {
 
   const [, setLocation] = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState("Customer-Support-Bot-V1");
+  const [selectedAgent, setSelectedAgent] = useState("UNICC-Chatbot-V2");
   const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
   const [selectedStandard, setSelectedStandard] = useState("owasp");
   const [launching, setLaunching] = useState(false);
@@ -698,9 +701,10 @@ export const DashboardMainSection = (): JSX.Element => {
                     style={{ background: "rgba(255,255,255,0.06)" }}
                     data-testid="select-audit-agent"
                   >
-                    <option value="Customer-Support-Bot-V1" className="bg-[#1e1533]">Customer-Support-Bot-V1</option>
-                    <option value="Finance-Advisor-LLM" className="bg-[#1e1533]">Finance-Advisor-LLM</option>
-                    <option value="Code-Review-Assistant" className="bg-[#1e1533]">Code-Review-Assistant</option>
+                    <option value="UNICC-Chatbot-V2" className="bg-[#1e1533]">UNICC-Chatbot-V2</option>
+                    <option value="Core-NLP-Model" className="bg-[#1e1533]">Core-NLP-Model</option>
+                    <option value="HR-Data-Processor" className="bg-[#1e1533]">HR-Data-Processor</option>
+                    <option value="Image-Gen-API" className="bg-[#1e1533]">Image-Gen-API</option>
                   </select>
                 </div>
               </div>
@@ -714,7 +718,7 @@ export const DashboardMainSection = (): JSX.Element => {
                 <p className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70 -mb-1">
                   Select Test Modules
                 </p>
-                <div className="flex flex-col gap-2.5 mt-1">
+                <div className="flex flex-col gap-2.5 mt-1 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                   {TEST_MODULES.map((mod) => {
                     const checked = selectedModules.includes(mod.id);
                     return (
