@@ -3,13 +3,8 @@ import {
   ArrowLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  ClockIcon,
-  GithubIcon,
-  Loader2Icon,
-  PlayIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
-  UploadCloudIcon,
 } from "lucide-react";
 import { useParams, useLocation, useSearch } from "wouter";
 import { SidebarSection } from "./sections/SidebarSection";
@@ -17,7 +12,6 @@ import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -123,24 +117,6 @@ export const AgentDetailPage = (): JSX.Element => {
 
   const agent = agentData[id ?? ""] ?? null;
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [githubUrl, setGithubUrl] = useState("");
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [isAuditing, setIsAuditing] = useState(false);
-
-  const handleRunAudit = () => {
-    if (isAuditing) return;
-    setIsAuditing(true);
-    setTimeout(() => setIsAuditing(false), 2000);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) setUploadedFile(file.name);
-  };
-
   const councilData = [
     {
       expert_name: "Expert A — Safety & Harm Assessment",
@@ -207,110 +183,6 @@ export const AgentDetailPage = (): JSX.Element => {
                       {agent.id} · {agent.type} · {agent.evalCount.toLocaleString()} evals run
                     </p>
                   </div>
-                </section>
-
-                {/* Audit Intake */}
-                <section className="w-full">
-                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="px-6 py-5">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-7 h-7 rounded-md bg-[#ede9fe] flex items-center justify-center flex-shrink-0">
-                          <GithubIcon className="w-4 h-4 text-[#4f39f6]" />
-                        </div>
-                        <div>
-                          <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.3px]">
-                            New AI Agent Evaluation
-                          </h2>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs leading-4">
-                            Submit a repository or upload a codebase to run a full safety audit
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-stretch gap-4">
-                        {/* GitHub URL input */}
-                        <div className="flex-1 flex flex-col gap-1.5">
-                          <label className="[font-family:'Inter',Helvetica] font-medium text-zinc-700 text-xs">
-                            GitHub Repository URL
-                          </label>
-                          <Input
-                            value={githubUrl}
-                            onChange={(e) => setGithubUrl(e.target.value)}
-                            placeholder="Enter GitHub Repository URL (e.g., https://github.com/unicc/ai-agent)"
-                            className="h-10 [font-family:'Inter',Helvetica] text-sm border-zinc-200 focus-visible:ring-[#4f39f6] focus-visible:ring-offset-0"
-                            data-testid="input-github-url"
-                          />
-                        </div>
-
-                        {/* OR divider */}
-                        <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0 pt-5">
-                          <div className="w-px h-3 bg-zinc-200" />
-                          <span className="[font-family:'Inter',Helvetica] font-medium text-[#a1a1aa] text-xs tracking-wide">
-                            OR
-                          </span>
-                          <div className="w-px h-3 bg-zinc-200" />
-                        </div>
-
-                        {/* File upload dropzone */}
-                        <div className="flex flex-col gap-1.5 w-[260px] flex-shrink-0">
-                          <label className="[font-family:'Inter',Helvetica] font-medium text-zinc-700 text-xs">
-                            Upload Codebase
-                          </label>
-                          <div
-                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                            onDragLeave={() => setDragOver(false)}
-                            onDrop={handleDrop}
-                            onClick={() => document.getElementById("audit-file-input")?.click()}
-                            className={`h-10 rounded-md border-2 border-dashed flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs [font-family:'Inter',Helvetica] ${
-                              dragOver
-                                ? "border-[#4f39f6] bg-[#f5f3ff] text-[#4f39f6]"
-                                : uploadedFile
-                                ? "border-[#00bc7d] bg-[#f0fdf9] text-[#004f3b]"
-                                : "border-zinc-200 hover:border-[#4f39f6] hover:bg-[#f5f3ff] text-[#71717b] hover:text-[#4f39f6]"
-                            }`}
-                            data-testid="dropzone-upload"
-                          >
-                            <UploadCloudIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span className="truncate max-w-[170px]">
-                              {uploadedFile ?? "Upload local codebase (.zip)"}
-                            </span>
-                          </div>
-                          <input
-                            id="audit-file-input"
-                            type="file"
-                            accept=".zip"
-                            className="hidden"
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (f) setUploadedFile(f.name);
-                            }}
-                          />
-                        </div>
-
-                        {/* Run button */}
-                        <div className="flex flex-col justify-end flex-shrink-0 pt-5">
-                          <Button
-                            onClick={handleRunAudit}
-                            disabled={isAuditing}
-                            className="h-10 bg-[#4f39f6] hover:bg-[#3d2bc4] text-white [font-family:'Inter',Helvetica] font-medium text-sm gap-2 px-5 disabled:opacity-80"
-                            data-testid="button-run-audit"
-                          >
-                            {isAuditing ? (
-                              <>
-                                <Loader2Icon className="w-4 h-4 animate-spin" />
-                                Analyzing (Mocking)...
-                              </>
-                            ) : (
-                              <>
-                                <PlayIcon className="w-4 h-4" />
-                                Run Safety Audit
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
                 </section>
 
                 {/* Stats */}
