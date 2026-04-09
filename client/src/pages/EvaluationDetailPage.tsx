@@ -1011,7 +1011,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                                         <div className="flex flex-col gap-1">
                                           <div className="flex items-center gap-2 flex-wrap">
                                             <span className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${isCurrent ? "text-[#4f39f6]" : "text-zinc-900"}`}>
-                                              {ev.evalId}
+                                              {ev.module}
                                             </span>
                                             {isCurrent && (
                                               <span className="[font-family:'Inter',Helvetica] text-[10px] font-medium bg-[#ede9fe] text-[#4f39f6] rounded-full px-2 py-0.5">
@@ -1019,9 +1019,6 @@ export const EvaluationDetailPage = (): JSX.Element => {
                                               </span>
                                             )}
                                           </div>
-                                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                                            {ev.module}
-                                          </span>
                                           <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
                                             {ev.date}
                                           </span>
