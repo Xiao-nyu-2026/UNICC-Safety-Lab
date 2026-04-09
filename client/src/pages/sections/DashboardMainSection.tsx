@@ -122,15 +122,15 @@ export const DashboardMainSection = (): JSX.Element => {
             />
             <Button
               variant="outline"
-              className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
+              className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm border-zinc-200 hover:bg-zinc-50"
               onClick={() => uploadRef.current?.click()}
             >
               <UploadIcon className="w-4 h-4 mr-2" />
-              Upload Agent
+              Import Agent
             </Button>
             <Button className="h-10 bg-[#4f39f6] hover:bg-[#3d2bc4] [font-family:'Inter',Helvetica] font-medium text-white text-sm">
               <PlayIcon className="w-4 h-4 mr-2 fill-white" />
-              Start Evaluation
+              Run New Evaluation
             </Button>
           </div>
         </section>

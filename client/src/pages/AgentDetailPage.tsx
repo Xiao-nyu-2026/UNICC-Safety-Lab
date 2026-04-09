@@ -3,6 +3,7 @@ import {
   ArrowLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  FileDownIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
 } from "lucide-react";
@@ -336,13 +337,24 @@ export const AgentDetailPage = (): JSX.Element => {
                 <section className="w-full">
                   <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                       <CardContent className="p-0">
-                        <div className="px-6 py-5 border-b border-zinc-100">
-                          <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                            Council of Experts Assessment
-                          </h2>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                            Independent expert verdicts for this agent
-                          </p>
+                        <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
+                          <div>
+                            <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
+                              Council of Experts Assessment
+                            </h2>
+                            <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                              Independent expert verdicts for this agent
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] flex-shrink-0"
+                            data-testid="button-export-pdf-report"
+                          >
+                            <FileDownIcon className="w-4 h-4 mr-2" />
+                            Export PDF Report
+                          </Button>
                         </div>
                         <div className="overflow-x-auto">
                           <Table>
