@@ -2,7 +2,7 @@ import {
   CalendarIcon,
   ClipboardCheckIcon,
   ClockIcon,
-  DownloadIcon,
+  FileTextIcon,
   FilterIcon,
   ShieldAlertIcon,
   XCircleIcon,
@@ -153,10 +153,10 @@ export const EvaluationsPage = (): JSX.Element => {
             <section className="flex items-center justify-between w-full">
               <div className="flex flex-col items-start">
                 <h1 className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[-0.60px] leading-8">
-                  Evaluations
+                  Evaluation Frameworks & Modules
                 </h1>
                 <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-1">
-                  Manage and schedule automated safety evaluations for your AI agents.
+                  Standardized security benchmarks based on international frameworks.
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -170,11 +170,11 @@ export const EvaluationsPage = (): JSX.Element => {
                 </Button>
                 <Button
                   variant="outline"
-                  data-testid="button-export-report"
+                  data-testid="button-export-standards-pdf"
                   className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4]"
                 >
-                  <DownloadIcon className="w-4 h-4 mr-2" />
-                  Export Report
+                  <FileTextIcon className="w-4 h-4 mr-2" />
+                  Export Standards PDF
                 </Button>
               </div>
             </section>
