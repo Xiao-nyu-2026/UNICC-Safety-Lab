@@ -202,7 +202,7 @@ export const EvaluationsPage = (): JSX.Element => {
                   <TableBody>
                     {modules.map((mod, i) => (
                       <TableRow key={i} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors">
-                        <TableCell className="pl-6 py-5">
+                        <TableCell className="pl-6 py-3">
                           <div className="flex flex-col gap-0.5">
                             <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
                               {mod.name}
@@ -210,12 +210,12 @@ export const EvaluationsPage = (): JSX.Element => {
                             <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{mod.lastRun}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="py-5">
+                        <TableCell className="py-3">
                           <span className={`[font-family:'Inter',Helvetica] font-medium text-xs px-2.5 py-1 rounded-md ${categoryColors[mod.category]}`}>
                             {mod.category}
                           </span>
                         </TableCell>
-                        <TableCell className="py-5">
+                        <TableCell className="py-3">
                           <span className={`[font-family:'Inter',Helvetica] font-medium text-sm ${
                             mod.framework.startsWith("OWASP")
                               ? "text-[#9f1239]"
@@ -224,12 +224,12 @@ export const EvaluationsPage = (): JSX.Element => {
                             {mod.framework}
                           </span>
                         </TableCell>
-                        <TableCell className="py-5">
+                        <TableCell className="py-3">
                           <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${verdictStyles[mod.lastVerdict]}`}>
                             {mod.lastVerdict}
                           </Badge>
                         </TableCell>
-                        <TableCell className="pr-6 py-5 text-right">
+                        <TableCell className="pr-6 py-3 text-right">
                           <button
                             onClick={() => navigate("/evaluations/EV-1030")}
                             className="inline-flex items-center gap-1.5 [font-family:'Inter',Helvetica] font-medium text-sm text-[#4f39f6] hover:text-[#3d2bc4] hover:underline transition-colors"
