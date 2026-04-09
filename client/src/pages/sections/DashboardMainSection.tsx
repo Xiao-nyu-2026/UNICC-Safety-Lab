@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
   PlayIcon,
   UploadIcon,
@@ -16,6 +16,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from "recharts";
+
+const vulnDistribution = [
+  { name: "Prompt Injection (LLM01)", value: 45, color: "#e7000b" },
+  { name: "Insecure Output (LLM02)", value: 35, color: "#f97316" },
+  { name: "Sensitive Data (LLM06)", value: 20, color: "#f59e0b" },
+];
+
+const assessmentTrend = [
+  { day: "Mon", approved: 22, rejected: 4 },
+  { day: "Tue", approved: 18, rejected: 6 },
+  { day: "Wed", approved: 25, rejected: 3 },
+  { day: "Thu", approved: 20, rejected: 7 },
+  { day: "Fri", approved: 24, rejected: 5 },
+  { day: "Sat", approved: 15, rejected: 2 },
+  { day: "Sun", approved: 19, rejected: 8 },
+];
 
 
 const evaluationsData = [
@@ -164,6 +193,118 @@ export const DashboardMainSection = (): JSX.Element => {
                   All LLM Modules Online
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Analytics Row */}
+        <section className="grid grid-cols-2 gap-6 w-full">
+          {/* Donut Chart: Vulnerability Distribution */}
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="px-6 pt-6 pb-6">
+              <div className="mb-4">
+                <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
+                  Vulnerability Distribution
+                </h2>
+                <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                  Based on OWASP LLM Top 10
+                </p>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex-shrink-0" style={{ width: 180, height: 180 }}>
+                  <PieChart width={180} height={180}>
+                    <Pie
+                      data={vulnDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={52}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {vulnDistribution.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 8,
+                        border: "1px solid #e4e4e7",
+                        fontFamily: "Inter, Helvetica",
+                        fontSize: 12,
+                      }}
+                      formatter={(value: number, name: string) => [`${value}%`, name]}
+                    />
+                  </PieChart>
+                </div>
+                <div className="flex flex-col gap-3 flex-1">
+                  {vulnDistribution.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-950 text-xs leading-4">
+                          {item.name}
+                        </span>
+                        <span
+                          className="[font-family:'Inter',Helvetica] font-semibold text-sm"
+                          style={{ color: item.color }}
+                        >
+                          {item.value}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bar Chart: Assessment Trend */}
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+            <CardContent className="px-6 pt-6 pb-6">
+              <div className="mb-4">
+                <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
+                  Assessment Trend (Last 7 Days)
+                </h2>
+                <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                  Approved vs. Rejected evaluations
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={assessmentTrend} barSize={14} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={[0, 30]}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 8,
+                      border: "1px solid #e4e4e7",
+                      fontFamily: "Inter, Helvetica",
+                      fontSize: 12,
+                    }}
+                    formatter={(value: number, name: string) => [value, name === "approved" ? "Approved" : "Rejected"]}
+                  />
+                  <Legend
+                    formatter={(value) => value === "approved" ? "Approved" : "Rejected"}
+                    wrapperStyle={{ fontFamily: "Inter, Helvetica", fontSize: 12, paddingTop: 8 }}
+                  />
+                  <Bar dataKey="approved" fill="#00bc7d" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="rejected" fill="#fb2c36" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </section>
