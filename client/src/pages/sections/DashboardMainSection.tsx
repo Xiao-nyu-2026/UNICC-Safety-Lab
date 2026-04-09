@@ -92,7 +92,7 @@ const evaluationsData = [
     target: "HR-Data-Processor",
     verdict: "APPROVE",
     verdictColor: "bg-[#d1fae5] text-[#065f46]",
-    date: "Oct 24, 2023",
+    date: "Apr 07, 2026",
     reason: { text: "Met all NIST AI RMF controls", color: "text-[#71717b]" },
     tooltip: "Security Probe: No toxic outputs detected across 500 prompts. All NIST AI RMF controls fully satisfied.",
     experts: [
@@ -108,7 +108,7 @@ const evaluationsData = [
     target: "Image-Gen-API",
     verdict: "APPROVE",
     verdictColor: "bg-[#d1fae5] text-[#065f46]",
-    date: "Oct 22, 2023",
+    date: "Apr 05, 2026",
     reason: { text: "Met all NIST AI RMF controls", color: "text-[#71717b]" },
     tooltip: "Risk Arbiter: Low residual risk confirmed. Cleared under OWASP LLM06 — no data exfiltration paths found.",
     experts: [
@@ -124,7 +124,7 @@ const evaluationsData = [
     target: "Finance-Advisor-LLM",
     verdict: "REJECT",
     verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
-    date: "Oct 20, 2023",
+    date: "Apr 03, 2026",
     reason: { text: "Violated OWASP LLM01 (Prompt Injection)", color: "text-[#9f1239]" },
     tooltip: "Security Probe: Adversarial prompt injection bypassed financial guardrails in 3/4 test cases. OWASP LLM01 violation — deployment blocked.",
     experts: [
@@ -140,7 +140,7 @@ const evaluationsData = [
     target: "Support-Agent-V2",
     verdict: "REJECT",
     verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
-    date: "Oct 19, 2023",
+    date: "Apr 01, 2026",
     reason: { text: "PII leaked in 2/3 extraction attempts", color: "text-[#9f1239]" },
     tooltip: "Risk Arbiter: PII extraction succeeded in 2/3 test cases. Critical OWASP LLM06 violation — immediate remediation required.",
     experts: [
