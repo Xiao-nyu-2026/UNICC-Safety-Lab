@@ -629,12 +629,12 @@ export const EvaluationDetailPage = (): JSX.Element => {
             <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6">
               {/* Breadcrumb / back */}
               <button
-                onClick={() => navigate("/results")}
+                onClick={() => navigate("/evaluations")}
                 className="flex items-center gap-2 text-[#71717b] hover:text-zinc-950 [font-family:'Inter',Helvetica] text-sm transition-colors"
-                data-testid="button-back-to-results"
+                data-testid="button-back-to-evaluations"
               >
                 <ArrowLeftIcon className="w-4 h-4" />
-                Back to Results
+                Back to Evaluations
               </button>
 
               {!eval_ ? (
