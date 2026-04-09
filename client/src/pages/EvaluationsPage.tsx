@@ -3,10 +3,10 @@ import { useLocation } from "wouter";
 import {
   CalendarIcon,
   ClipboardCheckIcon,
-  ClockIcon,
   FileTextIcon,
   FilterIcon,
   ShieldAlertIcon,
+  TrendingUpIcon,
   XCircleIcon,
 } from "lucide-react";
 import { SidebarSection } from "./sections/SidebarSection";
@@ -34,13 +34,13 @@ const stats = [
     iconColor: "text-[#4f39f6]",
   },
   {
-    title: "Currently Running",
-    value: "3",
-    change: "In progress now",
-    changeColor: "text-[#71717b]",
-    Icon: ClockIcon,
-    iconBg: "bg-zinc-100",
-    iconColor: "text-zinc-700",
+    title: "Most Targeted Risk",
+    value: "LLM01",
+    change: "Injection — 42% of failures",
+    changeColor: "text-[#9f1239]",
+    Icon: TrendingUpIcon,
+    iconBg: "bg-[#ffe2e2]",
+    iconColor: "text-[#9f1239]",
   },
   {
     title: "Scheduled",
@@ -62,61 +62,20 @@ const stats = [
   },
 ];
 
-const modules = [
-  { name: "Prompt Injection V2", evalId: "EV-1030", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago", framework: "OWASP LLM01" },
-  { name: "Toxicity & Bias", evalId: "EV-1028", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago", framework: "NIST AI RMF" },
-  { name: "Jailbreak Attempts", evalId: "EV-1029", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago", framework: "OWASP LLM01" },
-  { name: "Data Exfiltration", evalId: "EV-1027", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago", framework: "OWASP LLM06" },
-  { name: "Malicious Code Gen", evalId: "EV-1030", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago", framework: "OWASP LLM04" },
-  { name: "Bias Detection", evalId: "EV-1028", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago", framework: "NIST AI RMF" },
-  { name: "PII Leakage", evalId: "EV-1032", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago", framework: "OWASP LLM06" },
-];
+const verdictStyles: Record<string, string> = {
+  REJECT: "bg-[#ffe4e6] text-[#9f1239]",
+  APPROVE: "bg-[#d1fae5] text-[#065f46]",
+  REVIEW: "bg-[#fef3c7] text-[#92400e]",
+};
 
-const scheduled = [
-  {
-    agent: "GPT-4-Turbo-Prod",
-    agentId: "AGT-001",
-    evalId: "EV-1029",
-    module: "Prompt Injection V2",
-    status: "Security Probe Testing...",
-    statusKind: "probe",
-    scheduledAt: "Now",
-    triggeredBy: "Automated",
-    eta: "ETA: 2m 30s",
-  },
-  {
-    agent: "UNICC-Chatbot-V2",
-    agentId: "AGT-003",
-    evalId: "EV-1030",
-    module: "Prompt Injection V2",
-    status: "Arbiter Finalizing...",
-    statusKind: "arbiter",
-    scheduledAt: "Now",
-    triggeredBy: "Manual",
-    eta: "ETA: 45s",
-  },
-  {
-    agent: "Llama-3-Custom",
-    agentId: "AGT-002",
-    evalId: "EV-1028",
-    module: "Toxicity & Bias",
-    status: "Scheduled",
-    statusKind: "scheduled",
-    scheduledAt: "In 2 hrs",
-    triggeredBy: "Automated",
-    eta: "ETA: ~2h 00m",
-  },
-  {
-    agent: "GPT-4-Turbo-Prod",
-    agentId: "AGT-001",
-    evalId: "EV-1026",
-    module: "Data Exfiltration",
-    status: "Scheduled",
-    statusKind: "scheduled",
-    scheduledAt: "Today 6pm",
-    triggeredBy: "Automated",
-    eta: "ETA: ~4h",
-  },
+const modules = [
+  { name: "Prompt Injection V2", evalId: "EV-1030", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago", framework: "OWASP LLM01", lastVerdict: "REJECT" },
+  { name: "Toxicity & Bias", evalId: "EV-1028", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago", framework: "NIST AI RMF", lastVerdict: "APPROVE" },
+  { name: "Jailbreak Attempts", evalId: "EV-1029", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago", framework: "OWASP LLM01", lastVerdict: "REJECT" },
+  { name: "Data Exfiltration", evalId: "EV-1027", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago", framework: "OWASP LLM06", lastVerdict: "APPROVE" },
+  { name: "Malicious Code Gen", evalId: "EV-1030", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago", framework: "OWASP LLM04", lastVerdict: "REVIEW" },
+  { name: "Bias Detection", evalId: "EV-1028", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago", framework: "NIST AI RMF", lastVerdict: "APPROVE" },
+  { name: "PII Leakage", evalId: "EV-1032", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago", framework: "OWASP LLM06", lastVerdict: "REJECT" },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -216,166 +175,76 @@ export const EvaluationsPage = (): JSX.Element => {
               ))}
             </section>
 
-            {/* Two-column layout: Evaluation Modules + Queue */}
-            <section className="flex gap-6 w-full">
-              {/* Evaluation Modules */}
-              <Card className="flex-1 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                <CardContent className="p-0">
-                  <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
-                    <div className="flex flex-col">
-                      <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                        Evaluation Modules
-                      </h2>
-                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                        Available safety test suites
-                      </p>
-                    </div>
+            {/* Evaluation Modules — full width */}
+            <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+              <CardContent className="p-0">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
+                  <div className="flex flex-col">
+                    <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
+                      Evaluation Modules
+                    </h2>
+                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                      Available safety test suites
+                    </p>
                   </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-[#0000001a]">
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6">Module Name</TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Category</TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Tests</TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Avg Duration</TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pr-6">Framework</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {modules.map((mod, i) => (
-                        <TableRow key={i} className="border-[#0000001a]">
-                          <TableCell className="pl-6">
-                            <div className="flex flex-col">
-                              <button
-                                onClick={() => navigate(`/evaluations/${mod.evalId}`)}
-                                className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left w-fit"
-                                data-testid={`link-module-${mod.evalId}`}
-                              >
-                                {mod.name}
-                              </button>
-                              <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{mod.lastRun}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto ${categoryColors[mod.category]}`}>
-                              {mod.category}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                            {mod.tests}
-                          </TableCell>
-                          <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                            {mod.avgDuration}
-                          </TableCell>
-                          <TableCell className="pr-6">
-                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto ${
-                              mod.framework.startsWith("OWASP")
-                                ? "bg-[#fff0f5] text-[#9f1239]"
-                                : "bg-[#f0f4ff] text-[#4f39f6]"
-                            }`}>
-                              {mod.framework}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-
-              {/* Eval Queue */}
-              <Card className="w-[360px] border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                <CardContent className="p-0">
-                  <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
-                    <div className="flex flex-col">
-                      <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                        Eval Queue
-                      </h2>
-                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                        Running &amp; scheduled
-                      </p>
-                    </div>
-                    <Badge className="bg-[#f0f4ff] text-[#4f39f6] border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto">
-                      {scheduled.length} queued
-                    </Badge>
-                  </div>
-                  <div className="flex flex-col divide-y divide-zinc-100">
-                    {scheduled.map((item, i) => (
-                      <div key={i} className="flex items-start justify-between px-6 py-3 gap-3">
-                        <div className="flex flex-col gap-1 flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm truncate">
-                              {item.agent}
-                            </span>
-                            {/* Status badge — probe / arbiter get pulsing dot + pill */}
-                            {item.statusKind === "probe" && (
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dbeafe] px-2 py-0.5 flex-shrink-0">
-                                <span className="relative flex h-2 w-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563eb] opacity-75" />
-                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#3b82f6]" />
-                                </span>
-                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#1e40af] text-xs whitespace-nowrap">
-                                  {item.status}
-                                </span>
-                              </span>
-                            )}
-                            {item.statusKind === "arbiter" && (
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ede9fe] px-2 py-0.5 flex-shrink-0">
-                                <span className="relative flex h-2 w-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7c3aed] opacity-75" />
-                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#8b5cf6]" />
-                                </span>
-                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#4c1d95] text-xs whitespace-nowrap">
-                                  {item.status}
-                                </span>
-                              </span>
-                            )}
-                            {item.statusKind === "scheduled" && (
-                              <Badge className="border-transparent rounded-full bg-[#f0f4ff] text-[#4f39f6] [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto flex-shrink-0">
-                                {item.status}
-                              </Badge>
-                            )}
-                            {item.statusKind === "pending" && (
-                              <Badge className="border-transparent rounded-full bg-[#fff8e1] text-[#b45309] [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto flex-shrink-0">
-                                {item.status}
-                              </Badge>
-                            )}
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-[#0000001a]">
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[260px]">Module Name</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[120px]">Category</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[80px]">Tests</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[120px]">Avg Duration</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[180px]">Framework</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pr-6 w-[140px]">Last Verdict</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {modules.map((mod, i) => (
+                      <TableRow key={i} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors">
+                        <TableCell className="pl-6">
+                          <div className="flex flex-col">
+                            <button
+                              onClick={() => navigate(`/evaluations/${mod.evalId}`)}
+                              className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left w-fit"
+                              data-testid={`link-module-${mod.evalId}`}
+                            >
+                              {mod.name}
+                            </button>
+                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{mod.lastRun}</span>
                           </div>
-                          <button
-                            onClick={() => navigate(`/evaluations/${item.evalId}`)}
-                            className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-xs hover:underline text-left w-fit"
-                          >
-                            {item.module}
-                          </button>
-                          <div className="flex items-center gap-3 mt-0.5">
-                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs flex items-center gap-1">
-                              <ClockIcon className="w-3 h-3" />
-                              {item.scheduledAt}
-                            </span>
-                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                              {item.triggeredBy}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0 pt-0.5">
-                          <span className={`[font-family:'ui-monospace',SFMono-Regular,monospace] text-[11px] font-medium ${
-                            item.statusKind === "probe"
-                              ? "text-[#2563eb]"
-                              : item.statusKind === "arbiter"
-                              ? "text-[#7c3aed]"
-                              : item.statusKind === "pending"
-                              ? "text-[#b45309]"
-                              : "text-[#71717b]"
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto ${categoryColors[mod.category]}`}>
+                            {mod.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
+                          {mod.tests}
+                        </TableCell>
+                        <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
+                          {mod.avgDuration}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-4 py-1 h-auto ${
+                            mod.framework.startsWith("OWASP")
+                              ? "bg-[#fff0f5] text-[#9f1239]"
+                              : "bg-[#f0f4ff] text-[#4f39f6]"
                           }`}>
-                            {item.eta}
-                          </span>
-                        </div>
-                      </div>
+                            {mod.framework}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="pr-6">
+                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${verdictStyles[mod.lastVerdict]}`}>
+                            {mod.lastVerdict}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
 
             {/* Alerts */}
             <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
