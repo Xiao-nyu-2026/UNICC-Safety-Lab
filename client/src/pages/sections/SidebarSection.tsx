@@ -22,7 +22,7 @@ const navigationItems = [
   },
   {
     icon: ListChecksIcon,
-    label: "Test Modules",
+    label: "Evaluations",
     href: "/evaluations",
   },
   {
