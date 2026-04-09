@@ -609,9 +609,7 @@ export const DashboardMainSection = (): JSX.Element => {
                       onClick={() => setSelectedStandard(s.id)}
                       className={`flex-1 py-2 rounded-lg border text-sm font-medium [font-family:'Inter',Helvetica] transition-colors ${
                         selectedStandard === s.id
-                          ? s.id === "owasp"
-                            ? "border-[#9f1239]/60 bg-[#fff0f5]/10 text-[#ffc0d0]"
-                            : "border-[#4f39f6]/60 bg-[#4f39f6]/15 text-[#c4b5fd]"
+                          ? "border-[#4f39f6]/60 bg-[#4f39f6]/15 text-[#c4b5fd]"
                           : "border-white/10 bg-white/5 text-white/50 hover:bg-white/8"
                       }`}
                       data-testid={`radio-standard-${s.id}`}
