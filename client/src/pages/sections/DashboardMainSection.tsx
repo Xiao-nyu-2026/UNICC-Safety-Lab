@@ -399,12 +399,6 @@ export const DashboardMainSection = (): JSX.Element => {
                     Latest automated safety tests across your agents.
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="h-9 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
-                >
-                  View all
-                </Button>
               </div>
 
               <Table>
