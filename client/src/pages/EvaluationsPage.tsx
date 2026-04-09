@@ -3,8 +3,8 @@ import {
   ClipboardCheckIcon,
   ClockIcon,
   FilterIcon,
-  PlayCircleIcon,
   PlusIcon,
+  Settings2Icon,
   ShieldAlertIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -252,13 +252,13 @@ export const EvaluationsPage = (): JSX.Element => {
                           </TableCell>
                           <TableCell className="text-right pr-6">
                             <Button
-                              data-testid={`button-run-module-${i}`}
+                              data-testid={`button-configure-module-${i}`}
                               size="sm"
                               variant="ghost"
                               className="h-8 text-[#4f39f6] hover:text-[#4f39f6] hover:bg-[#f0f4ff] [font-family:'Inter',Helvetica] font-medium text-sm"
                             >
-                              <PlayCircleIcon className="w-3.5 h-3.5 mr-1" />
-                              Run
+                              <Settings2Icon className="w-3.5 h-3.5 mr-1" />
+                              Configure
                             </Button>
                           </TableCell>
                         </TableRow>
