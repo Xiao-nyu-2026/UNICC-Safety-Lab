@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import {
   CalendarIcon,
   ClipboardCheckIcon,
+  ExternalLinkIcon,
   FileTextIcon,
   FilterIcon,
   ShieldAlertIcon,
@@ -191,41 +192,30 @@ export const EvaluationsPage = (): JSX.Element => {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-[#0000001a]">
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[260px]">Module Name</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[120px]">Category</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[80px]">Tests</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[120px]">Avg Duration</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[180px]">Framework</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pr-6 w-[140px]">Last Verdict</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6">Module Name</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[110px]">Category</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[160px]">Framework</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[140px]">Last Verdict</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pr-6 w-[130px] text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {modules.map((mod, i) => (
                       <TableRow key={i} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors">
-                        <TableCell className="pl-6">
-                          <div className="flex flex-col">
-                            <button
-                              onClick={() => navigate(`/evaluations/${mod.evalId}`)}
-                              className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left w-fit"
-                              data-testid={`link-module-${mod.evalId}`}
-                            >
+                        <TableCell className="pl-6 py-5">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
                               {mod.name}
-                            </button>
+                            </span>
                             <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{mod.lastRun}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto ${categoryColors[mod.category]}`}>
+                        <TableCell className="py-5">
+                          <span className={`[font-family:'Inter',Helvetica] font-medium text-xs px-2.5 py-1 rounded-md ${categoryColors[mod.category]}`}>
                             {mod.category}
-                          </Badge>
+                          </span>
                         </TableCell>
-                        <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                          {mod.tests}
-                        </TableCell>
-                        <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                          {mod.avgDuration}
-                        </TableCell>
-                        <TableCell>
+                        <TableCell className="py-5">
                           <span className={`[font-family:'Inter',Helvetica] font-medium text-sm ${
                             mod.framework.startsWith("OWASP")
                               ? "text-[#9f1239]"
@@ -234,10 +224,20 @@ export const EvaluationsPage = (): JSX.Element => {
                             {mod.framework}
                           </span>
                         </TableCell>
-                        <TableCell className="pr-6">
+                        <TableCell className="py-5">
                           <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${verdictStyles[mod.lastVerdict]}`}>
                             {mod.lastVerdict}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="pr-6 py-5 text-right">
+                          <button
+                            onClick={() => navigate("/evaluations/EV-1030")}
+                            className="inline-flex items-center gap-1.5 [font-family:'Inter',Helvetica] font-medium text-sm text-[#4f39f6] hover:text-[#3d2bc4] hover:underline transition-colors"
+                            data-testid={`button-view-report-${i}`}
+                          >
+                            <ExternalLinkIcon className="w-3.5 h-3.5" />
+                            View Report
+                          </button>
                         </TableCell>
                       </TableRow>
                     ))}
