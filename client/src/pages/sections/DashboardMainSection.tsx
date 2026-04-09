@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
   CheckIcon,
@@ -40,13 +40,13 @@ const vulnDistribution = [
 ];
 
 const assessmentTrend = [
-  { day: "Mon", approved: 22, rejected: 4 },
-  { day: "Tue", approved: 18, rejected: 6 },
-  { day: "Wed", approved: 25, rejected: 3 },
-  { day: "Thu", approved: 20, rejected: 7 },
-  { day: "Fri", approved: 24, rejected: 5 },
-  { day: "Sat", approved: 15, rejected: 2 },
-  { day: "Sun", approved: 19, rejected: 8 },
+  { day: "Mon", fullAlignment: 22, nonCompliant: 4 },
+  { day: "Tue", fullAlignment: 18, nonCompliant: 6 },
+  { day: "Wed", fullAlignment: 25, nonCompliant: 3 },
+  { day: "Thu", fullAlignment: 20, nonCompliant: 7 },
+  { day: "Fri", fullAlignment: 24, nonCompliant: 5 },
+  { day: "Sat", fullAlignment: 15, nonCompliant: 2 },
+  { day: "Sun", fullAlignment: 19, nonCompliant: 8 },
 ];
 
 
@@ -171,6 +171,11 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
   const [selectedStandard, setSelectedStandard] = useState("owasp");
   const [launching, setLaunching] = useState(false);
+  const [chartLoading, setChartLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setChartLoading(false), 1400);
+    return () => clearTimeout(t);
+  }, []);
 
   const toggleModule = (id: string) => {
     setSelectedModules((prev) =>
@@ -371,49 +376,100 @@ export const DashboardMainSection = (): JSX.Element => {
             </CardContent>
           </Card>
 
-          {/* Bar Chart: Assessment Trend */}
+          {/* Bar Chart: NIST AI RMF Compliance Trend */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="px-6 pt-6 pb-6">
               <div className="mb-4">
-                <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
-                  Assessment Trend (Last 7 Days)
-                </h2>
-                <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                  Approved vs. Rejected evaluations
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                  <div>
+                    <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
+                      NIST AI RMF Compliance Trend
+                    </h2>
+                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                      Full Alignment vs. Non-compliant across evaluated agents · Last 7 Days
+                    </p>
+                  </div>
+                  {/* Live data indicator */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${chartLoading ? "animate-ping bg-[#4f39f6]" : "bg-[#009966]"}`} />
+                      <span className={`relative inline-flex h-2 w-2 rounded-full ${chartLoading ? "bg-[#4f39f6]" : "bg-[#009966]"}`} />
+                    </span>
+                    <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">
+                      {chartLoading ? "Fetching NIST compliance data…" : "Live · NIST AI 100-1"}
+                    </span>
+                  </div>
+                </div>
+                <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-[11px] mt-2">
+                  Monitoring lifecycle adherence based on NIST AI 100-1 standards.
                 </p>
               </div>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={assessmentTrend} barSize={14} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
-                    axisLine={false}
-                    tickLine={false}
-                    domain={[0, 30]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 8,
-                      border: "1px solid #e4e4e7",
-                      fontFamily: "Inter, Helvetica",
-                      fontSize: 12,
-                    }}
-                    formatter={(value: number, name: string) => [value, name === "approved" ? "Approved" : "Rejected"]}
-                  />
-                  <Legend
-                    formatter={(value) => value === "approved" ? "Approved" : "Rejected"}
-                    wrapperStyle={{ fontFamily: "Inter, Helvetica", fontSize: 12, paddingTop: 8 }}
-                  />
-                  <Bar dataKey="approved" fill="#00bc7d" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="rejected" fill="#fb2c36" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+
+              {/* Skeleton loader while fetching */}
+              {chartLoading ? (
+                <div className="h-[180px] flex items-end gap-3 pb-4 px-2" data-testid="chart-skeleton">
+                  {[0.7, 0.5, 0.85, 0.6, 0.75, 0.45, 0.65].map((h, i) => (
+                    <div key={i} className="flex gap-1 items-end flex-1">
+                      <div className="animate-pulse rounded-[3px] bg-[#d1fae5] flex-1" style={{ height: `${Math.round(h * 150)}px` }} />
+                      <div className="animate-pulse rounded-[3px] bg-[#fee2e2] flex-1" style={{ height: `${Math.round((1 - h) * 55)}px` }} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={assessmentTrend} barSize={14} barCategoryGap="30%">
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                      axisLine={false}
+                      tickLine={false}
+                      domain={[0, 30]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 8,
+                        border: "1px solid #e4e4e7",
+                        fontFamily: "Inter, Helvetica",
+                        fontSize: 12,
+                      }}
+                      formatter={(value: number, name: string) => [
+                        value,
+                        name === "fullAlignment" ? "Full Alignment (GOVERN & MEASURE)" : "Non-compliant",
+                      ]}
+                    />
+                    <Bar dataKey="fullAlignment" fill="#009966" radius={[3, 3, 0, 0]} name="fullAlignment" />
+                    <Bar dataKey="nonCompliant" fill="#e7000b" radius={[3, 3, 0, 0]} name="nonCompliant" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* Custom NIST legend */}
+              <div className="flex items-start gap-6 mt-3 pt-3 border-t border-zinc-100 flex-wrap">
+                <div className="flex items-start gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#009966] flex-shrink-0 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">Full Alignment</span>
+                    <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[11px] leading-4">
+                      Compliant with NIST GOVERN &amp; MEASURE core standards
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#e7000b] flex-shrink-0 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">Non-compliant</span>
+                    <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[11px] leading-4">
+                      Unresolved risk management items flagged
+                    </span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </section>
