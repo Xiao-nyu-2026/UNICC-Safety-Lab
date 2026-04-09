@@ -225,6 +225,86 @@ export const DashboardMainSection = (): JSX.Element => {
             </CardContent>
           </Card>
 
+          {/* Right sidebar */}
+          <div className="w-[300px] flex-shrink-0 flex flex-col gap-4">
+
+            {/* Expert Modules Health */}
+            <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+              <CardContent className="px-6 pt-5 pb-5">
+                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-4">
+                  Expert Modules Health
+                </h3>
+                <div className="flex flex-col gap-3">
+                  {[
+                    "Security & Compliance Probe",
+                    "Governance & Risk Workflow",
+                    "Contextual Risk Arbiter",
+                  ].map((name, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
+                        {name}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#009966] opacity-60" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#009966]" />
+                        </span>
+                        <span className="[font-family:'Inter',Helvetica] font-medium text-[#009966] text-xs">
+                          Online
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Standards Alignment */}
+            <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+              <CardContent className="px-6 pt-5 pb-5">
+                <div className="mb-4">
+                  <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
+                    Standards Alignment
+                  </h3>
+                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs mt-0.5">
+                    Framework coverage for EV-1029
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {/* OWASP — FAILED */}
+                  <div className="rounded-lg border border-[#ffc0d0] bg-[#fff0f5] px-4 py-3 hover:border-[#ff2d78] transition-colors cursor-default">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
+                        OWASP LLM Top 10
+                      </span>
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#e7000b] text-white">
+                        FAILED
+                      </span>
+                    </div>
+                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#e7000b] text-xs leading-4">
+                      Violated: LLM02 (Insecure Output)
+                    </p>
+                  </div>
+                  {/* NIST — PASSED */}
+                  <div className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3 hover:border-[#009966] transition-colors cursor-default">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
+                        NIST AI RMF
+                      </span>
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#009966] text-white">
+                        PASSED
+                      </span>
+                    </div>
+                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs leading-4">
+                      Aligned with GOVERN 1.1 &amp; MAP 2.3
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+          </div>
+
         </section>
       </main>
     </div>
