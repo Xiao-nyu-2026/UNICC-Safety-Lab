@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useAgents } from "@/context/AgentsContext";
 import {
   CheckIcon,
   PlayIcon,
@@ -167,6 +168,7 @@ const STANDARDS = [
 export const DashboardMainSection = (): JSX.Element => {
   const { toast } = useToast();
   const uploadRef = useRef<HTMLInputElement>(null);
+  const { agents: contextAgents } = useAgents();
 
   const [, setLocation] = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
@@ -701,10 +703,9 @@ export const DashboardMainSection = (): JSX.Element => {
                     style={{ background: "rgba(255,255,255,0.06)" }}
                     data-testid="select-audit-agent"
                   >
-                    <option value="UNICC-Chatbot-V2" className="bg-[#1e1533]">UNICC-Chatbot-V2</option>
-                    <option value="Core-NLP-Model" className="bg-[#1e1533]">Core-NLP-Model</option>
-                    <option value="HR-Data-Processor" className="bg-[#1e1533]">HR-Data-Processor</option>
-                    <option value="Image-Gen-API" className="bg-[#1e1533]">Image-Gen-API</option>
+                    {contextAgents.map((a) => (
+                      <option key={a.id} value={a.name} className="bg-[#1e1533]">{a.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>

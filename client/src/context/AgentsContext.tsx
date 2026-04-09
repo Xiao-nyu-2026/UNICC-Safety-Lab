@@ -1,0 +1,43 @@
+import { createContext, useContext, useState, ReactNode } from "react";
+
+export type Agent = {
+  name: string;
+  id: string;
+  type: string;
+  status: string;
+  statusColor: string;
+  lastEval: string;
+  evalCount: number;
+  hasIcon?: boolean;
+};
+
+const INITIAL_AGENTS: Agent[] = [
+  { name: "GPT-4-Turbo-Prod", id: "AGT-001", type: "Language Model", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "10 mins ago", evalCount: 1029 },
+  { name: "Llama-3-Custom", id: "AGT-002", type: "Fine-tuned Model", status: "Running Eval", statusColor: "bg-zinc-100 text-zinc-900", lastEval: "1 hr ago", evalCount: 412, hasIcon: true },
+  { name: "Customer-Bot-V1", id: "AGT-003", type: "Conversational AI", status: "REJECTED", statusColor: "bg-[#ffe4e6] text-[#9f1239]", lastEval: "3 hrs ago", evalCount: 887 },
+  { name: "Code-Gen-Agent", id: "AGT-004", type: "Code Generation", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "1 day ago", evalCount: 234 },
+  { name: "Data-Pipeline-Bot", id: "AGT-005", type: "Data Processing", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "2 days ago", evalCount: 567 },
+  { name: "Support-Agent-V2", id: "AGT-006", type: "Conversational AI", status: "Inactive", statusColor: "bg-zinc-100 text-zinc-500", lastEval: "5 days ago", evalCount: 103 },
+];
+
+type AgentsContextType = {
+  agents: Agent[];
+  addAgent: (agent: Agent) => void;
+};
+
+const AgentsContext = createContext<AgentsContextType>({
+  agents: INITIAL_AGENTS,
+  addAgent: () => {},
+});
+
+export const AgentsProvider = ({ children }: { children: ReactNode }) => {
+  const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
+  const addAgent = (agent: Agent) => setAgents((prev) => [...prev, agent]);
+  return (
+    <AgentsContext.Provider value={{ agents, addAgent }}>
+      {children}
+    </AgentsContext.Provider>
+  );
+};
+
+export const useAgents = () => useContext(AgentsContext);
