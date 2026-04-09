@@ -1,7 +1,6 @@
 import {
-  ClipboardCheckIcon,
-  FileTextIcon,
   LayoutDashboardIcon,
+  ListChecksIcon,
   SettingsIcon,
   ShieldCheckIcon,
   UsersIcon,
@@ -22,14 +21,9 @@ const navigationItems = [
     href: "/agents",
   },
   {
-    icon: ClipboardCheckIcon,
-    label: "Evaluations",
+    icon: ListChecksIcon,
+    label: "Test Modules",
     href: "/evaluations",
-  },
-  {
-    icon: FileTextIcon,
-    label: "Results",
-    href: "/results",
   },
   {
     icon: SettingsIcon,
