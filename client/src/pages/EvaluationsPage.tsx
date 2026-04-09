@@ -2,8 +2,8 @@ import {
   CalendarIcon,
   ClipboardCheckIcon,
   ClockIcon,
+  DownloadIcon,
   FilterIcon,
-  PlusIcon,
   Settings2Icon,
   ShieldAlertIcon,
   XCircleIcon,
@@ -160,21 +160,22 @@ export const EvaluationsPage = (): JSX.Element => {
                   Manage and schedule automated safety evaluations for your AI agents.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  data-testid="button-filter-evaluations"
-                  className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
+                  data-testid="button-filter-framework"
+                  className="h-10 px-4 border-zinc-200 bg-white [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950"
                 >
-                  <FilterIcon className="w-4 h-4 mr-2" />
-                  Filter
+                  <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
+                  Filter by Framework
                 </Button>
                 <Button
-                  data-testid="button-run-evaluation"
-                  className="h-10 bg-[#4f39f6] hover:bg-[#3d2bc4] text-white [font-family:'Inter',Helvetica] font-medium text-sm"
+                  variant="outline"
+                  data-testid="button-export-report"
+                  className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4]"
                 >
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Run New Evaluation
+                  <DownloadIcon className="w-4 h-4 mr-2" />
+                  Export Report
                 </Button>
               </div>
             </section>
