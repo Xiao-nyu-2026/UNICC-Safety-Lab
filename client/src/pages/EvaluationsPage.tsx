@@ -16,6 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -86,9 +92,18 @@ const categoryColors: Record<string, string> = {
   Privacy: "bg-zinc-100 text-zinc-700",
 };
 
+const FRAMEWORK_OPTIONS = ["All Frameworks", "OWASP", "NIST"] as const;
+type FrameworkOption = typeof FRAMEWORK_OPTIONS[number];
+
 export const EvaluationsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [filterFramework, setFilterFramework] = useState<FrameworkOption>("All Frameworks");
+
+  const filteredModules = modules.filter((mod) => {
+    if (filterFramework === "All Frameworks") return true;
+    return mod.framework.includes(filterFramework);
+  });
 
   const handleExportPDF = () => {
     setExportingPDF(true);
@@ -117,14 +132,29 @@ export const EvaluationsPage = (): JSX.Element => {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  data-testid="button-filter-framework"
-                  className="h-10 px-4 border-zinc-200 bg-white [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950"
-                >
-                  <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
-                  Filter by Framework
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      data-testid="button-filter-framework"
+                      className="h-10 px-4 border-zinc-200 bg-white [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950"
+                    >
+                      <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
+                      {filterFramework === "All Frameworks" ? "Filter by Framework" : `Framework: ${filterFramework}`}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {FRAMEWORK_OPTIONS.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt}
+                        onClick={() => setFilterFramework(opt)}
+                        className={`[font-family:'Inter',Helvetica] text-sm cursor-pointer ${filterFramework === opt ? "font-semibold text-[#4f39f6]" : "text-zinc-700"}`}
+                      >
+                        {opt}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="outline"
                   onClick={handleExportPDF}
@@ -200,7 +230,14 @@ export const EvaluationsPage = (): JSX.Element => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {modules.map((mod, i) => (
+                    {filteredModules.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-10 [font-family:'Inter',Helvetica] text-sm text-[#71717b]">
+                            No modules match the selected framework.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    {filteredModules.map((mod, i) => (
                       <TableRow key={i} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors">
                         <TableCell className="pl-6 py-3">
                           <div className="flex flex-col gap-0.5">
