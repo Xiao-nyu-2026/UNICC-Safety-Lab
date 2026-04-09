@@ -146,20 +146,20 @@ export const AgentsPage = (): JSX.Element => {
                   <div className="relative">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717b] pointer-events-none" />
                     <Input
-                      placeholder="Search agents..."
+                      placeholder="Search by Agent Name..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="pl-9 h-10 w-56 border-zinc-200 bg-white [font-family:'Inter',Helvetica] text-sm text-zinc-950 placeholder:text-[#71717b] focus-visible:ring-[#4f39f6] focus-visible:ring-1 focus-visible:ring-offset-0"
+                      className="pl-9 h-10 w-64 border-zinc-200 bg-white/80 backdrop-blur-sm [font-family:'Inter',Helvetica] text-sm text-zinc-950 placeholder:text-[#a1a1aa] focus-visible:ring-[#4f39f6] focus-visible:ring-1 focus-visible:ring-offset-0 rounded-lg"
                       data-testid="input-search-agents"
                     />
                   </div>
                   <Button
                     variant="outline"
-                    className="h-10 px-4 border-zinc-200 bg-white [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950"
+                    className="h-10 px-4 border-zinc-200 bg-white/80 backdrop-blur-sm [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950 rounded-lg"
                     data-testid="button-filter-agents"
                   >
                     <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
-                    Filter
+                    Filter by Status
                   </Button>
                 </div>
               </section>
