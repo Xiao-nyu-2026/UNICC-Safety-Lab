@@ -426,7 +426,7 @@ export const DashboardMainSection = (): JSX.Element => {
                       </TableCell>
 
                       {/* Module — 次要信息，muted 颜色，跳转至 evaluations */}
-                      <TableCell>
+                      <TableCell className="ml-[6px] mr-[6px]">
                         <button
                           onClick={() => setLocation("/evaluations")}
                           className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm hover:text-[#4f39f6] hover:underline text-left transition-colors"
