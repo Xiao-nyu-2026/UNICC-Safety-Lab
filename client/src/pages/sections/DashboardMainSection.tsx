@@ -1,7 +1,9 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
+  CheckIcon,
   PlayIcon,
   UploadIcon,
+  XIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,9 +85,45 @@ const evaluationsData = [
 ];
 
 
+const TEST_MODULES = [
+  { id: "prompt-injection", label: "Prompt Injection V2", tag: "LLM01" },
+  { id: "data-exfiltration", label: "Data Exfiltration", tag: "LLM06" },
+  { id: "toxicity", label: "Toxicity Detection", tag: "" },
+];
+
+const STANDARDS = [
+  { id: "owasp", label: "OWASP LLM Top 10" },
+  { id: "nist", label: "NIST AI RMF" },
+];
+
 export const DashboardMainSection = (): JSX.Element => {
   const { toast } = useToast();
   const uploadRef = useRef<HTMLInputElement>(null);
+
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState("Customer-Support-Bot-V1");
+  const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
+  const [selectedStandard, setSelectedStandard] = useState("owasp");
+  const [launching, setLaunching] = useState(false);
+
+  const toggleModule = (id: string) => {
+    setSelectedModules((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+    );
+  };
+
+  const handleStartAudit = () => {
+    setLaunching(true);
+    setTimeout(() => {
+      setLaunching(false);
+      setAuditOpen(false);
+      toast({
+        title: "Audit queued",
+        description: "Audit Task EV-1031 queued successfully.",
+        duration: 4000,
+      });
+    }, 900);
+  };
 
   const handleUploadAgent = (file: File) => {
     const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
@@ -128,7 +166,11 @@ export const DashboardMainSection = (): JSX.Element => {
               <UploadIcon className="w-4 h-4 mr-2" />
               Import Agent
             </Button>
-            <Button className="h-10 bg-[#4f39f6] hover:bg-[#3d2bc4] [font-family:'Inter',Helvetica] font-medium text-white text-sm">
+            <Button
+              className="h-10 bg-[#4f39f6] hover:bg-[#3d2bc4] [font-family:'Inter',Helvetica] font-medium text-white text-sm"
+              onClick={() => setAuditOpen(true)}
+              data-testid="button-run-new-evaluation"
+            >
               <PlayIcon className="w-4 h-4 mr-2 fill-white" />
               Run New Evaluation
             </Button>
@@ -450,6 +492,172 @@ export const DashboardMainSection = (): JSX.Element => {
 
         </section>
       </main>
+
+      {/* ── Launch New Security Audit Modal ── */}
+      {auditOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(15,10,30,0.55)", backdropFilter: "blur(6px)" }}
+          onClick={() => setAuditOpen(false)}
+          data-testid="modal-audit-backdrop"
+        >
+          <div
+            className="relative w-full max-w-lg mx-4 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+            style={{ background: "linear-gradient(145deg,#1e1533 0%,#16112a 100%)" }}
+            onClick={(e) => e.stopPropagation()}
+            data-testid="modal-audit"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
+              <div>
+                <h2 className="[font-family:'Inter',Helvetica] font-semibold text-white text-lg leading-7">
+                  Launch New Security Audit
+                </h2>
+                <p className="[font-family:'Inter',Helvetica] text-xs text-white/50 mt-0.5">
+                  Configure and queue an automated safety evaluation.
+                </p>
+              </div>
+              <button
+                onClick={() => setAuditOpen(false)}
+                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                data-testid="button-close-audit-modal"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 flex flex-col gap-6">
+
+              {/* Step 1 — Target Selection */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#4f39f6] flex items-center justify-center text-[10px] font-bold text-white [font-family:'Inter',Helvetica]">1</span>
+                  <span className="[font-family:'Inter',Helvetica] font-medium text-white/80 text-xs uppercase tracking-wider">Target Selection</span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70">
+                    Select AI Agent
+                  </label>
+                  <select
+                    value={selectedAgent}
+                    onChange={(e) => setSelectedAgent(e.target.value)}
+                    className="w-full h-10 rounded-lg border border-white/15 bg-white/8 px-3 text-sm text-white [font-family:'Inter',Helvetica] focus:outline-none focus:ring-1 focus:ring-[#4f39f6]"
+                    style={{ background: "rgba(255,255,255,0.06)" }}
+                    data-testid="select-audit-agent"
+                  >
+                    <option value="Customer-Support-Bot-V1" className="bg-[#1e1533]">Customer-Support-Bot-V1</option>
+                    <option value="Finance-Advisor-LLM" className="bg-[#1e1533]">Finance-Advisor-LLM</option>
+                    <option value="Code-Review-Assistant" className="bg-[#1e1533]">Code-Review-Assistant</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Step 2 — Test Configuration */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#4f39f6] flex items-center justify-center text-[10px] font-bold text-white [font-family:'Inter',Helvetica]">2</span>
+                  <span className="[font-family:'Inter',Helvetica] font-medium text-white/80 text-xs uppercase tracking-wider">Test Configuration</span>
+                </div>
+                <p className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70 -mb-1">
+                  Select Test Modules
+                </p>
+                <div className="flex flex-col gap-2.5 mt-1">
+                  {TEST_MODULES.map((mod) => {
+                    const checked = selectedModules.includes(mod.id);
+                    return (
+                      <button
+                        key={mod.id}
+                        type="button"
+                        onClick={() => toggleModule(mod.id)}
+                        className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-lg border transition-colors text-left ${
+                          checked
+                            ? "border-[#4f39f6]/60 bg-[#4f39f6]/15"
+                            : "border-white/10 bg-white/5 hover:bg-white/8"
+                        }`}
+                        data-testid={`checkbox-module-${mod.id}`}
+                      >
+                        <span className={`w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-colors ${checked ? "bg-[#4f39f6] border-[#4f39f6]" : "border-white/25 bg-transparent"}`}>
+                          {checked && <CheckIcon className="w-3 h-3 text-white" strokeWidth={3} />}
+                        </span>
+                        <span className="[font-family:'Inter',Helvetica] text-sm text-white/85">{mod.label}</span>
+                        {mod.tag && (
+                          <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#fff0f5] text-[#9f1239] [font-family:'Inter',Helvetica]">
+                            {mod.tag}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Step 3 — Compliance Mapping */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#4f39f6] flex items-center justify-center text-[10px] font-bold text-white [font-family:'Inter',Helvetica]">3</span>
+                  <span className="[font-family:'Inter',Helvetica] font-medium text-white/80 text-xs uppercase tracking-wider">Compliance Mapping</span>
+                </div>
+                <p className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70 -mb-1">
+                  Align with Standards?
+                </p>
+                <div className="flex gap-3 mt-1">
+                  {STANDARDS.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setSelectedStandard(s.id)}
+                      className={`flex-1 py-2 rounded-lg border text-sm font-medium [font-family:'Inter',Helvetica] transition-colors ${
+                        selectedStandard === s.id
+                          ? s.id === "owasp"
+                            ? "border-[#9f1239]/60 bg-[#fff0f5]/10 text-[#ffc0d0]"
+                            : "border-[#4f39f6]/60 bg-[#4f39f6]/15 text-[#c4b5fd]"
+                          : "border-white/10 bg-white/5 text-white/50 hover:bg-white/8"
+                      }`}
+                      data-testid={`radio-standard-${s.id}`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+              <Button
+                variant="outline"
+                onClick={() => setAuditOpen(false)}
+                className="h-10 px-5 border-white/15 bg-white/5 text-white/70 [font-family:'Inter',Helvetica] font-medium text-sm hover:bg-white/10 hover:text-white hover:border-white/25"
+                data-testid="button-cancel-audit"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleStartAudit}
+                disabled={launching || selectedModules.length === 0}
+                className="h-10 px-5 bg-[#4f39f6] hover:bg-[#3d2bc4] text-white [font-family:'Inter',Helvetica] font-medium text-sm disabled:opacity-60"
+                data-testid="button-start-audit"
+              >
+                {launching ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Launching…
+                  </span>
+                ) : (
+                  <>
+                    <PlayIcon className="w-4 h-4 mr-2 fill-white" />
+                    Start Audit
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
