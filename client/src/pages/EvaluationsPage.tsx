@@ -77,30 +77,33 @@ const scheduled = [
     agentId: "AGT-001",
     evalId: "EV-1029",
     module: "Prompt Injection V2",
-    status: "Running",
-    statusColor: "bg-zinc-100 text-zinc-900",
+    status: "Security Probe Testing...",
+    statusKind: "probe",
     scheduledAt: "Now",
     triggeredBy: "Automated",
+    eta: "ETA: 2m 30s",
+  },
+  {
+    agent: "UNICC-Chatbot-V2",
+    agentId: "AGT-003",
+    evalId: "EV-1030",
+    module: "Prompt Injection V2",
+    status: "Arbiter Finalizing...",
+    statusKind: "arbiter",
+    scheduledAt: "Now",
+    triggeredBy: "Manual",
+    eta: "ETA: 45s",
   },
   {
     agent: "Llama-3-Custom",
     agentId: "AGT-002",
     evalId: "EV-1028",
     module: "Toxicity & Bias",
-    status: "Running",
-    statusColor: "bg-zinc-100 text-zinc-900",
-    scheduledAt: "Now",
-    triggeredBy: "Manual",
-  },
-  {
-    agent: "Customer-Bot-V1",
-    agentId: "AGT-003",
-    evalId: "EV-1027",
-    module: "Jailbreak Attempts",
     status: "Scheduled",
-    statusColor: "bg-[#f0f4ff] text-[#4f39f6]",
+    statusKind: "scheduled",
     scheduledAt: "In 2 hrs",
     triggeredBy: "Automated",
+    eta: "ETA: ~2h 00m",
   },
   {
     agent: "GPT-4-Turbo-Prod",
@@ -108,19 +111,21 @@ const scheduled = [
     evalId: "EV-1026",
     module: "Data Exfiltration",
     status: "Scheduled",
-    statusColor: "bg-[#f0f4ff] text-[#4f39f6]",
+    statusKind: "scheduled",
     scheduledAt: "Today 6pm",
     triggeredBy: "Automated",
+    eta: "ETA: ~4h",
   },
   {
-    agent: "Code-Gen-Agent",
-    agentId: "AGT-004",
-    evalId: "EV-1025",
-    module: "Malicious Code Gen",
+    agent: "Finance-Advisor-LLM",
+    agentId: "AGT-007",
+    evalId: "EV-1031",
+    module: "Adversarial Prompt",
     status: "Scheduled",
-    statusColor: "bg-[#f0f4ff] text-[#4f39f6]",
+    statusKind: "scheduled",
     scheduledAt: "Tomorrow",
     triggeredBy: "Manual",
+    eta: "ETA: ~24h",
   },
   {
     agent: "Support-Agent-V2",
@@ -128,9 +133,10 @@ const scheduled = [
     evalId: "EV-1024",
     module: "Bias Detection",
     status: "Pending Review",
-    statusColor: "bg-[#fff8e1] text-[#b45309]",
+    statusKind: "pending",
     scheduledAt: "On approval",
     triggeredBy: "Manual",
+    eta: "ETA: Pending",
   },
 ];
 
@@ -311,13 +317,43 @@ export const EvaluationsPage = (): JSX.Element => {
                     {scheduled.map((item, i) => (
                       <div key={i} className="flex items-start justify-between px-6 py-4 gap-3">
                         <div className="flex flex-col gap-1 flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm truncate">
                               {item.agent}
                             </span>
-                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto flex-shrink-0 ${item.statusColor}`}>
-                              {item.status}
-                            </Badge>
+                            {/* Status badge — probe / arbiter get pulsing dot + pill */}
+                            {item.statusKind === "probe" && (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dbeafe] px-2 py-0.5 flex-shrink-0">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563eb] opacity-75" />
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#3b82f6]" />
+                                </span>
+                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#1e40af] text-xs whitespace-nowrap">
+                                  {item.status}
+                                </span>
+                              </span>
+                            )}
+                            {item.statusKind === "arbiter" && (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ede9fe] px-2 py-0.5 flex-shrink-0">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7c3aed] opacity-75" />
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#8b5cf6]" />
+                                </span>
+                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#4c1d95] text-xs whitespace-nowrap">
+                                  {item.status}
+                                </span>
+                              </span>
+                            )}
+                            {item.statusKind === "scheduled" && (
+                              <Badge className="border-transparent rounded-full bg-[#f0f4ff] text-[#4f39f6] [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto flex-shrink-0">
+                                {item.status}
+                              </Badge>
+                            )}
+                            {item.statusKind === "pending" && (
+                              <Badge className="border-transparent rounded-full bg-[#fff8e1] text-[#b45309] [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto flex-shrink-0">
+                                {item.status}
+                              </Badge>
+                            )}
                           </div>
                           <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
                             {item.module}
@@ -332,9 +368,20 @@ export const EvaluationsPage = (): JSX.Element => {
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0 pt-0.5">
                           <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
                             {item.evalId}
+                          </span>
+                          <span className={`[font-family:'ui-monospace',SFMono-Regular,monospace] text-[11px] font-medium ${
+                            item.statusKind === "probe"
+                              ? "text-[#2563eb]"
+                              : item.statusKind === "arbiter"
+                              ? "text-[#7c3aed]"
+                              : item.statusKind === "pending"
+                              ? "text-[#b45309]"
+                              : "text-[#71717b]"
+                          }`}>
+                            {item.eta}
                           </span>
                         </div>
                       </div>
@@ -358,7 +405,7 @@ export const EvaluationsPage = (): JSX.Element => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {[
-                    { agent: "Customer-Bot-V1", module: "Jailbreak Attempts", badge: "OWASP Violated", message: "Critical vulnerability (LLM02: Insecure Output) detected by Security Probe. Human Arbiter intervention required before deployment.", severity: "High" },
+                    { agent: "UNICC-Chatbot-V2", module: "Prompt Injection V2", badge: "OWASP Violated", message: "Critical vulnerability (LLM02: Insecure Output) detected by Security Probe. Human Arbiter intervention required before deployment.", severity: "High" },
                     { agent: "Llama-3-Custom", module: "Toxicity & Bias", badge: null, message: "Evaluation pipeline has been running for over 2 hours. Possible LLM API timeout from Project 2 backend.", severity: "Medium" },
                     { agent: "Support-Agent-V2", module: "Bias Detection", badge: null, message: "Pending human arbiter sign-off for NIST GOVERN 1.1 compliance checklist.", severity: "Low" },
                   ].map((flag, i) => (
