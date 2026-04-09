@@ -338,7 +338,7 @@ export const DashboardMainSection = (): JSX.Element => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-[#0000001a]">
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[160px]">ID</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[200px]">Module</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Target Agent</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[160px]">Verdict</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6 w-[140px]">Date</TableHead>
@@ -347,15 +347,8 @@ export const DashboardMainSection = (): JSX.Element => {
                 <TableBody>
                   {evaluationsData.map((evaluation, index) => (
                     <TableRow key={index} className="border-[#0000001a]">
-                      <TableCell className="pl-6">
-                        <div className="flex flex-col">
-                          <span className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm">
-                            {evaluation.id}
-                          </span>
-                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs mt-0.5">
-                            via {evaluation.module}
-                          </span>
-                        </div>
+                      <TableCell className="pl-6 [font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
+                        {evaluation.module}
                       </TableCell>
                       <TableCell className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
                         {evaluation.target}
