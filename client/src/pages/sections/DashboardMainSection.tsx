@@ -1,8 +1,7 @@
-import { Fragment, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
   CheckIcon,
-  ChevronDownIcon,
   PlayIcon,
   UploadIcon,
   XIcon,
@@ -60,6 +59,7 @@ const evaluationsData = [
     verdictColor: "bg-[#fef3c7] text-[#92400e]",
     date: "Today",
     reason: { text: "High bias variance detected", color: "text-[#92400e]" },
+    tooltip: "Contextual Arbiter: High bias variance detected; requires manual oversight.",
     experts: [
       { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Prompt boundary bypass possible under adversarial input." },
       { name: "Governance Workflow", status: "PARTIAL", statusColor: "bg-[#fef3c7] text-[#92400e]", note: "Policy controls partially enforced; 3 edge cases unhandled." },
@@ -74,6 +74,7 @@ const evaluationsData = [
     verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
     date: "Yesterday",
     reason: { text: "Violated LLM02 (Insecure Output)", color: "text-[#9f1239]" },
+    tooltip: "Security Probe: Violated LLM02 (Insecure Output) — Prompt boundary bypass detected in 4/5 test cases.",
     experts: [
       { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Direct jailbreak via role-play prompt succeeded in 4/5 test cases." },
       { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Output filter entirely bypassed; PII leaked in 2 responses." },
@@ -88,6 +89,7 @@ const evaluationsData = [
     verdictColor: "bg-[#d1fae5] text-[#065f46]",
     date: "Oct 24, 2023",
     reason: { text: "Met all NIST AI RMF controls", color: "text-[#71717b]" },
+    tooltip: "Security Probe: No toxic outputs detected across 500 prompts. All NIST AI RMF controls fully satisfied.",
     experts: [
       { name: "Security Probe", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "No toxic outputs detected across all 500 test prompts." },
       { name: "Governance Workflow", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Bias variance within acceptable NIST AI RMF thresholds." },
@@ -102,6 +104,7 @@ const evaluationsData = [
     verdictColor: "bg-[#d1fae5] text-[#065f46]",
     date: "Oct 22, 2023",
     reason: { text: "Met all NIST AI RMF controls", color: "text-[#71717b]" },
+    tooltip: "Risk Arbiter: Low residual risk confirmed. Cleared under OWASP LLM06 — no data exfiltration paths found.",
     experts: [
       { name: "Security Probe", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "No sensitive data exfiltration paths found during fuzzing." },
       { name: "Governance Workflow", status: "PASS", statusColor: "bg-[#d1fae5] text-[#065f46]", note: "Data handling policies enforced at all API boundaries." },
@@ -127,7 +130,6 @@ export const DashboardMainSection = (): JSX.Element => {
   const uploadRef = useRef<HTMLInputElement>(null);
 
   const [, setLocation] = useLocation();
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("Customer-Support-Bot-V1");
   const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
@@ -410,97 +412,67 @@ export const DashboardMainSection = (): JSX.Element => {
                   <TableRow className="border-[#0000001a]">
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[200px]">Module</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Target Agent</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[180px]">Verdict</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[200px]">Verdict</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6 w-[140px]">Date</TableHead>
-                    <TableHead className="w-8" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {evaluationsData.map((ev, index) => {
-                    const isOpen = expandedRow === ev.id;
-                    return (
-                      <Fragment key={index}>
-                        <TableRow
-                          className="border-[#0000001a] cursor-pointer hover:bg-zinc-50 transition-colors"
-                          onClick={() => setExpandedRow(isOpen ? null : ev.id)}
-                          data-testid={`row-evaluation-${ev.id}`}
+                  {evaluationsData.map((ev, index) => (
+                    <TableRow key={index} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors" data-testid={`row-evaluation-${ev.id}`}>
+
+                      {/* Module — deep link to evaluations */}
+                      <TableCell className="pl-6">
+                        <button
+                          onClick={() => setLocation("/evaluations")}
+                          className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left"
+                          data-testid={`link-module-${ev.id}`}
                         >
-                          {/* Module — blue link */}
-                          <TableCell className="pl-6">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setLocation("/evaluations"); }}
-                              className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left"
-                              data-testid={`link-module-${ev.id}`}
-                            >
-                              {ev.module}
-                            </button>
-                          </TableCell>
+                          {ev.module}
+                        </button>
+                      </TableCell>
 
-                          {/* Target Agent — blue link */}
-                          <TableCell>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setLocation("/agents"); }}
-                              className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left"
-                              data-testid={`link-agent-${ev.id}`}
-                            >
-                              {ev.target}
-                            </button>
-                          </TableCell>
+                      {/* Target Agent — link to agents */}
+                      <TableCell>
+                        <button
+                          onClick={() => setLocation("/agents")}
+                          className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left"
+                          data-testid={`link-agent-${ev.id}`}
+                        >
+                          {ev.target}
+                        </button>
+                      </TableCell>
 
-                          {/* Verdict + reason caption */}
-                          <TableCell>
-                            <div className="flex flex-col gap-0.5">
-                              <Badge className={`${ev.verdictColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs h-auto px-3 py-1 tracking-wide w-fit`}>
-                                {ev.verdict}
-                              </Badge>
-                              <span className={`[font-family:'Inter',Helvetica] text-[11px] leading-4 ${ev.reason.color}`}>
-                                {ev.reason.text}
-                              </span>
-                            </div>
-                          </TableCell>
-
-                          {/* Date */}
-                          <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-right pr-2">
-                            {ev.date}
-                          </TableCell>
-
-                          {/* Chevron */}
-                          <TableCell className="pr-4">
-                            <ChevronDownIcon
-                              className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                            />
-                          </TableCell>
-                        </TableRow>
-
-                        {/* Accordion detail row */}
-                        {isOpen && (
-                          <TableRow className="border-[#0000001a] bg-zinc-50/60" data-testid={`row-detail-${ev.id}`}>
-                            <TableCell colSpan={5} className="px-6 py-4">
-                              <div className="grid grid-cols-3 gap-4">
-                                {ev.experts.map((expert, ei) => {
-                                  return (
-                                    <div key={ei} className="flex flex-col gap-1.5 p-3 rounded-lg border border-zinc-200 bg-white">
-                                      <div className="flex items-center justify-between">
-                                        <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">
-                                          {expert.name}
-                                        </span>
-                                        <span className={`[font-family:'Inter',Helvetica] font-bold text-[10px] px-2 py-0.5 rounded-full tracking-wide ${expert.statusColor}`}>
-                                          {expert.status}
-                                        </span>
-                                      </div>
-                                      <p className="[font-family:'Inter',Helvetica] text-xs text-zinc-500 leading-4">
-                                        {expert.note}
-                                      </p>
-                                    </div>
-                                  );
-                                })}
+                      {/* Verdict + reason caption + hover tooltip */}
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          {/* Badge wrapped in tooltip container */}
+                          <div className="relative inline-flex w-fit group">
+                            <Badge className={`${ev.verdictColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs h-auto px-3 py-1 tracking-wide cursor-default`}>
+                              {ev.verdict}
+                            </Badge>
+                            {/* Tooltip bubble */}
+                            <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-30 hidden group-hover:flex w-64 flex-col gap-0">
+                              <div className="rounded-lg bg-[#1e1533] border border-white/10 px-3 py-2.5 shadow-xl">
+                                <p className="[font-family:'Inter',Helvetica] text-[11px] text-white/85 leading-[1.5]">
+                                  {ev.tooltip}
+                                </p>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </Fragment>
-                    );
-                  })}
+                              {/* Arrow */}
+                              <div className="ml-3 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#1e1533]" />
+                            </div>
+                          </div>
+                          <span className={`[font-family:'Inter',Helvetica] text-[11px] leading-4 ${ev.reason.color}`}>
+                            {ev.reason.text}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Date */}
+                      <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-right pr-6">
+                        {ev.date}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
