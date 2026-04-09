@@ -116,28 +116,6 @@ const scheduled = [
     triggeredBy: "Automated",
     eta: "ETA: ~4h",
   },
-  {
-    agent: "Finance-Advisor-LLM",
-    agentId: "AGT-007",
-    evalId: "EV-1031",
-    module: "Adversarial Prompt",
-    status: "Scheduled",
-    statusKind: "scheduled",
-    scheduledAt: "Tomorrow",
-    triggeredBy: "Manual",
-    eta: "ETA: ~24h",
-  },
-  {
-    agent: "Support-Agent-V2",
-    agentId: "AGT-006",
-    evalId: "EV-1024",
-    module: "Bias Detection",
-    status: "Pending Review",
-    statusKind: "pending",
-    scheduledAt: "On approval",
-    triggeredBy: "Manual",
-    eta: "ETA: Pending",
-  },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -315,7 +293,7 @@ export const EvaluationsPage = (): JSX.Element => {
                   </div>
                   <div className="flex flex-col divide-y divide-zinc-100">
                     {scheduled.map((item, i) => (
-                      <div key={i} className="flex items-start justify-between px-6 py-4 gap-3">
+                      <div key={i} className="flex items-start justify-between px-6 py-3 gap-3">
                         <div className="flex flex-col gap-1 flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm truncate">
