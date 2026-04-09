@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import {
   CalendarIcon,
   ClipboardCheckIcon,
@@ -62,13 +63,13 @@ const stats = [
 ];
 
 const modules = [
-  { name: "Prompt Injection V2", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago", framework: "OWASP LLM01" },
-  { name: "Toxicity & Bias", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago", framework: "NIST AI RMF" },
-  { name: "Jailbreak Attempts", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago", framework: "OWASP LLM01" },
-  { name: "Data Exfiltration", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago", framework: "OWASP LLM06" },
-  { name: "Malicious Code Gen", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago", framework: "OWASP LLM04" },
-  { name: "Bias Detection", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago", framework: "NIST AI RMF" },
-  { name: "PII Leakage", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago", framework: "OWASP LLM06" },
+  { name: "Prompt Injection V2", evalId: "EV-1030", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago", framework: "OWASP LLM01" },
+  { name: "Toxicity & Bias", evalId: "EV-1028", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago", framework: "NIST AI RMF" },
+  { name: "Jailbreak Attempts", evalId: "EV-1029", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago", framework: "OWASP LLM01" },
+  { name: "Data Exfiltration", evalId: "EV-1027", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago", framework: "OWASP LLM06" },
+  { name: "Malicious Code Gen", evalId: "EV-1030", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago", framework: "OWASP LLM04" },
+  { name: "Bias Detection", evalId: "EV-1028", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago", framework: "NIST AI RMF" },
+  { name: "PII Leakage", evalId: "EV-1032", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago", framework: "OWASP LLM06" },
 ];
 
 const scheduled = [
@@ -126,6 +127,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export const EvaluationsPage = (): JSX.Element => {
+  const [, navigate] = useLocation();
   const [exportingPDF, setExportingPDF] = useState(false);
 
   const handleExportPDF = () => {
@@ -244,7 +246,13 @@ export const EvaluationsPage = (): JSX.Element => {
                         <TableRow key={i} className="border-[#0000001a]">
                           <TableCell className="pl-6">
                             <div className="flex flex-col">
-                              <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">{mod.name}</span>
+                              <button
+                                onClick={() => navigate(`/evaluations/${mod.evalId}`)}
+                                className="[font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:underline text-left w-fit"
+                                data-testid={`link-module-${mod.evalId}`}
+                              >
+                                {mod.name}
+                              </button>
                               <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{mod.lastRun}</span>
                             </div>
                           </TableCell>
@@ -333,9 +341,12 @@ export const EvaluationsPage = (): JSX.Element => {
                               </Badge>
                             )}
                           </div>
-                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
+                          <button
+                            onClick={() => navigate(`/evaluations/${item.evalId}`)}
+                            className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-xs hover:underline text-left w-fit"
+                          >
                             {item.module}
-                          </span>
+                          </button>
                           <div className="flex items-center gap-3 mt-0.5">
                             <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs flex items-center gap-1">
                               <ClockIcon className="w-3 h-3" />
@@ -380,9 +391,9 @@ export const EvaluationsPage = (): JSX.Element => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {[
-                    { agent: "UNICC-Chatbot-V2", module: "Prompt Injection V2", badge: "OWASP Violated", message: "Critical vulnerability (LLM02: Insecure Output) detected by Security Probe. Human Arbiter intervention required before deployment.", severity: "High" },
-                    { agent: "Llama-3-Custom", module: "Toxicity & Bias", badge: null, message: "Evaluation pipeline has been running for over 2 hours. Possible LLM API timeout from Project 2 backend.", severity: "Medium" },
-                    { agent: "Support-Agent-V2", module: "Bias Detection", badge: null, message: "Pending human arbiter sign-off for NIST GOVERN 1.1 compliance checklist.", severity: "Low" },
+                    { agent: "UNICC-Chatbot-V2", module: "Prompt Injection V2", evalId: "EV-1030", badge: "OWASP Violated", message: "Critical vulnerability (LLM02: Insecure Output) detected by Security Probe. Human Arbiter intervention required before deployment.", severity: "High" },
+                    { agent: "Llama-3-Custom", module: "Toxicity & Bias", evalId: "EV-1028", badge: null, message: "Evaluation pipeline has been running for over 2 hours. Possible LLM API timeout from Project 2 backend.", severity: "Medium" },
+                    { agent: "Support-Agent-V2", module: "Bias Detection", evalId: "EV-1028", badge: null, message: "Pending human arbiter sign-off for NIST GOVERN 1.1 compliance checklist.", severity: "Low" },
                   ].map((flag, i) => (
                     <div key={i} className={`flex items-start justify-between p-4 rounded-lg border ${
                       flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : flag.severity === "Medium" ? "bg-[#fff8e1] border-[#fde68a]" : "bg-zinc-50 border-zinc-200"
@@ -390,7 +401,12 @@ export const EvaluationsPage = (): JSX.Element => {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">{flag.agent}</span>
-                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">· {flag.module}</span>
+                          <button
+                            onClick={() => navigate(`/evaluations/${flag.evalId}`)}
+                            className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-xs hover:underline"
+                          >
+                            · {flag.module}
+                          </button>
                           {flag.badge !== null && (
                             <Badge className="bg-[#ffe0eb] text-[#ff2d78] border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2 py-0.5 h-auto">
                               {flag.badge}
