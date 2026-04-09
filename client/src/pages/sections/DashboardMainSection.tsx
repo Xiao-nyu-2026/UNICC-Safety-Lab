@@ -518,10 +518,10 @@ export const DashboardMainSection = (): JSX.Element => {
                         </button>
                       </TableCell>
 
-                      {/* Module — deep link to /evaluations/:evalId */}
+                      {/* Module — deep link to flagship evaluation detail */}
                       <TableCell className="ml-[6px] mr-[6px]">
                         <button
-                          onClick={() => setLocation(`/evaluations/${ev.id}`)}
+                          onClick={() => setLocation("/evaluations/EV-1030")}
                           className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline text-left transition-colors"
                           data-testid={`link-module-${ev.id}`}
                         >

@@ -347,9 +347,6 @@ export const EvaluationsPage = (): JSX.Element => {
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1 flex-shrink-0 pt-0.5">
-                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                            {item.evalId}
-                          </span>
                           <span className={`[font-family:'ui-monospace',SFMono-Regular,monospace] text-[11px] font-medium ${
                             item.statusKind === "probe"
                               ? "text-[#2563eb]"
