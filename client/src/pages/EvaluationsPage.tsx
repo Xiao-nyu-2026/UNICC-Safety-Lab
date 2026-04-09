@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import {
-  CalendarIcon,
   ClipboardCheckIcon,
   ExternalLinkIcon,
   FileTextIcon,
@@ -48,15 +47,6 @@ const stats = [
     Icon: TrendingUpIcon,
     iconBg: "bg-[#ffe2e2]",
     iconColor: "text-[#9f1239]",
-  },
-  {
-    title: "Scheduled",
-    value: "12",
-    change: "Next: in 2 hours",
-    changeColor: "text-[#71717b]",
-    Icon: CalendarIcon,
-    iconBg: "bg-[#fff8e1]",
-    iconColor: "text-[#b45309]",
   },
   {
     title: "Rejected Audits (30d)",
@@ -181,7 +171,7 @@ export const EvaluationsPage = (): JSX.Element => {
             </section>
 
             {/* Stats cards */}
-            <section className="grid grid-cols-4 gap-4 w-full">
+            <section className="grid grid-cols-3 gap-4 w-full">
               {stats.map((stat, i) => (
                 <Card key={i} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                   <CardContent className="pt-6 pb-6 px-6">

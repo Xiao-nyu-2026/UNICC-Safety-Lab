@@ -40,15 +40,6 @@ const agentStats = [
     iconColor: "text-[#4f39f6]",
   },
   {
-    title: "Active Agents",
-    value: "11",
-    change: "78.5% of total",
-    changeColor: "text-[#71717b]",
-    Icon: ShieldCheckIcon,
-    iconBg: "bg-[#d0fae5]",
-    iconColor: "text-[#004f3b]",
-  },
-  {
     title: "System Compliance Rate",
     value: "82%",
     change: "Fully aligned with NIST RMF",
@@ -197,7 +188,7 @@ export const AgentsPage = (): JSX.Element => {
               </section>
 
               {/* Stats cards */}
-              <section className="grid grid-cols-4 gap-4 w-full">
+              <section className="grid grid-cols-3 gap-4 w-full">
                 {agentStats.map((stat, i) => (
                   <Card key={i} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                     <CardContent className="pt-6 pb-6 px-6">
