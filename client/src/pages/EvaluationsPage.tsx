@@ -189,14 +189,14 @@ export const EvaluationsPage = (): JSX.Element => {
                     </p>
                   </div>
                 </div>
-                <Table>
+                <Table className="table-fixed w-full">
                   <TableHeader>
                     <TableRow className="border-[#0000001a]">
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6">Module Name</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[110px]">Category</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[160px]">Framework</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[140px]">Last Verdict</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pr-6 w-[130px] text-right">Actions</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[35%]">Module Name</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[15%]">Category</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[20%]">Framework</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[15%]">Last Verdict</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[15%] text-center pr-6">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -229,7 +229,7 @@ export const EvaluationsPage = (): JSX.Element => {
                             {mod.lastVerdict}
                           </Badge>
                         </TableCell>
-                        <TableCell className="pr-6 py-3 text-right">
+                        <TableCell className="pr-6 py-3 text-center">
                           <button
                             onClick={() => navigate("/evaluations/EV-1030")}
                             className="inline-flex items-center gap-1.5 [font-family:'Inter',Helvetica] font-medium text-sm text-[#4f39f6] hover:text-[#3d2bc4] hover:underline transition-colors"
