@@ -223,12 +223,9 @@ export const AgentsPage = (): JSX.Element => {
                           Status
                         </TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">
-                          Evals Run
-                        </TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">
                           Last Evaluation
                         </TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6">
+                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-center pr-6">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -257,14 +254,11 @@ export const AgentsPage = (): JSX.Element => {
                               {agent.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                            {agent.evalCount.toLocaleString()}
-                          </TableCell>
                           <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm">
                             {agent.lastEval}
                           </TableCell>
-                          <TableCell className="text-right pr-6">
-                            <div className="flex items-center justify-end gap-2">
+                          <TableCell className="text-center pr-6">
+                            <div className="flex items-center justify-center gap-2">
                               <Button
                                 variant="ghost"
                                 size="sm"
