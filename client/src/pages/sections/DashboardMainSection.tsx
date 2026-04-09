@@ -314,8 +314,8 @@ export const DashboardMainSection = (): JSX.Element => {
         {/* Analytics Row */}
         <section className="grid grid-cols-2 gap-6 w-full">
           {/* Donut Chart: Vulnerability Distribution */}
-          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-            <CardContent className="px-6 pt-6 pb-6">
+          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] flex flex-col">
+            <CardContent className="px-6 pt-6 pb-6 flex flex-col flex-1">
               <div className="mb-4">
                 <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
                   Vulnerability Distribution
@@ -324,46 +324,50 @@ export const DashboardMainSection = (): JSX.Element => {
                   Based on OWASP LLM Top 10
                 </p>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="flex-shrink-0" style={{ width: 180, height: 180 }}>
-                  <PieChart width={180} height={180}>
-                    <Pie
-                      data={vulnDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={52}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {vulnDistribution.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} stroke="none" />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 8,
-                        border: "1px solid #e4e4e7",
-                        fontFamily: "Inter, Helvetica",
-                        fontSize: 12,
-                      }}
-                      formatter={(value: number, name: string) => [`${value}%`, name]}
-                    />
-                  </PieChart>
+              <div className="flex flex-1 min-h-0 gap-6">
+                {/* Pie fills remaining height */}
+                <div className="flex-1 min-w-0 min-h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={vulnDistribution}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="38%"
+                        outerRadius="62%"
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {vulnDistribution.map((entry, index) => (
+                          <Cell key={index} fill={entry.color} stroke="none" />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: 8,
+                          border: "1px solid #e4e4e7",
+                          fontFamily: "Inter, Helvetica",
+                          fontSize: 12,
+                        }}
+                        formatter={(value: number, name: string) => [`${value}%`, name]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="flex flex-col gap-3 flex-1">
+                {/* Legend — vertically centred */}
+                <div className="flex flex-col justify-center gap-5 w-[160px] flex-shrink-0">
                   {vulnDistribution.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2">
+                    <div key={i} className="flex items-start gap-3">
                       <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5"
+                        className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
                         style={{ backgroundColor: item.color }}
                       />
-                      <div className="flex flex-col">
-                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-950 text-xs leading-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-800 text-xs leading-4">
                           {item.name}
                         </span>
                         <span
-                          className="[font-family:'Inter',Helvetica] font-semibold text-sm"
+                          className="[font-family:'Inter',Helvetica] font-bold text-base leading-5"
                           style={{ color: item.color }}
                         >
                           {item.value}%
