@@ -1,11 +1,12 @@
+import { useState } from "react";
 import {
   BotIcon,
   ClockIcon,
   FileBarChart2Icon,
+  FilterIcon,
   MoreHorizontalIcon,
-  PlusIcon,
+  SearchIcon,
   ShieldCheckIcon,
-  UploadIcon,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { SidebarSection } from "./sections/SidebarSection";
@@ -13,6 +14,7 @@ import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -121,6 +123,7 @@ const agents = [
 
 export const AgentsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
+  const [search, setSearch] = useState("");
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
@@ -139,17 +142,24 @@ export const AgentsPage = (): JSX.Element => {
                     Manage and monitor all AI agents connected to AI Safety Lab.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717b] pointer-events-none" />
+                    <Input
+                      placeholder="Search agents..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="pl-9 h-10 w-56 border-zinc-200 bg-white [font-family:'Inter',Helvetica] text-sm text-zinc-950 placeholder:text-[#71717b] focus-visible:ring-[#4f39f6] focus-visible:ring-1 focus-visible:ring-offset-0"
+                      data-testid="input-search-agents"
+                    />
+                  </div>
                   <Button
                     variant="outline"
-                    className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm"
+                    className="h-10 px-4 border-zinc-200 bg-white [font-family:'Inter',Helvetica] font-medium text-zinc-700 text-sm hover:bg-zinc-50 hover:text-zinc-950"
+                    data-testid="button-filter-agents"
                   >
-                    <UploadIcon className="w-4 h-4 mr-2" />
-                    Upload Agent
-                  </Button>
-                  <Button className="h-10 bg-[#4f39f6] hover:bg-[#4f39f6]/90 [font-family:'Inter',Helvetica] font-medium text-white text-sm">
-                    <PlusIcon className="w-4 h-4 mr-2" />
-                    Add Agent
+                    <FilterIcon className="w-4 h-4 mr-2 text-[#71717b]" />
+                    Filter
                   </Button>
                 </div>
               </section>
