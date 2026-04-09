@@ -499,7 +499,7 @@ export const DashboardMainSection = (): JSX.Element => {
                   <TableRow className="border-[#0000001a]">
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[200px]">Target Agent</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Module</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[200px]">Verdict</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-10 w-[200px]">Verdict</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-center pr-10 w-[140px]">Date</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -530,7 +530,7 @@ export const DashboardMainSection = (): JSX.Element => {
                       </TableCell>
 
                       {/* Verdict + reason caption + hover tooltip */}
-                      <TableCell>
+                      <TableCell className="pl-10">
                         <div className="flex flex-col gap-0.5">
                           {/* Badge wrapped in tooltip container */}
                           <div className="relative inline-flex w-fit group">
