@@ -273,7 +273,7 @@ export const ResultsPage = (): JSX.Element => {
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       <SidebarSection />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto no-scrollbar">
         <div className="flex flex-col items-start w-full">
           <PageHeader placeholder="Search results, agents..." />
 

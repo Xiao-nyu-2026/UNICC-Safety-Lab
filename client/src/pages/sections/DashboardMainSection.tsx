@@ -717,7 +717,7 @@ export const DashboardMainSection = (): JSX.Element => {
                 <p className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70 -mb-1">
                   Select Test Modules
                 </p>
-                <div className="flex flex-col gap-2.5 mt-1 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                <div className="flex flex-col gap-2.5 mt-1">
                   {TEST_MODULES.map((mod) => {
                     const checked = selectedModules.includes(mod.id);
                     return (
