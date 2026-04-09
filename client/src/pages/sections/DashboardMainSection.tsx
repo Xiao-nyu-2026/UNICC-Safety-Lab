@@ -178,6 +178,14 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
   const [selectedStandard, setSelectedStandard] = useState("owasp");
   const [launching, setLaunching] = useState(false);
+
+  type EvalResult = {
+    final_verdict: string;
+    confidence_score: number;
+    summary: string;
+    experts: Record<string, { name: string; score: number; rationale: string }>;
+  };
+  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setChartLoading(false), 1400);
@@ -190,17 +198,37 @@ export const DashboardMainSection = (): JSX.Element => {
     );
   };
 
-  const handleStartAudit = () => {
+  const handleStartAudit = async () => {
     setLaunching(true);
-    setTimeout(() => {
-      setLaunching(false);
+    try {
+      const res = await fetch("/api/run_evaluation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentName: selectedAgent, modules: selectedModules }),
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+      const data: EvalResult = await res.json();
+      console.log("[run_evaluation] result:", data);
+      setEvalResult(data);
       setAuditOpen(false);
       toast({
-        title: "Audit queued",
-        description: "Audit Task EV-1031 queued successfully.",
-        duration: 4000,
+        title: `Audit complete — ${data.final_verdict}`,
+        description: `Confidence ${data.confidence_score}%. ${data.summary}`,
+        duration: 6000,
       });
-    }, 900);
+    } catch (err) {
+      console.error("[run_evaluation] error:", err);
+      toast({
+        title: "Evaluation failed",
+        description: "Could not reach the evaluation API. Check the console.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setLaunching(false);
+    }
   };
 
   const handleUploadAgent = (file: File) => {
@@ -478,6 +506,46 @@ export const DashboardMainSection = (): JSX.Element => {
             </CardContent>
           </Card>
         </section>
+
+        {/* Evaluation Result Banner — shown after /api/run_evaluation returns */}
+        {evalResult && (
+          <section className="w-full rounded-xl border overflow-hidden"
+            style={{
+              borderColor: evalResult.final_verdict === "APPROVE" ? "#6ee7b7" : "#fca5a5",
+              background: evalResult.final_verdict === "APPROVE"
+                ? "linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)"
+                : "linear-gradient(135deg,#fff1f2 0%,#ffe4e6 100%)",
+            }}
+          >
+            <div className="flex items-start justify-between px-6 py-5">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <span className={`[font-family:'Inter',Helvetica] font-bold text-lg ${evalResult.final_verdict === "APPROVE" ? "text-[#065f46]" : "text-[#9f1239]"}`}>
+                    Latest Audit Result — {evalResult.final_verdict}
+                  </span>
+                  <span className={`text-sm font-semibold px-3 py-0.5 rounded-full ${evalResult.final_verdict === "APPROVE" ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
+                    {evalResult.confidence_score}% confidence
+                  </span>
+                </div>
+                <p className="[font-family:'Inter',Helvetica] text-sm text-zinc-600 mt-0.5">{evalResult.summary}</p>
+              </div>
+              <button onClick={() => setEvalResult(null)} className="ml-4 text-zinc-400 hover:text-zinc-700 text-lg leading-none flex-shrink-0">✕</button>
+            </div>
+            <div className="grid grid-cols-3 gap-px bg-zinc-200 border-t border-zinc-200">
+              {Object.values(evalResult.experts).map((ex) => (
+                <div key={ex.name} className="flex flex-col gap-1 px-6 py-4 bg-white/70">
+                  <div className="flex items-center justify-between">
+                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-sm">{ex.name}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ex.score >= 70 ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
+                      {ex.score}/100
+                    </span>
+                  </div>
+                  <p className="[font-family:'Inter',Helvetica] text-xs text-zinc-500">{ex.rationale}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Bottom: Evaluations table + Right sidebar */}
         <section className="flex gap-6 w-full">
