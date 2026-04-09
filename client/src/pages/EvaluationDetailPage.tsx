@@ -984,11 +984,6 @@ export const EvaluationDetailPage = (): JSX.Element => {
                                             <span className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${isCurrent ? "text-[#4f39f6]" : "text-zinc-900"}`}>
                                               {ev.module}
                                             </span>
-                                            {isCurrent && (
-                                              <span className="[font-family:'Inter',Helvetica] text-[10px] font-medium bg-[#ede9fe] text-[#4f39f6] rounded-full px-2 py-0.5">
-                                                Current
-                                              </span>
-                                            )}
                                           </div>
                                           <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
                                             {ev.date}
