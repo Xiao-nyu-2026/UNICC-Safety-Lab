@@ -902,35 +902,6 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         </Card>
                       )}
 
-                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                        <CardContent className="px-6 pt-5 pb-5">
-                          <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-3">
-                            Agent
-                          </h3>
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-[#f0f4ff] flex items-center justify-center flex-shrink-0">
-                              <CpuIcon className="w-4 h-4 text-[#4f39f6]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
-                                {eval_.agent}
-                              </span>
-                              <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                                {eval_.agentId}
-                              </span>
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => navigate(`/agents/${eval_.agentId}?from=${eval_.evalId}`)}
-                            variant="outline"
-                            className="w-full mt-4 h-8 [font-family:'Inter',Helvetica] font-medium text-sm border-zinc-200 text-zinc-950 gap-2"
-                            data-testid="button-view-agent"
-                          >
-                            <MicroscopeIcon className="w-3.5 h-3.5 text-[#4f39f6]" />
-                            Deep Dive into Agent Logic
-                          </Button>
-                        </CardContent>
-                      </Card>
                     </div>
                   </section>
 
