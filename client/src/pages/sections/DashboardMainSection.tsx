@@ -500,7 +500,7 @@ export const DashboardMainSection = (): JSX.Element => {
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[200px]">Target Agent</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Module</TableHead>
                     <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[200px]">Verdict</TableHead>
-                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6 w-[140px]">Date</TableHead>
+                    <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-center w-[140px]">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -552,7 +552,7 @@ export const DashboardMainSection = (): JSX.Element => {
                       </TableCell>
 
                       {/* Date */}
-                      <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-right pr-6">
+                      <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-center">
                         {ev.date}
                       </TableCell>
                     </TableRow>
