@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useAgents } from "@/context/AgentsContext";
+import { ImportAgentModal } from "@/components/ImportAgentModal";
 import {
   CheckIcon,
   PlayIcon,
@@ -172,6 +173,7 @@ export const DashboardMainSection = (): JSX.Element => {
 
   const [, setLocation] = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("UNICC-Chatbot-V2");
   const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
   const [selectedStandard, setSelectedStandard] = useState("owasp");
@@ -227,17 +229,11 @@ export const DashboardMainSection = (): JSX.Element => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <input
-              ref={uploadRef}
-              type="file"
-              accept=".json,.py"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadAgent(f); }}
-            />
             <Button
               variant="outline"
               className="h-10 [font-family:'Inter',Helvetica] font-medium text-zinc-950 text-sm border-zinc-200 hover:bg-zinc-50"
-              onClick={() => uploadRef.current?.click()}
+              onClick={() => setImportOpen(true)}
+              data-testid="button-import-agent-dashboard"
             >
               <UploadIcon className="w-4 h-4 mr-2" />
               Import Agent
@@ -651,6 +647,8 @@ export const DashboardMainSection = (): JSX.Element => {
       </main>
 
       {/* ── Launch New Security Audit Modal ── */}
+      <ImportAgentModal open={importOpen} onClose={() => setImportOpen(false)} />
+
       {auditOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
