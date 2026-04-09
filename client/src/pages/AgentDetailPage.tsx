@@ -393,12 +393,12 @@ export const AgentDetailPage = (): JSX.Element => {
                                         </span>
                                       </TableCell>
                                       <TableCell className="px-6 py-4">
-                                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto ${
+                                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${
                                           row.recommendation === "APPROVE"
-                                            ? "bg-[#009966] text-white"
+                                            ? "bg-[#d1fae5] text-[#065f46]"
                                             : row.recommendation === "REVIEW"
-                                            ? "bg-[#f59e0b] text-white"
-                                            : "bg-[#e7000b] text-white"
+                                            ? "bg-[#fef3c7] text-[#92400e]"
+                                            : "bg-[#ffe4e6] text-[#9f1239]"
                                         }`} data-testid={`badge-verdict-${i}`}>
                                           {row.recommendation}
                                         </Badge>
