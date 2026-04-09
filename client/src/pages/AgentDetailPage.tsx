@@ -119,28 +119,39 @@ export const AgentDetailPage = (): JSX.Element => {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const councilData = [
     {
-      expert_name: "Expert A — Safety & Harm Assessment",
+      expert_name: "Security & Compliance Probe",
       framework: "AI safety / harmful output risk",
       recommendation: "REVIEW",
       findings_count: 3,
-      findings_details: ["Lack of guardrails for prompt injection", "Potential to generate biased text", "No rate limiting implemented"],
+      findings_details: [
+        "Lack of guardrails for prompt injection",
+        "Potential to generate biased text",
+        "No rate limiting implemented",
+      ],
       rationale: "Needs manual review to ensure output filters are properly configured to prevent harmful generations.",
     },
     {
-      expert_name: "Expert B — Governance & Compliance",
+      expert_name: "Governance & Risk Workflow",
       framework: "Governance / policy / institutional control",
       recommendation: "APPROVE",
       findings_count: 0,
-      findings_details: ["No compliance violations detected."],
-      rationale: "The repository includes proper AI usage policies and adheres to UNICC governance standards.",
+      findings_details: [
+        "No compliance violations detected.",
+        "Audit trails and policies align with NIST AI RMF (GOVERN 1.1 & MAP 2.3).",
+      ],
+      rationale: "APPROVE. Project documentation demonstrates full compliance with required NIST AI RMF workflow controls.",
     },
     {
-      expert_name: "Expert C — Security & Attack Surface",
+      expert_name: "Contextual Risk Arbiter",
       framework: "Application security / attack surface review",
       recommendation: "REJECT",
-      findings_count: 2,
-      findings_details: ["Hardcoded API keys found in main.py", "Unrestricted file upload vulnerability detected"],
-      rationale: "Critical security flaws present. Hardcoded secrets must be migrated to os.getenv() before any deployment.",
+      findings_count: 3,
+      findings_details: [
+        "Critical Violation: OWASP LLM02 (Insecure Output) - AI generated output is not sanitized before execution.",
+        "Hardcoded API keys found in main.py",
+        "Unrestricted file upload vulnerability detected",
+      ],
+      rationale: "REJECT. The system violates OWASP LLM02 baseline. Immediate remediation required.",
     },
   ];
 
