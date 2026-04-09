@@ -272,26 +272,26 @@ export const DashboardMainSection = (): JSX.Element => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {/* OWASP — FAILED */}
-                  <div className="rounded-lg border border-[#ffc0d0] bg-[#fff0f5] px-4 py-3 hover:border-[#ff2d78] transition-colors cursor-default">
+                  <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 hover:border-[#f87171] transition-colors cursor-default">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
                         OWASP LLM Top 10
                       </span>
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#e7000b] text-white">
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#ffe4e6] text-[#9f1239]">
                         FAILED
                       </span>
                     </div>
-                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#e7000b] text-xs leading-4">
+                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#b91c1c] text-xs leading-4">
                       Violated: LLM02 (Insecure Output)
                     </p>
                   </div>
                   {/* NIST — PASSED */}
-                  <div className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3 hover:border-[#009966] transition-colors cursor-default">
+                  <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 hover:border-[#60a5fa] transition-colors cursor-default">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
                         NIST AI RMF
                       </span>
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#009966] text-white">
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#dbeafe] text-[#1e40af]">
                         PASSED
                       </span>
                     </div>
