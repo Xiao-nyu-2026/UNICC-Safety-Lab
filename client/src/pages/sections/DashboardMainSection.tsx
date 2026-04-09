@@ -388,8 +388,8 @@ export const DashboardMainSection = (): JSX.Element => {
         {/* Bottom: Evaluations table + Right sidebar */}
         <section className="flex gap-6 w-full">
           {/* Recent Evaluations table */}
-          <Card className="flex-1 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-            <CardContent className="p-0">
+          <Card className="flex-1 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] overflow-visible">
+            <CardContent className="p-0 overflow-visible">
               <div className="flex items-center justify-between px-6 py-6">
                 <div className="flex flex-col">
                   <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
@@ -451,7 +451,7 @@ export const DashboardMainSection = (): JSX.Element => {
                               {ev.verdict}
                             </Badge>
                             {/* Tooltip bubble */}
-                            <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-30 hidden group-hover:flex w-64 flex-col gap-0">
+                            <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-[9999] hidden group-hover:flex w-64 flex-col gap-0">
                               <div className="rounded-lg bg-[#1e1533] border border-white/10 px-3 py-2.5 shadow-xl">
                                 <p className="[font-family:'Inter',Helvetica] text-[11px] text-white/85 leading-[1.5]">
                                   {ev.tooltip}
