@@ -4,7 +4,6 @@ import {
   ClockIcon,
   DownloadIcon,
   FilterIcon,
-  Settings2Icon,
   ShieldAlertIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -62,13 +61,13 @@ const stats = [
 ];
 
 const modules = [
-  { name: "Prompt Injection V2", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago" },
-  { name: "Toxicity & Bias", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago" },
-  { name: "Jailbreak Attempts", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago" },
-  { name: "Data Exfiltration", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago" },
-  { name: "Malicious Code Gen", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago" },
-  { name: "Bias Detection", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago" },
-  { name: "PII Leakage", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago" },
+  { name: "Prompt Injection V2", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago", framework: "OWASP LLM01" },
+  { name: "Toxicity & Bias", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago", framework: "NIST AI RMF" },
+  { name: "Jailbreak Attempts", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago", framework: "OWASP LLM01" },
+  { name: "Data Exfiltration", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago", framework: "OWASP LLM06" },
+  { name: "Malicious Code Gen", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago", framework: "OWASP LLM04" },
+  { name: "Bias Detection", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago", framework: "NIST AI RMF" },
+  { name: "PII Leakage", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago", framework: "OWASP LLM06" },
 ];
 
 const scheduled = [
@@ -224,11 +223,11 @@ export const EvaluationsPage = (): JSX.Element => {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-[#0000001a]">
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6">Module</TableHead>
+                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6">Module Name</TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Category</TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Tests</TableHead>
                         <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm">Avg Duration</TableHead>
-                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm text-right pr-6">Action</TableHead>
+                        <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pr-6">Framework</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -251,16 +250,14 @@ export const EvaluationsPage = (): JSX.Element => {
                           <TableCell className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
                             {mod.avgDuration}
                           </TableCell>
-                          <TableCell className="text-right pr-6">
-                            <Button
-                              data-testid={`button-configure-module-${i}`}
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 text-[#4f39f6] hover:text-[#4f39f6] hover:bg-[#f0f4ff] [font-family:'Inter',Helvetica] font-medium text-sm"
-                            >
-                              <Settings2Icon className="w-3.5 h-3.5 mr-1" />
-                              Configure
-                            </Button>
+                          <TableCell className="pr-6">
+                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-3 py-1 h-auto ${
+                              mod.framework.startsWith("OWASP")
+                                ? "bg-[#fff0f5] text-[#9f1239]"
+                                : "bg-[#f0f4ff] text-[#4f39f6]"
+                            }`}>
+                              {mod.framework}
+                            </Badge>
                           </TableCell>
                         </TableRow>
                       ))}
