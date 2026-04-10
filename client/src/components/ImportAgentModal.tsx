@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { UploadCloudIcon, XIcon } from "lucide-react";
+import { useState } from "react";
+import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAgents, Agent } from "@/context/AgentsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -19,21 +19,17 @@ interface Props {
 export const ImportAgentModal = ({ open, onClose }: Props) => {
   const { agents, addAgent } = useAgents();
   const { toast } = useToast();
-  const fileRef = useRef<HTMLInputElement>(null);
-
   const [form, setForm] = useState({
     name: "",
     provider: "GPT-4o" as typeof MODEL_PROVIDERS[number],
     department: "Legal" as typeof DEPARTMENTS[number],
     description: "",
+    repoUrl: "",
   });
-  const [dragOver, setDragOver] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
 
   const handleClose = () => {
     onClose();
-    setForm({ name: "", provider: "GPT-4o", department: "Legal", description: "" });
-    setFileName(null);
+    setForm({ name: "", provider: "GPT-4o", department: "Legal", description: "", repoUrl: "" });
   };
 
   const handleAddAgent = () => {
@@ -162,43 +158,20 @@ export const ImportAgentModal = ({ open, onClose }: Props) => {
             />
           </div>
 
-          {/* File Upload */}
+          {/* GitHub Repository URL */}
           <div className="flex flex-col gap-1.5">
             <label className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70">
-              Configuration File
+              GitHub Repository URL
             </label>
-            <div
-              className={`relative flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed py-6 cursor-pointer transition-colors ${
-                dragOver ? "border-[#4f39f6] bg-[#4f39f6]/10" : "border-white/15 hover:border-white/30"
-              }`}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                const file = e.dataTransfer.files[0];
-                if (file) setFileName(file.name);
-              }}
-              onClick={() => fileRef.current?.click()}
-              data-testid="dropzone-config-file"
-            >
-              <UploadCloudIcon className="w-6 h-6 text-white/40" />
-              <p className="[font-family:'Inter',Helvetica] text-xs text-white/40 text-center">
-                {fileName
-                  ? <span className="text-[#c4b5fd] font-medium">{fileName}</span>
-                  : <><span className="text-white/60">Drop file here or </span><span className="text-[#c4b5fd]">browse</span></>
-                }
-              </p>
-              <input
-                ref={fileRef}
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setFileName(file.name);
-                }}
-              />
-            </div>
+            <input
+              type="url"
+              value={form.repoUrl}
+              onChange={(e) => setForm({ ...form, repoUrl: e.target.value })}
+              placeholder="e.g. https://github.com/FlashCarrot/VeriMedia"
+              className="w-full h-10 rounded-lg border border-white/15 px-3 text-sm text-white placeholder:text-white/30 [font-family:'Inter',Helvetica] focus:outline-none focus:ring-1 focus:ring-[#4f39f6]"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+              data-testid="input-repo-url"
+            />
           </div>
         </div>
 
