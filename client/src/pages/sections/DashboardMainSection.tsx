@@ -490,15 +490,15 @@ export const DashboardMainSection = (): JSX.Element => {
 
         {/* Analytics Row */}
         <section className="grid grid-cols-2 gap-6 w-full">
-          {/* Donut Chart: Vulnerability Distribution */}
+          {/* Donut Chart: Evaluation Distribution */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] flex flex-col">
             <CardContent className="px-6 pt-6 pb-6 flex flex-col flex-1">
               <div className="mb-4">
                 <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
-                  Vulnerability Distribution
+                  Evaluation Distribution
                 </h2>
                 <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                  Based on OWASP LLM Top 10
+                  Breakdown of safety tests across OWASP, NIST &amp; Privacy frameworks
                 </p>
               </div>
               {vulnDistribution.length === 0 ? (
