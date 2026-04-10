@@ -227,13 +227,13 @@ export const DashboardMainSection = (): JSX.Element => {
         REJECTED: "bg-[#ffe4e6] text-[#9f1239]",
         REVIEW: "bg-[#fef3c7] text-[#92400e]",
       };
-      const selectedModuleLabel = selectedModules
-        .map((mid) => TEST_MODULES.find((m) => m.id === mid)?.label ?? mid)
-        .join(", ");
+      const selectedModuleLabels = selectedModules
+        .map((mid) => TEST_MODULES.find((m) => m.id === mid)?.label ?? mid);
       const newEval = {
         id: `EV-${Date.now()}`,
         agentId: "",
-        module: selectedModuleLabel,
+        module: selectedModuleLabels.join(", "),
+        modules: selectedModuleLabels,
         target: selectedAgent,
         verdict,
         verdictColor: verdictColorMap[verdict] ?? "bg-zinc-100 text-zinc-700",
@@ -627,14 +627,21 @@ export const DashboardMainSection = (): JSX.Element => {
                         </button>
                       </TableCell>
 
-                      {/* Module — route to evaluation detail */}
+                      {/* Module — route to evaluation detail, render as badges if array */}
                       <TableCell className="ml-[6px] mr-[6px]">
                         <button
                           onClick={() => setLocation(`/evaluations/${ev.id}`)}
-                          className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline text-left transition-colors"
+                          className="flex flex-wrap gap-1 text-left"
                           data-testid={`link-module-${ev.id}`}
                         >
-                          {ev.module}
+                          {Array.isArray((ev as any).modules) && (ev as any).modules.length > 0
+                            ? (ev as any).modules.map((m: string) => (
+                                <span key={m} className="px-2 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium hover:bg-violet-200 transition-colors">
+                                  {m}
+                                </span>
+                              ))
+                            : <span className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline">{ev.module}</span>
+                          }
                         </button>
                       </TableCell>
 

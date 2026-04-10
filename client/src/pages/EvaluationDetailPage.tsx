@@ -599,7 +599,7 @@ const evalData: Record<string, {
 const EXPERTS = ["Expert A — Safety", "Expert B — Governance", "Expert C — Security"];
 
 type DynamicEval = {
-  id: string; module: string; target: string; verdict: string; verdictColor: string;
+  id: string; module: string; modules?: string[]; target: string; verdict: string; verdictColor: string;
   date: string; tooltip: string;
   experts: { name: string; status: string; statusColor: string; note: string }[];
 };
@@ -674,6 +674,16 @@ export const EvaluationDetailPage = (): JSX.Element => {
                       <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
                         {dynamicEval.target} · {dynamicEval.date} · {dynamicEval.id}
                       </p>
+                      {/* Modules badges */}
+                      {Array.isArray(dynamicEval.modules) && dynamicEval.modules.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {dynamicEval.modules.map((m) => (
+                            <span key={m} className="px-2.5 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium">
+                              {m}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </section>
 
