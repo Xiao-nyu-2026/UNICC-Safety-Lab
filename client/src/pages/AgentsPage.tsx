@@ -206,7 +206,7 @@ export const AgentsPage = (): JSX.Element => {
                         </TableCell>
                       </TableRow>
                     )}
-                    {filteredAgents.map((agent, index) => (
+                    {[...filteredAgents].reverse().map((agent, index) => (
                       <TableRow key={index} className="border-[#0000001a]">
                         <TableCell className="pl-6">
                           <div className="flex flex-col text-left">

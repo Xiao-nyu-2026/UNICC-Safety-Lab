@@ -597,6 +597,11 @@ const evalData: Record<string, {
 };
 
 const EXPERTS = ["Expert A — Safety", "Expert B — Governance", "Expert C — Security"];
+const EXPERT_LIVE_KEYS: Record<string, string> = {
+  "Expert A — Safety": "expert_a",
+  "Expert B — Governance": "expert_b",
+  "Expert C — Security": "expert_c",
+};
 
 type DynamicEval = {
   id: string; module: string; modules?: string[]; target: string; verdict: string; verdictColor: string;
@@ -1303,8 +1308,26 @@ export const EvaluationDetailPage = (): JSX.Element => {
                                             </td>
                                           );
                                         }
-                                        const passes = expertData.testScores.filter((ts) => ts.result === "pass").length;
-                                        const total = expertData.testScores.length;
+                                        const liveKey = EXPERT_LIVE_KEYS[expertName];
+                                        const liveEx = isCurrent && liveReport ? liveReport.experts[liveKey] : null;
+                                        const liveVerdict = liveEx ? (liveEx.verdict ?? "REVIEW").toUpperCase() : null;
+                                        const liveIsPass = liveVerdict === "APPROVE" || liveVerdict === "APPROVED";
+                                        const liveFindings: string[] = liveEx
+                                          ? (Array.isArray(liveEx.findings) && liveEx.findings.length > 0
+                                              ? liveEx.findings
+                                              : liveEx.rationale
+                                                ? liveEx.rationale.split(/(?<=[.!?])\s+/).map((s: string) => s.trim()).filter((s: string) => s.length > 4)
+                                                : [])
+                                          : [];
+                                        const liveRisks: string[] = liveEx
+                                          ? (Array.isArray(liveEx.risks) ? liveEx.risks : [])
+                                          : [];
+                                        const passes = liveEx
+                                          ? liveFindings.length
+                                          : expertData.testScores.filter((ts) => ts.result === "pass").length;
+                                        const total = liveEx
+                                          ? liveFindings.length + liveRisks.length || 1
+                                          : expertData.testScores.length;
                                         return (
                                           <td
                                             key={expertName}
@@ -1312,9 +1335,19 @@ export const EvaluationDetailPage = (): JSX.Element => {
                                             data-testid={`cell-expert-${rowIdx}-${expertName.replace(/\s+/g, "-").toLowerCase()}`}
                                           >
                                             <div className="flex flex-col gap-2">
-                                              {/* Overall verdict — verdictTag takes priority over pass/fail */}
+                                              {/* Overall verdict — live verdict tag > verdictTag > pass/fail */}
                                               <div className="flex items-center gap-2 flex-wrap">
-                                                {expertData.verdictTag ? (
+                                                {liveEx ? (
+                                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full [font-family:'ui-monospace',SFMono-Regular,monospace] font-bold text-[10px] tracking-wider ${
+                                                    liveIsPass
+                                                      ? "bg-[#d0fae5] text-[#004f3b]"
+                                                      : liveVerdict === "REVIEW"
+                                                        ? "bg-[#fef3c7] text-[#92400e]"
+                                                        : "bg-[#fee2e2] text-[#9f1239]"
+                                                  }`}>
+                                                    {liveVerdict}
+                                                  </span>
+                                                ) : expertData.verdictTag ? (
                                                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full [font-family:'ui-monospace',SFMono-Regular,monospace] font-bold text-[10px] tracking-wider ${
                                                     expertData.verdictTag === "NON-COMPLIANT"
                                                       ? "bg-[#fef3c7] text-[#92400e]"
@@ -1331,34 +1364,72 @@ export const EvaluationDetailPage = (): JSX.Element => {
                                                     {expertData.overallVerdict === "pass" ? "Pass" : "Fail"}
                                                   </Badge>
                                                 )}
-                                                <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">
-                                                  {passes}/{total} tests
-                                                </span>
+                                                {!liveEx && (
+                                                  <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">
+                                                    {passes}/{total} tests
+                                                  </span>
+                                                )}
+                                                {liveEx && (
+                                                  <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#4f39f6]">
+                                                    live
+                                                  </span>
+                                                )}
                                               </div>
-                                              {/* Overall reason */}
-                                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
-                                                {expertData.overallReason}
-                                              </p>
-                                              {/* Per-test scores */}
-                                              <div className="flex flex-col gap-1 pt-1 border-t border-zinc-100">
-                                                {expertData.testScores.map((ts, ti) => (
-                                                  <div key={ti} className="flex items-start gap-2" data-testid={`cell-test-${rowIdx}-${ti}`}>
-                                                    <span className={`mt-0.5 flex-shrink-0 text-[10px] font-bold leading-none ${
-                                                      ts.result === "pass" ? "text-[#009966]" : "text-[#e7000b]"
-                                                    }`}>
-                                                      {ts.result === "pass" ? "✓" : "✗"}
-                                                    </span>
-                                                    <div className="flex flex-col gap-0.5 min-w-0">
-                                                      <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-800 text-[11px] leading-4 truncate" title={ts.testName}>
-                                                        {ts.testName}
-                                                      </span>
-                                                      <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[10px] leading-[14px]">
-                                                        {ts.rationale}
-                                                      </span>
-                                                    </div>
+                                              {/* Findings / overall reason */}
+                                              {liveEx ? (
+                                                liveFindings.length > 0 ? (
+                                                  <div className="flex flex-col gap-1">
+                                                    {liveFindings.map((f, fi) => (
+                                                      <p key={fi} className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
+                                                        {f}
+                                                      </p>
+                                                    ))}
                                                   </div>
-                                                ))}
-                                              </div>
+                                                ) : (
+                                                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs leading-4 italic">
+                                                    No live findings available
+                                                  </p>
+                                                )
+                                              ) : (
+                                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
+                                                  {expertData.overallReason}
+                                                </p>
+                                              )}
+                                              {/* Risks (live) or per-test scores (static) */}
+                                              {liveEx ? (
+                                                liveRisks.length > 0 && (
+                                                  <div className="flex flex-col gap-1 pt-1 border-t border-zinc-100">
+                                                    {liveRisks.map((r, ri) => (
+                                                      <div key={ri} className="flex items-start gap-2">
+                                                        <span className="mt-0.5 flex-shrink-0 text-[10px] font-bold leading-none text-[#e7000b]">✗</span>
+                                                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#9f1239] text-[10px] leading-[14px]">
+                                                          {r}
+                                                        </span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )
+                                              ) : (
+                                                <div className="flex flex-col gap-1 pt-1 border-t border-zinc-100">
+                                                  {expertData.testScores.map((ts, ti) => (
+                                                    <div key={ti} className="flex items-start gap-2" data-testid={`cell-test-${rowIdx}-${ti}`}>
+                                                      <span className={`mt-0.5 flex-shrink-0 text-[10px] font-bold leading-none ${
+                                                        ts.result === "pass" ? "text-[#009966]" : "text-[#e7000b]"
+                                                      }`}>
+                                                        {ts.result === "pass" ? "✓" : "✗"}
+                                                      </span>
+                                                      <div className="flex flex-col gap-0.5 min-w-0">
+                                                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-800 text-[11px] leading-4 truncate" title={ts.testName}>
+                                                          {ts.testName}
+                                                        </span>
+                                                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[10px] leading-[14px]">
+                                                          {ts.rationale}
+                                                        </span>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
                                             </div>
                                           </td>
                                         );

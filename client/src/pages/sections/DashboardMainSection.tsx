@@ -424,29 +424,31 @@ export const DashboardMainSection = (): JSX.Element => {
 
         {/* Stats row */}
         <section className="grid grid-cols-4 gap-4 w-full">
-          {/* System Pass Rate */}
+          {/* System Pass Rate — derived from evaluationsData */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="pt-6 pb-5 px-6">
               <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
                 System Pass Rate
               </p>
               <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl leading-8 mt-1">
-                82%
+                {evaluationsData.length > 0
+                  ? `${Math.round((evaluationsData.filter((e: { verdict: string }) => e.verdict === "APPROVE").length / evaluationsData.length) * 100)}%`
+                  : "—"}
               </p>
               <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
-                Last 30 days
+                Based on {evaluationsData.length} record{evaluationsData.length !== 1 ? "s" : ""}
               </p>
             </CardContent>
           </Card>
 
-          {/* Total Evaluations */}
+          {/* Total Evaluations — derived from evaluationsData */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="pt-6 pb-5 px-6">
               <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
                 Total Evaluations
               </p>
               <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl leading-8 mt-1">
-                1,284
+                {evaluationsData.length.toLocaleString()}
               </p>
               <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
                 AI Agents Audited
@@ -454,14 +456,14 @@ export const DashboardMainSection = (): JSX.Element => {
             </CardContent>
           </Card>
 
-          {/* Pending Reviews */}
+          {/* Pending Reviews — derived from evaluationsData */}
           <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
             <CardContent className="pt-6 pb-5 px-6">
               <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
                 Pending Reviews
               </p>
               <p className="[font-family:'Inter',Helvetica] font-bold text-[#f59e0b] text-2xl leading-8 mt-1">
-                14
+                {evaluationsData.filter((e: { verdict: string }) => e.verdict === "REVIEW").length}
               </p>
               <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
                 Requires Human Arbiter
@@ -476,7 +478,7 @@ export const DashboardMainSection = (): JSX.Element => {
                 Requires Attention
               </p>
               <p className="[font-family:'Inter',Helvetica] font-bold text-[#e7000b] text-2xl leading-8 mt-1">
-                {evaluationsData.filter((e) => e.verdict === "REJECT").length}
+                {evaluationsData.filter((e: { verdict: string }) => e.verdict === "REJECT").length}
               </p>
               <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-2">
                 Critical REJECTs pending fix
