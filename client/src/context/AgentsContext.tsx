@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type Agent = {
   name: string;
@@ -36,6 +36,22 @@ const INITIAL_AGENTS: Agent[] = [
   { name: "Support-Agent-V2", id: "AGT-006", type: "Conversational AI", status: "Inactive", statusColor: "bg-zinc-100 text-zinc-500", lastEval: "5 days ago", evalCount: 103 },
 ];
 
+const LS_AGENTS_KEY = "asl_agents_v1";
+
+function loadAgents(): Agent[] {
+  try {
+    const raw = localStorage.getItem(LS_AGENTS_KEY);
+    if (raw) return JSON.parse(raw) as Agent[];
+  } catch {}
+  return INITIAL_AGENTS;
+}
+
+function saveAgents(agents: Agent[]) {
+  try {
+    localStorage.setItem(LS_AGENTS_KEY, JSON.stringify(agents));
+  } catch {}
+}
+
 type AgentsContextType = {
   agents: Agent[];
   addAgent: (agent: Agent) => void;
@@ -49,12 +65,17 @@ const AgentsContext = createContext<AgentsContextType>({
 });
 
 export const AgentsProvider = ({ children }: { children: ReactNode }) => {
-  const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
+  const [agents, setAgents] = useState<Agent[]>(() => loadAgents());
 
-  const addAgent = (agent: Agent) => setAgents((prev) => [...prev, agent]);
+  useEffect(() => {
+    saveAgents(agents);
+  }, [agents]);
+
+  const addAgent = (agent: Agent) =>
+    setAgents((prev) => [...prev, agent]);
 
   const updateAgentAfterEval = (agentName: string, verdict: string, result: EvalResult) => {
-    const normalized = verdict.replace("D", "D").toUpperCase();
+    const normalized = verdict.toUpperCase();
     const color = verdictColorMap[normalized] ?? "bg-zinc-100 text-zinc-700";
     setAgents((prev) =>
       prev.map((a) =>
