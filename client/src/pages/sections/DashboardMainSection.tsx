@@ -156,10 +156,6 @@ const TEST_MODULES = [
   { id: "pii-extraction", label: "PII Extraction", tag: "Privacy" },
 ];
 
-const STANDARDS = [
-  { id: "owasp", label: "OWASP LLM Top 10" },
-  { id: "nist", label: "NIST AI RMF" },
-];
 
 export const DashboardMainSection = (): JSX.Element => {
   const { toast } = useToast();
@@ -171,7 +167,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [importOpen, setImportOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("UNICC-Chatbot-V2");
   const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
-  const [selectedStandard, setSelectedStandard] = useState("owasp");
+
   const [launching, setLaunching] = useState(false);
   const LS_EVALS_KEY = "asl_evaluations_v1";
   const [evaluationsData, setEvaluationsData] = useState(() => {
@@ -218,47 +214,52 @@ export const DashboardMainSection = (): JSX.Element => {
     }));
   })();
 
-  // Bar: continuous 14-day timeline, zero-filled, data mapped in
+  // Bar: active-dates-only — collect real eval dates, group, sort, last 14
   const assessmentTrend = (() => {
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Step 1 — pre-generate 14 consecutive days ending today
-    const days = Array.from({ length: 14 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() - (13 - i));   // index 0 = 13 days ago, index 13 = today
-      const label = `${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
-      return { label, dateMs: d.getTime(), fullAlignment: 0, nonCompliant: 0 };
-    });
-
-    // Build a quick lookup: label → index into days[]
-    const labelIndex = new Map(days.map((d, i) => [d.label, i]));
-
-    // Step 2 — normalise eval date → "Mmm DD" label
     const toLabel = (raw: string): string | null => {
-      const s = raw.trim();
+      const s = (raw ?? "").trim();
       if (!s) return null;
-      if (/just now|today/i.test(s)) return days[13].label;          // today
-      if (/yesterday/i.test(s))      return days[12].label;          // yesterday
+      if (/just now|today/i.test(s)) {
+        return `${MONTHS[today.getMonth()]} ${String(today.getDate()).padStart(2, "0")}`;
+      }
+      if (/yesterday/i.test(s)) {
+        const y = new Date(today);
+        y.setDate(today.getDate() - 1);
+        return `${MONTHS[y.getMonth()]} ${String(y.getDate()).padStart(2, "0")}`;
+      }
       const parsed = new Date(s);
       if (isNaN(parsed.getTime())) return null;
       return `${MONTHS[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2, "0")}`;
     };
 
-    // Step 3 — map each evaluation into the matching bucket
+    const toDateMs = (label: string): number => {
+      const [mon, day] = label.split(" ");
+      const idx = MONTHS.indexOf(mon);
+      if (idx === -1) return 0;
+      const d = new Date(today.getFullYear(), idx, parseInt(day, 10));
+      if (d > today) d.setFullYear(today.getFullYear() - 1);
+      return d.getTime();
+    };
+
+    const buckets: Record<string, { fullAlignment: number; nonCompliant: number }> = {};
     for (const ev of evaluationsData) {
       const label = toLabel(ev.date ?? "");
       if (!label) continue;
-      const idx = labelIndex.get(label);
-      if (idx === undefined) continue;
-      if ((ev.verdict ?? "").toUpperCase() === "APPROVE") days[idx].fullAlignment += 1;
-      else days[idx].nonCompliant += 1;
+      if (!buckets[label]) buckets[label] = { fullAlignment: 0, nonCompliant: 0 };
+      if ((ev.verdict ?? "").toUpperCase() === "APPROVE") buckets[label].fullAlignment += 1;
+      else buckets[label].nonCompliant += 1;
     }
 
-    return days.map(({ label, fullAlignment, nonCompliant }) => ({
-      day: label, fullAlignment, nonCompliant,
-    }));
+    return Object.entries(buckets)
+      .sort(([a], [b]) => toDateMs(a) - toDateMs(b))
+      .slice(-14)
+      .map(([label, { fullAlignment, nonCompliant }]) => ({
+        day: label, fullAlignment, nonCompliant,
+      }));
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
@@ -570,26 +571,13 @@ export const DashboardMainSection = (): JSX.Element => {
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div>
                     <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
-                      NIST AI RMF Compliance Trend
+                      Overall Security &amp; Compliance Trend
                     </h2>
                     <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                      Full Alignment vs. Non-compliant across evaluated agents · Last 7 Days
+                      Pass vs. Fail rates across all evaluated agents and frameworks.
                     </p>
                   </div>
-                  {/* Live data indicator */}
-                  <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${chartLoading ? "animate-ping bg-[#4f39f6]" : "bg-[#009966]"}`} />
-                      <span className={`relative inline-flex h-2 w-2 rounded-full ${chartLoading ? "bg-[#4f39f6]" : "bg-[#009966]"}`} />
-                    </span>
-                    <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">
-                      {chartLoading ? "Fetching NIST compliance data…" : "Live · NIST AI 100-1"}
-                    </span>
-                  </div>
                 </div>
-                <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-[11px] mt-2">
-                  Monitoring lifecycle adherence based on NIST AI 100-1 standards.
-                </p>
               </div>
 
               {/* Skeleton loader while fetching */}
@@ -925,33 +913,6 @@ export const DashboardMainSection = (): JSX.Element => {
                 </div>
               </div>
 
-              {/* Step 3 — Compliance Mapping */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#4f39f6] flex items-center justify-center text-[10px] font-bold text-white [font-family:'Inter',Helvetica]">3</span>
-                  <span className="[font-family:'Inter',Helvetica] font-medium text-white/80 text-xs uppercase tracking-wider">Compliance Mapping</span>
-                </div>
-                <p className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70 -mb-1">
-                  Align with Standards?
-                </p>
-                <div className="flex gap-3 mt-1">
-                  {STANDARDS.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setSelectedStandard(s.id)}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium [font-family:'Inter',Helvetica] transition-colors ${
-                        selectedStandard === s.id
-                          ? "border-[#4f39f6]/60 bg-[#4f39f6]/15 text-[#c4b5fd]"
-                          : "border-white/10 bg-white/5 text-white/50 hover:bg-white/8"
-                      }`}
-                      data-testid={`radio-standard-${s.id}`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Footer */}
