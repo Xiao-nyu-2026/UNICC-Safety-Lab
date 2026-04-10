@@ -218,20 +218,46 @@ export const DashboardMainSection = (): JSX.Element => {
     }));
   })();
 
-  // Bar: last 14 runs as individual pipeline status indicators
+  // Bar: group-by-day aggregation → old-left, new-right, max 14 days
   const assessmentTrend = (() => {
-    const slice = [...evaluationsData].slice(-14).reverse();
-    if (slice.length === 0) return [];
-    return slice.map((ev, i) => {
-      const label = ev.date?.trim() || `Run ${i + 1}`;
-      const isApprove = (ev.verdict ?? "").toUpperCase() === "APPROVE";
-      return {
-        day: label,
-        module: ev.module ?? "",
-        fullAlignment: isApprove ? 1 : 0,
-        nonCompliant: isApprove ? 0 : 1,
-      };
-    });
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const todayLabel     = `${MONTHS[now.getMonth()]} ${String(now.getDate()).padStart(2,"0")}`;
+    const yest = new Date(now); yest.setDate(now.getDate() - 1);
+    const yesterdayLabel = `${MONTHS[yest.getMonth()]} ${String(yest.getDate()).padStart(2,"0")}`;
+
+    // Normalise an evaluation's date string to a "Mmm DD" label
+    const toLabel = (raw: string): string | null => {
+      const s = raw.trim();
+      if (!s) return null;
+      if (/just now|today/i.test(s)) return todayLabel;
+      if (/yesterday/i.test(s))      return yesterdayLabel;
+      const parsed = new Date(s);
+      if (isNaN(parsed.getTime())) return null;
+      return `${MONTHS[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2,"0")}`;
+    };
+
+    // Accumulate into an ordered map (insertion order = chronological)
+    const map = new Map<string, { fullAlignment: number; nonCompliant: number; sortMs: number }>();
+    for (const ev of evaluationsData) {
+      const label = toLabel(ev.date ?? "");
+      if (!label) continue;
+      if (!map.has(label)) {
+        // derive a sort key from the label so we can order properly
+        const parsed = new Date(`${label}, ${now.getFullYear()}`);
+        map.set(label, { fullAlignment: 0, nonCompliant: 0, sortMs: isNaN(parsed.getTime()) ? 0 : parsed.getTime() });
+      }
+      const bucket = map.get(label)!;
+      if ((ev.verdict ?? "").toUpperCase() === "APPROVE") bucket.fullAlignment += 1;
+      else bucket.nonCompliant += 1;
+    }
+
+    // Sort chronologically, keep last 14
+    return [...map.entries()]
+      .sort((a, b) => a[1].sortMs - b[1].sortMs)
+      .slice(-14)
+      .map(([day, { fullAlignment, nonCompliant }]) => ({ day, fullAlignment, nonCompliant }));
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
@@ -593,7 +619,13 @@ export const DashboardMainSection = (): JSX.Element => {
                           textAnchor="end"
                           height={42}
                         />
-                        <YAxis hide />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                          axisLine={false}
+                          tickLine={false}
+                          allowDecimals={false}
+                          width={20}
+                        />
                         <Tooltip
                           contentStyle={{
                             borderRadius: 8,
@@ -601,11 +633,11 @@ export const DashboardMainSection = (): JSX.Element => {
                             fontFamily: "Inter, Helvetica",
                             fontSize: 12,
                           }}
-                          formatter={(_value: number, name: string, props: any) => [
-                            props.payload?.module || "",
+                          formatter={(value: number, name: string) => [
+                            `${value} eval${value !== 1 ? "s" : ""}`,
                             name === "fullAlignment" ? "✓ Full Alignment" : "✗ Non-compliant",
                           ]}
-                          labelFormatter={(label: string) => `Run: ${label}`}
+                          labelFormatter={(label: string) => label}
                         />
                         <Bar dataKey="fullAlignment" fill="#009966" radius={[4, 4, 0, 0]} name="fullAlignment" stackId="a" />
                         <Bar dataKey="nonCompliant" fill="#e7000b" radius={[4, 4, 0, 0]} name="nonCompliant" stackId="a" />
