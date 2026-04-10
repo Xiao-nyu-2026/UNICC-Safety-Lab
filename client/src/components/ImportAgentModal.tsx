@@ -23,13 +23,12 @@ export const ImportAgentModal = ({ open, onClose }: Props) => {
     name: "",
     provider: "GPT-4o" as typeof MODEL_PROVIDERS[number],
     department: "Legal" as typeof DEPARTMENTS[number],
-    description: "",
     repoUrl: "",
   });
 
   const handleClose = () => {
     onClose();
-    setForm({ name: "", provider: "GPT-4o", department: "Legal", description: "", repoUrl: "" });
+    setForm({ name: "", provider: "GPT-4o", department: "Legal", repoUrl: "" });
   };
 
   const handleAddAgent = () => {
@@ -140,22 +139,6 @@ export const ImportAgentModal = ({ open, onClose }: Props) => {
                 ))}
               </select>
             </div>
-          </div>
-
-          {/* Description */}
-          <div className="flex flex-col gap-1.5">
-            <label className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70">
-              Description
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Brief description of the agent's purpose..."
-              rows={2}
-              className="w-full rounded-lg border border-white/15 px-3 py-2 text-sm text-white placeholder:text-white/30 [font-family:'Inter',Helvetica] focus:outline-none focus:ring-1 focus:ring-[#4f39f6] resize-none"
-              style={{ background: "rgba(255,255,255,0.06)" }}
-              data-testid="textarea-description"
-            />
           </div>
 
           {/* GitHub Repository URL */}
