@@ -273,11 +273,13 @@ export const DashboardMainSection = (): JSX.Element => {
       }
     }
 
-    return days.map(({ label }) => ({
-      day: label,
-      fullAlignment: buckets[label].fullAlignment,
-      nonCompliant: buckets[label].nonCompliant,
-    }));
+    return days
+      .filter(({ label }) => buckets[label].fullAlignment > 0 || buckets[label].nonCompliant > 0)
+      .map(({ label }) => ({
+        day: label,
+        fullAlignment: buckets[label].fullAlignment,
+        nonCompliant: buckets[label].nonCompliant,
+      }));
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
