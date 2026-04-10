@@ -1,11 +1,10 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import {
   ArrowLeftIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
   FileDownIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
+  ShieldIcon,
 } from "lucide-react";
 import { useParams, useLocation, useSearch } from "wouter";
 import { useAgents } from "@/context/AgentsContext";
@@ -14,7 +13,6 @@ import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -24,6 +22,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+/* ─────────────────────────── Types ─────────────────────────── */
+type ExpertCell = {
+  colKey: "expert_a" | "expert_b" | "expert_c";
+  displayName: string;
+  score: number | null;
+  verdict: string;
+  bullets: string[];
+};
+
+type MatrixRow = {
+  moduleId: string;
+  moduleName: string;
+  moduleVerdict: string;
+  moduleVerdictColor: string;
+  confidence: number | null;
+  expert_a: ExpertCell;
+  expert_b: ExpertCell;
+  expert_c: ExpertCell;
+};
+
+/* ─────────────────────── Static agent data ─────────────────────── */
 const agentData: Record<string, {
   name: string; id: string; type: string; status: string; statusColor: string;
   safetyScore: number | null; scoreColor: string; evalCount: number;
@@ -125,6 +144,333 @@ const agentData: Record<string, {
   },
 };
 
+/* ─────────────────────── Expert column definitions ─────────────────────── */
+const EXPERT_COLS: { key: "expert_a" | "expert_b" | "expert_c"; label: string; framework: string }[] = [
+  { key: "expert_a", label: "Security & Compliance Probe", framework: "AI safety / harmful output risk" },
+  { key: "expert_b", label: "Governance & Risk Workflow",  framework: "Governance / policy / institutional control" },
+  { key: "expert_c", label: "Contextual Risk Arbiter",     framework: "Application security / attack surface" },
+];
+
+/* ─────────────────────── Helpers ─────────────────────── */
+function verdictFromScore(score: number): string {
+  if (score >= 70) return "APPROVE";
+  if (score >= 50) return "REVIEW";
+  return "REJECT";
+}
+
+function verdictStyle(verdict: string): string {
+  const v = verdict.toUpperCase();
+  if (v === "APPROVE" || v === "APPROVED" || v === "PASS") return "bg-[#d1fae5] text-[#065f46]";
+  if (v === "REVIEW") return "bg-[#fef3c7] text-[#92400e]";
+  return "bg-[#ffe4e6] text-[#9f1239]";
+}
+
+function verdictBorderColor(verdict: string): string {
+  const v = verdict.toUpperCase();
+  if (v === "APPROVE" || v === "APPROVED" || v === "PASS") return "#009966";
+  if (v === "REVIEW") return "#f59e0b";
+  return "#e7000b";
+}
+
+/** Split a rationale string into 2–3 sensible bullet points */
+function rationaleAsBullets(rationale: string, score: number | null): string[] {
+  if (!rationale) return ["No rationale provided."];
+  const sentences = rationale
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  const bullets: string[] = sentences.slice(0, 3);
+  if (score !== null) {
+    bullets.push(`Score: ${score}/100 — ${score >= 70 ? "within safe threshold" : score >= 50 ? "borderline, review required" : "below minimum threshold"}`);
+  }
+  return bullets.slice(0, 4);
+}
+
+/* ─────────────────── Load matrix rows from localStorage ─────────────────── */
+function loadMatrixRows(agentName: string): MatrixRow[] {
+  try {
+    const raw = localStorage.getItem("asl_module_report_v1");
+    if (!raw) return [];
+    const all: Record<string, {
+      agentName: string; verdict: string; verdictColor: string;
+      confidence: number; summary: string; timestamp: string;
+      experts: Record<string, { name: string; score: number; rationale: string }>;
+    }> = JSON.parse(raw);
+
+    const rows: MatrixRow[] = [];
+    for (const [moduleId, report] of Object.entries(all)) {
+      if (report.agentName !== agentName) continue;
+
+      const toCell = (key: "expert_a" | "expert_b" | "expert_c", colLabel: string): ExpertCell => {
+        const ex = report.experts[key];
+        if (!ex) {
+          return { colKey: key, displayName: colLabel, score: null, verdict: "REVIEW", bullets: ["No data available for this expert."] };
+        }
+        const v = verdictFromScore(ex.score);
+        return {
+          colKey: key,
+          displayName: ex.name || colLabel,
+          score: ex.score,
+          verdict: v,
+          bullets: rationaleAsBullets(ex.rationale, ex.score),
+        };
+      };
+
+      const v = report.verdict.toUpperCase();
+      rows.push({
+        moduleId,
+        moduleName: moduleIdToLabel(moduleId),
+        moduleVerdict: v,
+        moduleVerdictColor: verdictStyle(v),
+        confidence: report.confidence,
+        expert_a: toCell("expert_a", EXPERT_COLS[0].label),
+        expert_b: toCell("expert_b", EXPERT_COLS[1].label),
+        expert_c: toCell("expert_c", EXPERT_COLS[2].label),
+      });
+    }
+    return rows;
+  } catch { return []; }
+}
+
+const MODULE_ID_TO_LABEL: Record<string, string> = {
+  "prompt-injection":   "Prompt Injection V2",
+  "jailbreak-attempts": "Jailbreak Attempts",
+  "toxicity":           "Toxicity & Bias",
+  "data-exfiltration":  "Data Exfiltration",
+  "adversarial-prompt": "Adversarial Prompt",
+  "pii-extraction":     "PII Extraction",
+};
+function moduleIdToLabel(id: string): string {
+  return MODULE_ID_TO_LABEL[id] ?? id.replace(/-/g, " ");
+}
+
+/* Static expert "findings_details" per expert index */
+const STATIC_COUNCIL: {
+  label: string; framework: string; verdict: string; bullets: string[];
+}[] = [
+  {
+    label: "Security & Compliance Probe",
+    framework: "AI safety / harmful output risk",
+    verdict: "REVIEW",
+    bullets: [
+      "Lack of guardrails for prompt injection detected.",
+      "Potential to generate biased text across adversarial inputs.",
+      "No rate limiting implemented on output generation.",
+    ],
+  },
+  {
+    label: "Governance & Risk Workflow",
+    framework: "Governance / policy / institutional control",
+    verdict: "APPROVE",
+    bullets: [
+      "No compliance violations detected.",
+      "Audit trails and policies align with NIST AI RMF (GOVERN 1.1 & MAP 2.3).",
+    ],
+  },
+  {
+    label: "Contextual Risk Arbiter",
+    framework: "Application security / attack surface",
+    verdict: "REJECT",
+    bullets: [
+      "OWASP LLM02 (Insecure Output) — AI output not sanitized before execution.",
+      "Hardcoded API keys found in main.py.",
+      "Unrestricted file upload vulnerability detected in tool interface.",
+    ],
+  },
+];
+
+/** Build matrix rows from static agentData (fallback when no localStorage runs) */
+function buildStaticRows(agentId: string): MatrixRow[] {
+  const ad = agentData[agentId];
+  if (!ad) return [];
+  return ad.recentEvals.map((ev) => {
+    const toCell = (idx: number, key: "expert_a" | "expert_b" | "expert_c"): ExpertCell => {
+      const sc = STATIC_COUNCIL[idx];
+      return {
+        colKey: key,
+        displayName: sc.label,
+        score: ev.score,
+        verdict: ev.status === "Passed" ? "APPROVE" : ev.status === "Failed" ? "REJECT" : "REVIEW",
+        bullets: sc.bullets,
+      };
+    };
+    const v = ev.status === "Passed" ? "APPROVE" : ev.status === "Failed" ? "REJECT" : "REVIEW";
+    return {
+      moduleId: ev.evalId,
+      moduleName: ev.module,
+      moduleVerdict: v,
+      moduleVerdictColor: verdictStyle(v),
+      confidence: ev.score,
+      expert_a: toCell(0, "expert_a"),
+      expert_b: toCell(1, "expert_b"),
+      expert_c: toCell(2, "expert_c"),
+    };
+  });
+}
+
+/* ─────────────────────── Matrix cell component ─────────────────────── */
+function ExpertCellView({ cell }: { cell: ExpertCell }) {
+  const bColor = verdictBorderColor(cell.verdict);
+  const isApprove = cell.verdict === "APPROVE";
+  const isReview  = cell.verdict === "REVIEW";
+  return (
+    <div
+      className="rounded-lg border border-zinc-100 bg-white overflow-hidden"
+      style={{ borderLeft: `3px solid ${bColor}` }}
+    >
+      {/* Verdict badge + score */}
+      <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5 border-b border-zinc-50">
+        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-[10px] px-2 py-0.5 h-auto ${verdictStyle(cell.verdict)}`}>
+          {cell.verdict}
+        </Badge>
+        {cell.score !== null && (
+          <span className="[font-family:'Inter',Helvetica] text-[10px] font-semibold text-[#71717b]">
+            {cell.score}/100
+          </span>
+        )}
+      </div>
+      {/* Bullet findings */}
+      <ul className="px-3 py-2.5 flex flex-col gap-1.5">
+        {cell.bullets.map((b, i) => (
+          <li key={i} className="flex items-start gap-1.5">
+            <span
+              className="mt-[5px] w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: bColor }}
+            />
+            <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-[11px] leading-[1.55]">
+              {b}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ─────────────────────── Matrix table component ─────────────────────── */
+function CouncilMatrix({ rows, emptyAgent }: { rows: MatrixRow[]; emptyAgent: string }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[780px] border-collapse">
+        <thead>
+          <tr className="bg-zinc-50 border-b border-zinc-200">
+            <th className="[font-family:'Inter',Helvetica] font-semibold text-[#71717b] text-xs uppercase tracking-wide text-left px-6 py-3 w-[200px]">
+              Evaluation Module
+            </th>
+            {EXPERT_COLS.map((col) => (
+              <th key={col.key} className="[font-family:'Inter',Helvetica] font-semibold text-[#71717b] text-xs uppercase tracking-wide text-left px-4 py-3">
+                <span className="text-zinc-800 normal-case font-semibold text-xs">{col.label}</span>
+                <span className="block text-[#a1a1aa] font-normal text-[10px] normal-case mt-0.5 tracking-normal">{col.framework}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="px-6 py-16 text-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <ShieldIcon className="w-6 h-6 text-zinc-300" />
+                  </div>
+                  <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
+                    No evaluations have been run for this agent yet
+                  </p>
+                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-center max-w-sm leading-5">
+                    Launch a security audit from the Dashboard to populate this matrix with expert council findings.
+                  </p>
+                  <span className="[font-family:'Inter',Helvetica] text-xs text-[#a1a1aa] mt-1">
+                    Agent: {emptyAgent}
+                  </span>
+                </div>
+              </td>
+            </tr>
+          ) : (
+            rows.map((row, i) => (
+              <tr
+                key={`${row.moduleId}-${i}`}
+                className="border-b border-zinc-100 hover:bg-zinc-50/60 transition-colors"
+                data-testid={`row-matrix-${i}`}
+              >
+                {/* Module column */}
+                <td className="px-6 py-4 align-top">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm leading-5">
+                      {row.moduleName}
+                    </span>
+                    <Badge
+                      className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-[10px] px-2.5 py-0.5 h-auto w-fit ${row.moduleVerdictColor}`}
+                    >
+                      {row.moduleVerdict}
+                    </Badge>
+                    {row.confidence !== null && (
+                      <span className="[font-family:'Inter',Helvetica] text-[10px] text-[#a1a1aa]">
+                        {row.confidence}% confidence
+                      </span>
+                    )}
+                  </div>
+                </td>
+
+                {/* Expert cells */}
+                {(["expert_a", "expert_b", "expert_c"] as const).map((key) => (
+                  <td key={key} className="px-4 py-3 align-top">
+                    <ExpertCellView cell={row[key]} />
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ─────────────────────── PDF export button ─────────────────────── */
+function ExportPDFButton({ exporting, onExport }: { exporting: boolean; onExport: () => void }) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onExport}
+      disabled={exporting}
+      className="h-9 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] flex-shrink-0 disabled:opacity-70"
+      data-testid="button-export-pdf-report"
+    >
+      {exporting ? (
+        <>
+          <svg className="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          Generating PDF…
+        </>
+      ) : (
+        <>
+          <FileDownIcon className="w-4 h-4 mr-2" />
+          Export PDF Report
+        </>
+      )}
+    </Button>
+  );
+}
+
+/* ─────────────────────── Stats card ─────────────────────── */
+function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+  return (
+    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+      <CardContent className="pt-6 pb-5 px-6">
+        <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">{label}</p>
+        <p className={`[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 mt-1 ${color ?? "text-zinc-950"}`}>{value}</p>
+        {sub && (
+          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">{sub}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─────────────────────── Main page ─────────────────────── */
 export const AgentDetailPage = (): JSX.Element => {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -140,49 +486,20 @@ export const AgentDetailPage = (): JSX.Element => {
 
   const handleExportPDF = () => {
     setExportingPDF(true);
-    setTimeout(() => {
-      setExportingPDF(false);
-      window.print();
-    }, 1800);
+    setTimeout(() => { setExportingPDF(false); window.print(); }, 1800);
   };
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const councilData = [
-    {
-      expert_name: "Security & Compliance Probe",
-      framework: "AI safety / harmful output risk",
-      recommendation: "REVIEW",
-      findings_count: 3,
-      findings_details: [
-        "Lack of guardrails for prompt injection",
-        "Potential to generate biased text",
-        "No rate limiting implemented",
-      ],
-      rationale: "Needs manual review to ensure output filters are properly configured to prevent harmful generations.",
-    },
-    {
-      expert_name: "Governance & Risk Workflow",
-      framework: "Governance / policy / institutional control",
-      recommendation: "APPROVE",
-      findings_count: 0,
-      findings_details: [
-        "No compliance violations detected.",
-        "Audit trails and policies align with NIST AI RMF (GOVERN 1.1 & MAP 2.3).",
-      ],
-      rationale: "APPROVE. Project documentation demonstrates full compliance with required NIST AI RMF workflow controls.",
-    },
-    {
-      expert_name: "Contextual Risk Arbiter",
-      framework: "Application security / attack surface review",
-      recommendation: "REJECT",
-      findings_count: 3,
-      findings_details: [
-        "Critical Violation: OWASP LLM02 (Insecure Output) - AI generated output is not sanitized before execution.",
-        "Hardcoded API keys found in main.py",
-        "Unrestricted file upload vulnerability detected",
-      ],
-      rationale: "REJECT. The system violates OWASP LLM02 baseline. Immediate remediation required.",
-    },
-  ];
+
+  /* Determine the effective agent name for LS lookup */
+  const agentName = agent?.name ?? liveAgent?.name ?? "";
+
+  /* Matrix rows: prefer LS data, fall back to static rows for known agents */
+  const lsRows   = loadMatrixRows(agentName);
+  const matrixRows = lsRows.length > 0 ? lsRows : (agent ? buildStaticRows(id ?? "") : []);
+
+  /* Aggregate stats from matrix rows */
+  const totalFindings  = matrixRows.reduce((acc, r) =>
+    acc + [r.expert_a, r.expert_b, r.expert_c].filter((ex) => ex.verdict !== "APPROVE").length, 0);
+  const runCount = matrixRows.length;
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
@@ -202,46 +519,44 @@ export const AgentDetailPage = (): JSX.Element => {
               {fromEval ? `Back to Evaluation ${fromEval}` : "Back to Agents"}
             </button>
 
+            {/* Not found */}
             {!agent && !liveAgent ? (
               <p className="[font-family:'Inter',Helvetica] text-[#71717b] text-sm">
                 Agent {id} not found.
               </p>
-            ) : !agent && liveAgent ? (
-              /* ── Context-only Agent View (imported agent or no static record) ── */
+            ) : (
               <>
-                {/* Title */}
+                {/* ── Title row ── */}
                 <section className="flex items-start justify-between w-full">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-3">
                       <h1 className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[-0.60px] leading-8">
-                        {liveAgent.name}
+                        {agent?.name ?? liveAgent?.name}
                       </h1>
-                      <Badge className={`${liveAgent.statusColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs h-auto px-3 py-1`}>
-                        {liveAgent.status}
+                      <Badge
+                        className={`${agent?.statusColor ?? liveAgent?.statusColor ?? "bg-zinc-100 text-zinc-500"} border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs h-auto px-3 py-1`}
+                        data-testid="badge-agent-status"
+                      >
+                        {agent?.status ?? liveAgent?.status ?? "UNTESTED"}
                       </Badge>
                     </div>
                     <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                      {liveAgent.id} · {liveAgent.type} · {liveAgent.evalCount?.toLocaleString() ?? "—"} evals run · Last evaluated {liveAgent.lastEval}
+                      {agent?.id ?? liveAgent?.id} · {agent?.type ?? liveAgent?.type} · {(agent?.evalCount ?? liveAgent?.evalCount ?? 0).toLocaleString()} evals run
+                      {(agent?.lastEval ?? liveAgent?.lastEval) ? ` · Last evaluated ${agent?.lastEval ?? liveAgent?.lastEval}` : ""}
                     </p>
                   </div>
-                  <Button variant="outline" onClick={handleExportPDF} disabled={exportingPDF} className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff]">
-                    {exportingPDF ? "Exporting…" : "Export PDF"}
-                  </Button>
+                  <ExportPDFButton exporting={exportingPDF} onExport={handleExportPDF} />
                 </section>
 
-                {liveResult ? (
-                  <>
-                    {/* Stats row */}
-                    <section className="grid grid-cols-4 gap-4 w-full">
+                {/* ── Stats cards ── */}
+                <section className="grid grid-cols-4 gap-4 w-full">
+                  {liveResult ? (
+                    <>
                       <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                         <CardContent className="pt-6 pb-5 px-6">
                           <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Overall Verdict</p>
                           <div className="mt-2">
-                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${
-                              liveResult.final_verdict.toUpperCase().includes("APPROVE") ? "bg-[#d1fae5] text-[#065f46]" :
-                              liveResult.final_verdict.toUpperCase().includes("REJECT") ? "bg-[#ffe4e6] text-[#9f1239]" :
-                              "bg-[#fff7ed] text-[#c2410c] ring-1 ring-inset ring-[#fed7aa]"
-                            }`}>
+                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${verdictStyle(liveResult.final_verdict)}`}>
                               {liveResult.final_verdict}
                             </Badge>
                           </div>
@@ -258,498 +573,151 @@ export const AgentDetailPage = (): JSX.Element => {
                           </div>
                         </CardContent>
                       </Card>
+                      <StatCard label="Modules Evaluated" value={String(runCount)} sub="From audit history" />
+                      <StatCard label="Experts Consulted" value={String(Object.keys(liveResult.experts).length)} sub="Independent council members" />
+                    </>
+                  ) : agent ? (
+                    <>
                       <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                         <CardContent className="pt-6 pb-5 px-6">
-                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Experts Consulted</p>
-                          <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-tight mt-2">{Object.keys(liveResult.experts).length}</p>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">Independent council members</p>
-                        </CardContent>
-                      </Card>
-                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                        <CardContent className="pt-6 pb-5 px-6">
-                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Evals Run</p>
-                          <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-tight mt-2">{liveAgent.evalCount?.toLocaleString() ?? "—"}</p>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">Lifetime evaluations</p>
-                        </CardContent>
-                      </Card>
-                    </section>
-
-                    {/* Summary card */}
-                    <section className="w-full">
-                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                        <CardContent className="px-6 py-5">
-                          <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-3">
-                            Audit Synthesis
-                          </p>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-6">
-                            {liveResult.summary}
+                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Safety Score</p>
+                          <p className={`[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 mt-1 ${agent.safetyScore !== null ? (agent.safetyScore >= 80 ? "text-[#009966]" : agent.safetyScore >= 50 ? "text-[#b45309]" : "text-[#e7000b]") : "text-zinc-950"}`}>
+                            {agent.safetyScore !== null ? `${agent.safetyScore}%` : "—"}
                           </p>
                         </CardContent>
                       </Card>
-                    </section>
+                      <StatCard label="Total Evals" value={agent.evalCount.toLocaleString()} sub="Lifetime evaluations" />
+                      <StatCard label="Modules Evaluated" value={String(matrixRows.length)} sub="Distinct test modules" />
+                      <StatCard label="Security Flags" value={String(agent.securityFlags.length)} color={agent.securityFlags.length > 0 ? "text-[#e7000b]" : "text-zinc-950"} sub={agent.securityFlags.length > 0 ? "Require immediate attention" : "No active flags"} />
+                    </>
+                  ) : (
+                    /* Zero state for dynamic agent with no runs */
+                    <>
+                      <StatCard label="Overall Verdict" value="UNTESTED" color="text-[#71717b]" sub="No evaluations run yet" />
+                      <StatCard label="Confidence Score" value="—" sub="Run an audit to generate" />
+                      <StatCard label="Modules Evaluated" value="0" sub="No modules tested" />
+                      <StatCard label="Experts Consulted" value="3" sub="Council standing by" />
+                    </>
+                  )}
+                </section>
 
-                    {/* Expert panel — rich cards */}
-                    <section className="w-full">
-                      <div className="mb-4">
-                        <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">Expert Council Assessment</h2>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">Individual verdicts, scores, and rationale from each council member</p>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 w-full">
-                        {Object.values(liveResult.experts).map((ex, idx) => {
-                          const isPassing = ex.score >= 70;
-                          const verdict = isPassing ? "PASS" : ex.score >= 50 ? "REVIEW" : "FAIL";
-                          const verdictStyle = isPassing
-                            ? "bg-[#d1fae5] text-[#065f46]"
-                            : ex.score >= 50
-                            ? "bg-[#fef3c7] text-[#92400e]"
-                            : "bg-[#ffe4e6] text-[#9f1239]";
-                          const scoreColor = isPassing ? "bg-[#00bc7d]" : ex.score >= 50 ? "bg-amber-400" : "bg-[#e7000b]";
-                          const expertLabels = ["Expert A", "Expert B", "Expert C"];
-                          return (
-                            <Card key={ex.name} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] flex flex-col">
-                              <CardContent className="p-0 flex flex-col flex-1">
-                                {/* Card header */}
-                                <div className={`px-5 py-4 border-b border-zinc-100 flex items-start justify-between gap-3 ${isPassing ? "bg-[#f0fdf4]" : ex.score >= 50 ? "bg-[#fffbeb]" : "bg-[#fff1f2]"}`}>
-                                  <div className="flex flex-col gap-0.5">
-                                    <span className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">{expertLabels[idx] ?? `Expert ${idx + 1}`}</span>
-                                    <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">{ex.name}</h3>
-                                  </div>
-                                  <Badge className={`${verdictStyle} border-transparent rounded-full flex-shrink-0 [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-1 h-auto`}>
-                                    {verdict}
-                                  </Badge>
-                                </div>
-                                {/* Score */}
-                                <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="[font-family:'Inter',Helvetica] text-xs font-medium text-[#71717b]">Safety Score</span>
-                                    <span className={`[font-family:'Inter',Helvetica] text-xs font-bold px-2 py-0.5 rounded-full ${verdictStyle}`}>{ex.score} / 100</span>
-                                  </div>
-                                  <div className="w-full bg-zinc-100 rounded-full h-2">
-                                    <div className={`h-2 rounded-full transition-all ${scoreColor}`} style={{ width: `${ex.score}%` }} />
-                                  </div>
-                                </div>
-                                {/* Rationale */}
-                                <div className="px-5 py-4 flex flex-col gap-2 flex-1">
-                                  <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">Rationale</p>
-                                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#3f3f46] text-sm leading-[1.6]">
-                                    {ex.rationale}
-                                  </p>
-                                </div>
-                                {/* Risk indicator */}
-                                <div className={`px-5 py-3 rounded-b-lg flex items-center gap-2 ${isPassing ? "bg-[#f0fdf4]" : ex.score >= 50 ? "bg-[#fffbeb]" : "bg-[#fff1f2]"}`}>
-                                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isPassing ? "bg-[#00bc7d]" : ex.score >= 50 ? "bg-amber-400" : "bg-[#e7000b]"}`} />
-                                  <p className="[font-family:'Inter',Helvetica] text-xs text-[#71717b]">
-                                    {isPassing ? "No critical risks identified" : ex.score >= 50 ? "Moderate risk — review recommended" : "High risk — immediate action required"}
-                                  </p>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  </>
-                ) : (
-                  <Card className="w-full border-zinc-200 border-dashed shadow-none">
-                    <CardContent className="px-6 py-12 flex flex-col items-center gap-3">
-                      <ShieldAlertIcon className="w-8 h-8 text-zinc-300" />
-                      <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">No evaluation results yet</p>
-                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-center max-w-xs">
-                        Run an audit from the Dashboard to generate a full safety report for this agent.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            ) : (
-              <>
-                {/* Title */}
-                <section className="flex items-start justify-between w-full">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
-                      <h1 className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[-0.60px] leading-8">
-                        {agent.name}
-                      </h1>
-                      <Badge className={`${agent.statusColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs h-auto px-3 py-1`}>
-                        {agent.status}
-                      </Badge>
+                {/* ── Description + flags (static agents) OR Summary (dynamic agents with liveResult) ── */}
+                {agent ? (
+                  <section className="flex gap-6 w-full">
+                    <div className="flex flex-col gap-4 flex-1">
+                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                        <CardContent className="px-6 pt-5 pb-5">
+                          <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-2">About this Agent</h3>
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">{agent.description}</p>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                      {agent.id} · {agent.type} · {agent.evalCount.toLocaleString()} evals run
-                    </p>
-                  </div>
-                </section>
-
-                {/* Stats */}
-                <section className="grid grid-cols-4 gap-4 w-full">
-                  {/* Overall Assessment card */}
-                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="pt-6 pb-5 px-6">
-                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
-                        Overall Assessment
-                      </p>
-                      <div className="mt-2">
-                        <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto bg-[#fff7ed] text-[#c2410c] ring-1 ring-inset ring-[#fed7aa]">
-                          REVIEW REQUIRED
-                        </Badge>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-2">
-                          Triggered by 1 Critical Failure (Expert C)
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Artifacts Scanned */}
-                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="pt-6 pb-5 px-6">
-                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
-                        Artifacts Scanned
-                      </p>
-                      <div className="mt-1">
-                        <p className="[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 text-zinc-950">
-                          14 Files
-                        </p>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
-                          1.2k Lines of Code
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Total Findings */}
-                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="pt-6 pb-5 px-6">
-                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
-                        Total Findings
-                      </p>
-                      <div className="mt-1">
-                        <p className="[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 text-[#c2410c]">
-                          5 Issues
-                        </p>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
-                          Across 3 Expert Modules
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Execution Time */}
-                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="pt-6 pb-5 px-6">
-                      <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
-                        Execution Time
-                      </p>
-                      <div className="mt-1">
-                        <p className="[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 text-zinc-950">
-                          12.4s
-                        </p>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
-                          Powered by DGX Spark
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </section>
-
-                <section className="flex gap-6 w-full">
-                  {/* Description */}
-                  <div className="flex flex-col gap-4 flex-1">
-                    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                      <CardContent className="px-6 pt-5 pb-5">
-                        <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-2">
-                          About this Agent
-                        </h3>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
-                          {agent.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Security flags sidebar */}
-                  <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
-                    <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${agent.securityFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
-                      <CardContent className="px-6 pt-5 pb-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <ShieldAlertIcon className={`w-4 h-4 ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
-                          <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
-                            Security Flags
-                          </h3>
-                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${agent.securityFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
-                            {agent.securityFlags.length}
-                          </Badge>
-                        </div>
-                        {agent.securityFlags.length === 0 ? (
-                          <div className="flex items-center gap-2 py-2">
-                            <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
-                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                              No active security flags
-                            </span>
+                    <div className="w-[280px] flex-shrink-0">
+                      <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${agent.securityFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
+                        <CardContent className="px-6 pt-5 pb-5">
+                          <div className="flex items-center gap-2 mb-3">
+                            <ShieldAlertIcon className={`w-4 h-4 ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
+                            <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${agent.securityFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
+                              Security Flags
+                            </h3>
+                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${agent.securityFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
+                              {agent.securityFlags.length}
+                            </Badge>
                           </div>
-                        ) : (
-                          <div className="flex flex-col gap-2">
-                            {agent.securityFlags.map((flag, i) => (
-                              <div key={i} className={`p-3 rounded-lg border ${
-                                flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
-                              }`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
-                                    flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
-                                    flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
-                                    "bg-zinc-100 text-zinc-700"
-                                  }`}>
-                                    {flag.severity}
-                                  </Badge>
-                                  <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                                    {flag.module}
-                                  </span>
+                          {agent.securityFlags.length === 0 ? (
+                            <div className="flex items-center gap-2 py-2">
+                              <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
+                              <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">No active security flags</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              {agent.securityFlags.map((flag, i) => (
+                                <div key={i} className={`p-3 rounded-lg border ${flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"}`}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" : flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" : "bg-zinc-100 text-zinc-700"}`}>
+                                      {flag.severity}
+                                    </Badge>
+                                    <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{flag.module}</span>
+                                  </div>
+                                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">{flag.message}</p>
                                 </div>
-                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
-                                  {flag.message}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </section>
-
-                {/* Council of Experts Assessment — full width */}
-                <section className="w-full">
-                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                      <CardContent className="p-0">
-                        <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
-                          <div>
-                            <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                              Council of Experts Assessment
-                            </h2>
-                            <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                              Independent expert verdicts for this agent
-                            </p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleExportPDF}
-                            disabled={exportingPDF}
-                            className="h-9 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] flex-shrink-0 disabled:opacity-70"
-                            data-testid="button-export-pdf-report"
-                          >
-                            {exportingPDF ? (
-                              <>
-                                <svg className="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                </svg>
-                                Generating PDF…
-                              </>
-                            ) : (
-                              <>
-                                <FileDownIcon className="w-4 h-4 mr-2" />
-                                Export PDF Report
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="bg-zinc-50 hover:bg-zinc-50">
-                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[260px]">
-                                  Expert Role
-                                </TableHead>
-                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3">
-                                  Evaluation Framework
-                                </TableHead>
-                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 text-center w-[100px]">
-                                  Findings
-                                </TableHead>
-                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[120px]">
-                                  Verdict
-                                </TableHead>
-                                <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-xs uppercase tracking-wide px-6 py-3 w-[60px]">
-                                  Details
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {councilData.map((row, i) => {
-                                const isOpen = expandedRow === i;
-                                return (
-                                  <Fragment key={i}>
-                                    <TableRow
-                                      className={`transition-colors border-zinc-100 cursor-pointer select-none ${isOpen ? "bg-zinc-50" : "hover:bg-zinc-50"}`}
-                                      onClick={() => setExpandedRow(isOpen ? null : i)}
-                                      data-testid={`row-expert-council-${i}`}
-                                    >
-                                      <TableCell className="px-6 py-4">
-                                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-900 text-sm">
-                                          {row.expert_name}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell className="px-6 py-4">
-                                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                                          {row.framework}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell className="px-6 py-4 text-center">
-                                        <span className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${
-                                          row.findings_count === 0 ? "text-[#009966]" : row.recommendation === "REJECT" ? "text-[#e7000b]" : "text-[#b45309]"
-                                        }`}>
-                                          {row.findings_count}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell className="px-6 py-4">
-                                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${
-                                          row.recommendation === "APPROVE"
-                                            ? "bg-[#d1fae5] text-[#065f46]"
-                                            : row.recommendation === "REVIEW"
-                                            ? "bg-[#fef3c7] text-[#92400e]"
-                                            : "bg-[#ffe4e6] text-[#9f1239]"
-                                        }`} data-testid={`badge-verdict-${i}`}>
-                                          {row.recommendation}
-                                        </Badge>
-                                      </TableCell>
-                                      <TableCell className="px-6 py-4">
-                                        <button
-                                          className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-zinc-200 transition-colors text-[#71717b] hover:text-zinc-900"
-                                          data-testid={`button-toggle-row-${i}`}
-                                          onClick={(e) => { e.stopPropagation(); setExpandedRow(isOpen ? null : i); }}
-                                          aria-label={isOpen ? "Collapse" : "Expand"}
-                                        >
-                                          {isOpen
-                                            ? <ChevronUpIcon className="w-4 h-4" />
-                                            : <ChevronDownIcon className="w-4 h-4" />
-                                          }
-                                        </button>
-                                      </TableCell>
-                                    </TableRow>
-
-                                    {isOpen && (
-                                      <TableRow key={`detail-${i}`} className="bg-zinc-50 border-zinc-100">
-                                        <TableCell colSpan={5} className="px-0 py-0">
-                                          <div
-                                            className="mx-6 my-4 rounded-lg border border-zinc-200 bg-white overflow-hidden"
-                                            style={{ borderLeft: `3px solid ${
-                                              row.recommendation === "APPROVE" ? "#009966"
-                                              : row.recommendation === "REVIEW" ? "#f59e0b"
-                                              : "#e7000b"
-                                            }` }}
-                                          >
-                                            <div className="px-5 py-4 flex flex-col gap-4">
-                                              <div>
-                                                <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs uppercase tracking-wide mb-2">
-                                                  Specific Findings
-                                                </p>
-                                                <ul className="flex flex-col gap-1.5 pl-1">
-                                                  {row.findings_details.map((f, fi) => (
-                                                    <li key={fi} className="flex items-start gap-2">
-                                                      <span className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                                                        row.findings_count === 0 ? "bg-[#009966]"
-                                                        : row.recommendation === "REJECT" ? "bg-[#e7000b]"
-                                                        : "bg-[#f59e0b]"
-                                                      }`} />
-                                                      <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
-                                                        {f}
-                                                      </span>
-                                                    </li>
-                                                  ))}
-                                                </ul>
-                                              </div>
-                                              <div className="pt-3 border-t border-zinc-100">
-                                                <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs uppercase tracking-wide mb-2">
-                                                  Expert Rationale
-                                                </p>
-                                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5 italic">
-                                                  "{row.rationale}"
-                                                </p>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </TableCell>
-                                      </TableRow>
-                                    )}
-                                  </Fragment>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                </section>
-
-                {/* ── Live Evaluation Results (from last run) ── */}
-                {liveResult && (
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </section>
+                ) : liveResult ? (
                   <section className="w-full">
                     <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                      <CardContent className="p-0">
-                        <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
-                          <div>
-                            <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                              Latest Evaluation Results
-                            </h2>
-                            <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                              From most recent automated safety audit — {liveAgent?.lastEval}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${
-                              liveResult.final_verdict.toUpperCase().includes("APPROVE") ? "bg-[#d1fae5] text-[#065f46]" :
-                              liveResult.final_verdict.toUpperCase().includes("REJECT") ? "bg-[#ffe4e6] text-[#9f1239]" :
-                              "bg-[#fef3c7] text-[#92400e]"
-                            }`}>
-                              {liveResult.final_verdict}
-                            </Badge>
-                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm">
-                              Confidence: <span className="font-semibold text-zinc-950">{liveResult.confidence_score}%</span>
-                            </span>
-                          </div>
+                      <CardContent className="px-6 py-5">
+                        <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-3">Audit Synthesis</p>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-6">{liveResult.summary}</p>
+                      </CardContent>
+                    </Card>
+                  </section>
+                ) : (
+                  /* Zero state: imported agent, no run yet — show a gentle onboarding card */
+                  <section className="w-full">
+                    <Card className="border-zinc-200 border-dashed shadow-none">
+                      <CardContent className="px-6 py-6 flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-full bg-[#ede9fe] border border-[#c4b5fd]/50 flex items-center justify-center flex-shrink-0">
+                          <ShieldIcon className="w-5 h-5 text-[#4f39f6]" />
                         </div>
-
-                        {/* Summary */}
-                        <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                          <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-1.5">
-                            Summary
+                        <div>
+                          <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-1">
+                            This agent has not been evaluated yet
                           </p>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
-                            {liveResult.summary}
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 max-w-lg">
+                            Once you launch a security audit from the Dashboard and select this agent, the Council of Experts Assessment matrix below will populate with findings, risk ratings, and recommendations from each council member.
                           </p>
-                        </div>
-
-                        {/* Three-expert grid */}
-                        <div className="grid grid-cols-3 divide-x divide-zinc-100">
-                          {Object.values(liveResult.experts).map((ex) => {
-                            const isPassing = ex.score >= 70;
-                            return (
-                              <div key={ex.name} className="flex flex-col gap-3 px-6 py-5">
-                                <div className="flex items-start justify-between gap-2">
-                                  <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">
-                                    {ex.name}
-                                  </h3>
-                                  <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-0.5 rounded-full ${isPassing ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
-                                    {ex.score}/100
-                                  </span>
-                                </div>
-                                <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                                  <div
-                                    className={`h-1.5 rounded-full ${isPassing ? "bg-[#00bc7d]" : "bg-[#e7000b]"}`}
-                                    style={{ width: `${ex.score}%` }}
-                                  />
-                                </div>
-                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
-                                  {ex.rationale}
-                                </p>
-                              </div>
-                            );
-                          })}
                         </div>
                       </CardContent>
                     </Card>
                   </section>
                 )}
+
+                {/* ── Council of Experts Assessment — Matrix ── */}
+                <section className="w-full">
+                  <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="p-0">
+                      <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between gap-4">
+                        <div>
+                          <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
+                            Council of Experts Assessment
+                          </h2>
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                            {matrixRows.length > 0
+                              ? `${matrixRows.length} evaluation module${matrixRows.length > 1 ? "s" : ""} · ${totalFindings} finding${totalFindings !== 1 ? "s" : ""} across ${EXPERT_COLS.length} expert reviewers`
+                              : "Independent expert verdicts per evaluation module · run an audit to populate"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {matrixRows.length > 0 && (
+                            <div className="flex gap-2 mr-1">
+                              {EXPERT_COLS.map((col, idx) => {
+                                const colors = [
+                                  "bg-[#ede9fe] text-[#4f39f6]",
+                                  "bg-[#d1fae5] text-[#065f46]",
+                                  "bg-[#fff7ed] text-[#c2410c]",
+                                ];
+                                return (
+                                  <span key={col.key} className={`[font-family:'Inter',Helvetica] text-[10px] font-semibold px-2 py-1 rounded-full ${colors[idx]}`}>
+                                    {col.label.split(" ")[0]}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <ExportPDFButton exporting={exportingPDF} onExport={handleExportPDF} />
+                        </div>
+                      </div>
+
+                      <CouncilMatrix rows={matrixRows} emptyAgent={agentName} />
+                    </CardContent>
+                  </Card>
+                </section>
               </>
             )}
           </main>
