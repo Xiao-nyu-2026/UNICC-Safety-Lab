@@ -5,7 +5,6 @@ import { useAgents, Agent } from "@/context/AgentsContext";
 import { useToast } from "@/hooks/use-toast";
 
 const MODEL_PROVIDERS = ["GPT-4o", "Llama 3.1", "Claude 3.5", "Gemini 1.5"] as const;
-const DEPARTMENTS = ["Legal", "HR", "Customer Service", "Finance", "Engineering", "Operations"] as const;
 
 const statusColorMap: Record<string, string> = {
   UNTESTED: "bg-[#f0f4ff] text-[#4f39f6]",
@@ -22,13 +21,12 @@ export const ImportAgentModal = ({ open, onClose }: Props) => {
   const [form, setForm] = useState({
     name: "",
     provider: "GPT-4o" as typeof MODEL_PROVIDERS[number],
-    department: "Legal" as typeof DEPARTMENTS[number],
     repoUrl: "",
   });
 
   const handleClose = () => {
     onClose();
-    setForm({ name: "", provider: "GPT-4o", department: "Legal", repoUrl: "" });
+    setForm({ name: "", provider: "GPT-4o", repoUrl: "" });
   };
 
   const handleAddAgent = () => {
@@ -105,40 +103,22 @@ export const ImportAgentModal = ({ open, onClose }: Props) => {
             />
           </div>
 
-          {/* Model Provider + Department */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70">
-                Model Provider
-              </label>
-              <select
-                value={form.provider}
-                onChange={(e) => setForm({ ...form, provider: e.target.value as typeof MODEL_PROVIDERS[number] })}
-                className="w-full h-10 rounded-lg border border-white/15 px-3 text-sm text-white [font-family:'Inter',Helvetica] focus:outline-none focus:ring-1 focus:ring-[#4f39f6]"
-                style={{ background: "rgba(255,255,255,0.06)" }}
-                data-testid="select-model-provider"
-              >
-                {MODEL_PROVIDERS.map((p) => (
-                  <option key={p} value={p} className="bg-[#1e1533]">{p}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70">
-                Department
-              </label>
-              <select
-                value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.target.value as typeof DEPARTMENTS[number] })}
-                className="w-full h-10 rounded-lg border border-white/15 px-3 text-sm text-white [font-family:'Inter',Helvetica] focus:outline-none focus:ring-1 focus:ring-[#4f39f6]"
-                style={{ background: "rgba(255,255,255,0.06)" }}
-                data-testid="select-department"
-              >
-                {DEPARTMENTS.map((d) => (
-                  <option key={d} value={d} className="bg-[#1e1533]">{d}</option>
-                ))}
-              </select>
-            </div>
+          {/* Model Provider — full width */}
+          <div className="flex flex-col gap-1.5">
+            <label className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70">
+              Model Provider
+            </label>
+            <select
+              value={form.provider}
+              onChange={(e) => setForm({ ...form, provider: e.target.value as typeof MODEL_PROVIDERS[number] })}
+              className="w-full h-10 rounded-lg border border-white/15 px-3 text-sm text-white [font-family:'Inter',Helvetica] focus:outline-none focus:ring-1 focus:ring-[#4f39f6]"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+              data-testid="select-model-provider"
+            >
+              {MODEL_PROVIDERS.map((p) => (
+                <option key={p} value={p} className="bg-[#1e1533]">{p}</option>
+              ))}
+            </select>
           </div>
 
           {/* GitHub Repository URL */}
