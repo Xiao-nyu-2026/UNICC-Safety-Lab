@@ -9,6 +9,22 @@ export type Agent = {
   lastEval: string;
   evalCount: number;
   hasIcon?: boolean;
+  lastEvalResult?: EvalResult | null;
+};
+
+export type EvalResult = {
+  final_verdict: string;
+  confidence_score: number;
+  summary: string;
+  experts: Record<string, { name: string; score: number; rationale: string }>;
+};
+
+const verdictColorMap: Record<string, string> = {
+  APPROVE: "bg-[#d1fae5] text-[#065f46]",
+  APPROVED: "bg-[#d1fae5] text-[#065f46]",
+  REJECT: "bg-[#ffe4e6] text-[#9f1239]",
+  REJECTED: "bg-[#ffe4e6] text-[#9f1239]",
+  REVIEW: "bg-[#fef3c7] text-[#92400e]",
 };
 
 const INITIAL_AGENTS: Agent[] = [
@@ -23,18 +39,34 @@ const INITIAL_AGENTS: Agent[] = [
 type AgentsContextType = {
   agents: Agent[];
   addAgent: (agent: Agent) => void;
+  updateAgentAfterEval: (agentName: string, verdict: string, result: EvalResult) => void;
 };
 
 const AgentsContext = createContext<AgentsContextType>({
   agents: INITIAL_AGENTS,
   addAgent: () => {},
+  updateAgentAfterEval: () => {},
 });
 
 export const AgentsProvider = ({ children }: { children: ReactNode }) => {
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
+
   const addAgent = (agent: Agent) => setAgents((prev) => [...prev, agent]);
+
+  const updateAgentAfterEval = (agentName: string, verdict: string, result: EvalResult) => {
+    const normalized = verdict.replace("D", "D").toUpperCase();
+    const color = verdictColorMap[normalized] ?? "bg-zinc-100 text-zinc-700";
+    setAgents((prev) =>
+      prev.map((a) =>
+        a.name === agentName
+          ? { ...a, status: normalized, statusColor: color, lastEval: "Just now", hasIcon: false, lastEvalResult: result }
+          : a
+      )
+    );
+  };
+
   return (
-    <AgentsContext.Provider value={{ agents, addAgent }}>
+    <AgentsContext.Provider value={{ agents, addAgent, updateAgentAfterEval }}>
       {children}
     </AgentsContext.Provider>
   );

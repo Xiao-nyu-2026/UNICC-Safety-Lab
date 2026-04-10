@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { useAgents } from "@/context/AgentsContext";
+import { useAgents, EvalResult } from "@/context/AgentsContext";
 import { ImportAgentModal } from "@/components/ImportAgentModal";
 import {
   CheckIcon,
@@ -52,7 +52,7 @@ const assessmentTrend = [
 ];
 
 
-const evaluationsData = [
+const INITIAL_EVALUATIONS = [
   {
     id: "EV-1030",
     agentId: "AGT-003",
@@ -169,7 +169,7 @@ const STANDARDS = [
 export const DashboardMainSection = (): JSX.Element => {
   const { toast } = useToast();
   const uploadRef = useRef<HTMLInputElement>(null);
-  const { agents: contextAgents } = useAgents();
+  const { agents: contextAgents, updateAgentAfterEval } = useAgents();
 
   const [, setLocation] = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
@@ -178,13 +178,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
   const [selectedStandard, setSelectedStandard] = useState("owasp");
   const [launching, setLaunching] = useState(false);
-
-  type EvalResult = {
-    final_verdict: string;
-    confidence_score: number;
-    summary: string;
-    experts: Record<string, { name: string; score: number; rationale: string }>;
-  };
+  const [evaluationsData, setEvaluationsData] = useState(INITIAL_EVALUATIONS);
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
   useEffect(() => {
@@ -213,6 +207,36 @@ export const DashboardMainSection = (): JSX.Element => {
       console.log("[run_evaluation] result:", data);
       setEvalResult(data);
       setAuditOpen(false);
+
+      const verdict = data.final_verdict.toUpperCase();
+      const verdictColorMap: Record<string, string> = {
+        APPROVE: "bg-[#d1fae5] text-[#065f46]",
+        APPROVED: "bg-[#d1fae5] text-[#065f46]",
+        REJECT: "bg-[#ffe4e6] text-[#9f1239]",
+        REJECTED: "bg-[#ffe4e6] text-[#9f1239]",
+        REVIEW: "bg-[#fef3c7] text-[#92400e]",
+      };
+      const selectedModuleLabel = TEST_MODULES.find((m) => selectedModules[0] === m.id)?.label ?? selectedModules[0] ?? "Custom Module";
+      const newEval = {
+        id: `EV-${Date.now()}`,
+        agentId: "",
+        module: selectedModuleLabel,
+        target: selectedAgent,
+        verdict,
+        verdictColor: verdictColorMap[verdict] ?? "bg-zinc-100 text-zinc-700",
+        date: "Just now",
+        reason: { text: data.summary.slice(0, 60), color: "text-[#71717b]" },
+        tooltip: data.summary,
+        experts: Object.values(data.experts).map((ex) => ({
+          name: ex.name,
+          status: ex.score >= 70 ? "PASS" : "FAIL",
+          statusColor: ex.score >= 70 ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]",
+          note: ex.rationale,
+        })),
+      };
+      setEvaluationsData((prev) => [newEval, ...prev]);
+      updateAgentAfterEval(selectedAgent, verdict, data);
+
       toast({
         title: `Audit complete — ${data.final_verdict}`,
         description: `Confidence ${data.confidence_score}%. ${data.summary}`,
