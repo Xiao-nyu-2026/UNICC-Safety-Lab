@@ -207,8 +207,8 @@ export const AgentDetailPage = (): JSX.Element => {
                 Agent {id} not found.
               </p>
             ) : !agent && liveAgent ? (
-              /* ── Context-only Agent View (imported or no static record) ── */
-              <div className="flex flex-col gap-6 w-full">
+              /* ── Context-only Agent View (imported agent or no static record) ── */
+              <>
                 {/* Title */}
                 <section className="flex items-start justify-between w-full">
                   <div className="flex flex-col gap-1">
@@ -221,80 +221,146 @@ export const AgentDetailPage = (): JSX.Element => {
                       </Badge>
                     </div>
                     <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                      {liveAgent.id} · {liveAgent.type} · {liveAgent.evalCount?.toLocaleString() ?? "—"} evals run
+                      {liveAgent.id} · {liveAgent.type} · {liveAgent.evalCount?.toLocaleString() ?? "—"} evals run · Last evaluated {liveAgent.lastEval}
                     </p>
                   </div>
+                  <Button variant="outline" onClick={handleExportPDF} disabled={exportingPDF} className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff]">
+                    {exportingPDF ? "Exporting…" : "Export PDF"}
+                  </Button>
                 </section>
 
-                {/* Live Result Panel */}
                 {liveResult ? (
-                  <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="p-0">
-                      <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
-                        <div>
-                          <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                            Latest Evaluation Results
-                          </h2>
-                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                            From most recent automated safety audit — {liveAgent.lastEval}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${
-                            liveResult.final_verdict.toUpperCase().includes("APPROVE") ? "bg-[#d1fae5] text-[#065f46]" :
-                            liveResult.final_verdict.toUpperCase().includes("REJECT") ? "bg-[#ffe4e6] text-[#9f1239]" :
-                            "bg-[#fef3c7] text-[#92400e]"
-                          }`}>
-                            {liveResult.final_verdict}
-                          </Badge>
-                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm">
-                            Confidence: <span className="font-semibold text-zinc-950">{liveResult.confidence_score}%</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Summary */}
-                      <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                        <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-1.5">
-                          Summary
-                        </p>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
-                          {liveResult.summary}
-                        </p>
-                      </div>
-
-                      {/* Three-expert grid */}
-                      <div className="grid grid-cols-3 divide-x divide-zinc-100">
-                        {Object.values(liveResult.experts).map((ex) => {
-                          const isPassing = ex.score >= 70;
-                          return (
-                            <div key={ex.name} className="flex flex-col gap-3 px-6 py-5">
-                              <div className="flex items-start justify-between gap-2">
-                                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">
-                                  {ex.name}
-                                </h3>
-                                <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-0.5 rounded-full ${isPassing ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
-                                  {ex.score}/100
-                                </span>
-                              </div>
-                              <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                                <div className={`h-1.5 rounded-full ${isPassing ? "bg-[#00bc7d]" : "bg-[#e7000b]"}`} style={{ width: `${ex.score}%` }} />
-                              </div>
-                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
-                                {ex.rationale}
-                              </p>
+                  <>
+                    {/* Stats row */}
+                    <section className="grid grid-cols-4 gap-4 w-full">
+                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                        <CardContent className="pt-6 pb-5 px-6">
+                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Overall Verdict</p>
+                          <div className="mt-2">
+                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${
+                              liveResult.final_verdict.toUpperCase().includes("APPROVE") ? "bg-[#d1fae5] text-[#065f46]" :
+                              liveResult.final_verdict.toUpperCase().includes("REJECT") ? "bg-[#ffe4e6] text-[#9f1239]" :
+                              "bg-[#fff7ed] text-[#c2410c] ring-1 ring-inset ring-[#fed7aa]"
+                            }`}>
+                              {liveResult.final_verdict}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                        <CardContent className="pt-6 pb-5 px-6">
+                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Confidence Score</p>
+                          <div className="mt-2 flex flex-col gap-1.5">
+                            <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-tight">{liveResult.confidence_score}%</p>
+                            <div className="w-full bg-zinc-100 rounded-full h-1.5">
+                              <div className="h-1.5 rounded-full bg-[#4f39f6]" style={{ width: `${liveResult.confidence_score}%` }} />
                             </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                        <CardContent className="pt-6 pb-5 px-6">
+                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Experts Consulted</p>
+                          <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-tight mt-2">{Object.keys(liveResult.experts).length}</p>
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">Independent council members</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                        <CardContent className="pt-6 pb-5 px-6">
+                          <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Evals Run</p>
+                          <p className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-tight mt-2">{liveAgent.evalCount?.toLocaleString() ?? "—"}</p>
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">Lifetime evaluations</p>
+                        </CardContent>
+                      </Card>
+                    </section>
+
+                    {/* Summary card */}
+                    <section className="w-full">
+                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                        <CardContent className="px-6 py-5">
+                          <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-3">
+                            Audit Synthesis
+                          </p>
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-6">
+                            {liveResult.summary}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </section>
+
+                    {/* Expert panel — rich cards */}
+                    <section className="w-full">
+                      <div className="mb-4">
+                        <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">Expert Council Assessment</h2>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">Individual verdicts, scores, and rationale from each council member</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 w-full">
+                        {Object.values(liveResult.experts).map((ex, idx) => {
+                          const isPassing = ex.score >= 70;
+                          const verdict = isPassing ? "PASS" : ex.score >= 50 ? "REVIEW" : "FAIL";
+                          const verdictStyle = isPassing
+                            ? "bg-[#d1fae5] text-[#065f46]"
+                            : ex.score >= 50
+                            ? "bg-[#fef3c7] text-[#92400e]"
+                            : "bg-[#ffe4e6] text-[#9f1239]";
+                          const scoreColor = isPassing ? "bg-[#00bc7d]" : ex.score >= 50 ? "bg-amber-400" : "bg-[#e7000b]";
+                          const expertLabels = ["Expert A", "Expert B", "Expert C"];
+                          return (
+                            <Card key={ex.name} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] flex flex-col">
+                              <CardContent className="p-0 flex flex-col flex-1">
+                                {/* Card header */}
+                                <div className={`px-5 py-4 border-b border-zinc-100 flex items-start justify-between gap-3 ${isPassing ? "bg-[#f0fdf4]" : ex.score >= 50 ? "bg-[#fffbeb]" : "bg-[#fff1f2]"}`}>
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">{expertLabels[idx] ?? `Expert ${idx + 1}`}</span>
+                                    <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">{ex.name}</h3>
+                                  </div>
+                                  <Badge className={`${verdictStyle} border-transparent rounded-full flex-shrink-0 [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-1 h-auto`}>
+                                    {verdict}
+                                  </Badge>
+                                </div>
+                                {/* Score */}
+                                <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="[font-family:'Inter',Helvetica] text-xs font-medium text-[#71717b]">Safety Score</span>
+                                    <span className={`[font-family:'Inter',Helvetica] text-xs font-bold px-2 py-0.5 rounded-full ${verdictStyle}`}>{ex.score} / 100</span>
+                                  </div>
+                                  <div className="w-full bg-zinc-100 rounded-full h-2">
+                                    <div className={`h-2 rounded-full transition-all ${scoreColor}`} style={{ width: `${ex.score}%` }} />
+                                  </div>
+                                </div>
+                                {/* Rationale */}
+                                <div className="px-5 py-4 flex flex-col gap-2 flex-1">
+                                  <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">Rationale</p>
+                                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#3f3f46] text-sm leading-[1.6]">
+                                    {ex.rationale}
+                                  </p>
+                                </div>
+                                {/* Risk indicator */}
+                                <div className={`px-5 py-3 rounded-b-lg flex items-center gap-2 ${isPassing ? "bg-[#f0fdf4]" : ex.score >= 50 ? "bg-[#fffbeb]" : "bg-[#fff1f2]"}`}>
+                                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isPassing ? "bg-[#00bc7d]" : ex.score >= 50 ? "bg-amber-400" : "bg-[#e7000b]"}`} />
+                                  <p className="[font-family:'Inter',Helvetica] text-xs text-[#71717b]">
+                                    {isPassing ? "No critical risks identified" : ex.score >= 50 ? "Moderate risk — review recommended" : "High risk — immediate action required"}
+                                  </p>
+                                </div>
+                              </CardContent>
+                            </Card>
                           );
                         })}
                       </div>
+                    </section>
+                  </>
+                ) : (
+                  <Card className="w-full border-zinc-200 border-dashed shadow-none">
+                    <CardContent className="px-6 py-12 flex flex-col items-center gap-3">
+                      <ShieldAlertIcon className="w-8 h-8 text-zinc-300" />
+                      <p className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">No evaluation results yet</p>
+                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm text-center max-w-xs">
+                        Run an audit from the Dashboard to generate a full safety report for this agent.
+                      </p>
                     </CardContent>
                   </Card>
-                ) : (
-                  <p className="[font-family:'Inter',Helvetica] text-[#71717b] text-sm">
-                    No evaluation results yet. Run an audit from the Dashboard to see results here.
-                  </p>
                 )}
-              </div>
+              </>
             ) : (
               <>
                 {/* Title */}

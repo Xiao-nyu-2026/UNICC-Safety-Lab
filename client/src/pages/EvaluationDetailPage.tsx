@@ -659,11 +659,11 @@ export const EvaluationDetailPage = (): JSX.Element => {
                 </p>
               ) : !eval_ && dynamicEval ? (
                 /* ── Dynamic Evaluation View ── */
-                <div className="flex flex-col gap-6 w-full">
-                  {/* Title */}
+                <>
+                  {/* Title row */}
                   <section className="flex items-start justify-between w-full">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[-0.60px] leading-8">
                           {dynamicEval.module}
                         </h1>
@@ -674,68 +674,112 @@ export const EvaluationDetailPage = (): JSX.Element => {
                       <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
                         {dynamicEval.target} · {dynamicEval.date} · {dynamicEval.id}
                       </p>
-                      {/* Modules badges */}
+                      {/* Module badges */}
                       {Array.isArray(dynamicEval.modules) && dynamicEval.modules.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
+                        <div className="flex flex-wrap gap-1.5">
                           {dynamicEval.modules.map((m) => (
-                            <span key={m} className="px-2.5 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium">
+                            <span key={m} className="px-2.5 py-1 bg-violet-100 text-violet-800 rounded-full text-xs font-semibold tracking-wide border border-violet-200">
                               {m}
                             </span>
                           ))}
                         </div>
                       )}
                     </div>
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" onClick={handleExportPDF} disabled={exportingPDF} data-testid="button-export-eval-pdf"
+                        className="h-10 px-4 border-[#4f39f6] bg-white [font-family:'Inter',Helvetica] font-medium text-[#4f39f6] text-sm hover:bg-[#f0f4ff] hover:text-[#3d2bc4] hover:border-[#3d2bc4] disabled:opacity-70">
+                        {exportingPDF ? (<><span className="animate-spin mr-1.5">↻</span>Exporting…</>) : (<><FileDownIcon className="w-4 h-4 mr-1.5" />Export PDF</>)}
+                      </Button>
+                    </div>
                   </section>
 
-                  {/* Summary card */}
-                  <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="px-6 py-5">
-                      <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-2">
-                        Summary
-                      </p>
-                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
-                        {dynamicEval.tooltip}
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Three-expert grid */}
-                  <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                    <CardContent className="p-0">
-                      <div className="px-6 py-5 border-b border-zinc-100">
-                        <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
-                          Expert Panel Assessment
-                        </h2>
-                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
-                          Independent expert verdicts for this evaluation
+                  {/* Audit synthesis card */}
+                  <section className="w-full">
+                    <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <CardContent className="px-6 py-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-1 h-4 rounded-full bg-[#4f39f6]" />
+                          <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">
+                            Audit Synthesis
+                          </p>
+                        </div>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#3f3f46] text-sm leading-[1.7]">
+                          {dynamicEval.tooltip}
                         </p>
-                      </div>
-                      <div className="grid grid-cols-3 divide-x divide-zinc-100">
-                        {dynamicEval.experts.map((ex) => {
-                          const isPassing = ex.status === "PASS";
-                          return (
-                            <div key={ex.name} className="flex flex-col gap-3 px-6 py-6">
-                              <div className="flex items-start justify-between gap-2">
-                                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">
-                                  {ex.name}
-                                </h3>
-                                <Badge className={`${ex.statusColor} border-transparent rounded-full flex-shrink-0 [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto`}>
-                                  {ex.status}
-                                </Badge>
+                      </CardContent>
+                    </Card>
+                  </section>
+
+                  {/* Expert panel header */}
+                  <div className="flex items-end justify-between w-full">
+                    <div>
+                      <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">Expert Council Assessment</h2>
+                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                        Independent verdicts, findings, and rationale from each council member
+                      </p>
+                    </div>
+                    <span className="[font-family:'Inter',Helvetica] text-xs font-medium text-[#71717b]">
+                      {dynamicEval.experts.filter(e => e.status === "PASS").length} / {dynamicEval.experts.length} passing
+                    </span>
+                  </div>
+
+                  {/* Expert cards grid */}
+                  <section className="grid grid-cols-3 gap-4 w-full">
+                    {dynamicEval.experts.map((ex, idx) => {
+                      const isPassing = ex.status === "PASS";
+                      const isReview = ex.status === "REVIEW";
+                      const headerBg = isPassing ? "bg-[#f0fdf4]" : isReview ? "bg-[#fffbeb]" : "bg-[#fff1f2]";
+                      const footerBg = isPassing ? "bg-[#f0fdf4]" : isReview ? "bg-[#fffbeb]" : "bg-[#fff1f2]";
+                      const barColor = isPassing ? "bg-[#00bc7d]" : isReview ? "bg-amber-400" : "bg-[#e7000b]";
+                      const dotColor = isPassing ? "bg-[#00bc7d]" : isReview ? "bg-amber-400" : "bg-[#e7000b]";
+                      const barWidth = isPassing ? "100%" : isReview ? "60%" : "35%";
+                      const expertLabels = ["Expert A", "Expert B", "Expert C"];
+                      return (
+                        <Card key={ex.name} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] flex flex-col" data-testid={`card-expert-${idx}`}>
+                          <CardContent className="p-0 flex flex-col flex-1">
+                            {/* Card header */}
+                            <div className={`${headerBg} px-5 py-4 border-b border-zinc-100 flex items-start justify-between gap-3 rounded-t-lg`}>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">{expertLabels[idx] ?? `Expert ${idx + 1}`}</span>
+                                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">{ex.name}</h3>
                               </div>
-                              <div className={`w-full h-1.5 rounded-full ${isPassing ? "bg-[#d1fae5]" : "bg-[#ffe4e6]"}`}>
-                                <div className={`h-1.5 rounded-full ${isPassing ? "bg-[#00bc7d]" : "bg-[#e7000b]"}`} style={{ width: isPassing ? "100%" : "40%" }} />
+                              <Badge className={`${ex.statusColor} border-transparent rounded-full flex-shrink-0 [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-1 h-auto`}>
+                                {ex.status}
+                              </Badge>
+                            </div>
+
+                            {/* Score bar */}
+                            <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="[font-family:'Inter',Helvetica] text-xs font-medium text-[#71717b]">Confidence</span>
+                                <span className="[font-family:'Inter',Helvetica] text-xs font-bold text-zinc-950">{isPassing ? "High" : isReview ? "Moderate" : "Low"}</span>
                               </div>
-                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
+                              <div className="w-full bg-zinc-100 rounded-full h-2">
+                                <div className={`h-2 rounded-full ${barColor}`} style={{ width: barWidth }} />
+                              </div>
+                            </div>
+
+                            {/* Rationale */}
+                            <div className="px-5 py-4 flex flex-col gap-2 flex-1">
+                              <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider">Rationale</p>
+                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#3f3f46] text-sm leading-[1.6]">
                                 {ex.note}
                               </p>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+
+                            {/* Risk footer */}
+                            <div className={`${footerBg} px-5 py-3 rounded-b-lg flex items-center gap-2`}>
+                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
+                              <p className="[font-family:'Inter',Helvetica] text-xs text-[#71717b]">
+                                {isPassing ? "No critical risks identified" : isReview ? "Moderate risk — review recommended" : "High risk — immediate action required"}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </section>
+                </>
               ) : (
                 <>
                   {/* Title row */}

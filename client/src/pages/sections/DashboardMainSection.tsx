@@ -627,21 +627,23 @@ export const DashboardMainSection = (): JSX.Element => {
                         </button>
                       </TableCell>
 
-                      {/* Module — route to evaluation detail, render as badges if array */}
-                      <TableCell className="ml-[6px] mr-[6px]">
+                      {/* Module — normalise to array, always render as badges */}
+                      <TableCell className="ml-[6px] mr-[6px] py-3">
                         <button
                           onClick={() => setLocation(`/evaluations/${ev.id}`)}
                           className="flex flex-wrap gap-1 text-left"
                           data-testid={`link-module-${ev.id}`}
                         >
-                          {Array.isArray((ev as any).modules) && (ev as any).modules.length > 0
-                            ? (ev as any).modules.map((m: string) => (
-                                <span key={m} className="px-2 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium hover:bg-violet-200 transition-colors">
-                                  {m}
-                                </span>
-                              ))
-                            : <span className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline">{ev.module}</span>
-                          }
+                          {((): string[] => {
+                            const raw = (ev as any).modules;
+                            if (Array.isArray(raw) && raw.length > 0) return raw;
+                            if (typeof ev.module === "string" && ev.module.trim()) return ev.module.split(",").map((s: string) => s.trim()).filter(Boolean);
+                            return ["—"];
+                          })().map((m: string) => (
+                            <span key={m} className="px-2 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium hover:bg-violet-200 transition-colors whitespace-nowrap">
+                              {m}
+                            </span>
+                          ))}
                         </button>
                       </TableCell>
 
