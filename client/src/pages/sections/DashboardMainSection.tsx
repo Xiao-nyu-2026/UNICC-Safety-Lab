@@ -218,68 +218,20 @@ export const DashboardMainSection = (): JSX.Element => {
     }));
   })();
 
-  // Bar: 7-day window keyed to real calendar dates
+  // Bar: last 14 runs as individual pipeline status indicators
   const assessmentTrend = (() => {
-    // Build a 7-day window ending today
-    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Generate the last 7 days as { label, dateMs } pairs
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() - (6 - i));          // index 0 = 6 days ago, index 6 = today
+    const slice = [...evaluationsData].slice(-14).reverse();
+    if (slice.length === 0) return [];
+    return slice.map((ev, i) => {
+      const label = ev.date?.trim() || `Run ${i + 1}`;
+      const isApprove = (ev.verdict ?? "").toUpperCase() === "APPROVE";
       return {
-        label: `${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`,
-        dateMs: d.getTime(),
+        day: label,
+        module: ev.module ?? "",
+        fullAlignment: isApprove ? 1 : 0,
+        nonCompliant: isApprove ? 0 : 1,
       };
     });
-
-    // Buckets: label → { fullAlignment, nonCompliant }
-    const buckets: Record<string, { fullAlignment: number; nonCompliant: number }> = {};
-    for (const { label } of days) buckets[label] = { fullAlignment: 0, nonCompliant: 0 };
-
-    const yesterdayMs = today.getTime() - 86_400_000;
-
-    for (const ev of evaluationsData) {
-      const raw = (ev.date ?? "").trim();
-      let targetMs: number | null = null;
-
-      if (/just now|today/i.test(raw)) {
-        targetMs = today.getTime();
-      } else if (/yesterday/i.test(raw)) {
-        targetMs = yesterdayMs;
-      } else if (raw) {
-        // Parse "Apr 07, 2026" or "Apr 7, 2026"
-        const parsed = new Date(raw);
-        if (!isNaN(parsed.getTime())) {
-          parsed.setHours(0, 0, 0, 0);
-          targetMs = parsed.getTime();
-        }
-      }
-
-      if (targetMs === null) continue;
-
-      // Find matching bucket
-      const match = days.find((d) => d.dateMs === targetMs);
-      if (!match) continue;
-
-      const bucket = buckets[match.label];
-      const v = (ev.verdict ?? "").toUpperCase();
-      if (v === "APPROVE") {
-        bucket.fullAlignment += 1;
-      } else {
-        bucket.nonCompliant += 1;
-      }
-    }
-
-    return days
-      .filter(({ label }) => buckets[label].fullAlignment > 0 || buckets[label].nonCompliant > 0)
-      .map(({ label }) => ({
-        day: label,
-        fullAlignment: buckets[label].fullAlignment,
-        nonCompliant: buckets[label].nonCompliant,
-      }));
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
@@ -629,20 +581,19 @@ export const DashboardMainSection = (): JSX.Element => {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={assessmentTrend} barSize={18} barCategoryGap="35%">
+                      <BarChart data={assessmentTrend} barSize={22} barCategoryGap="8%" barGap={0}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
                         <XAxis
                           dataKey="day"
-                          tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                          tick={{ fontSize: 10, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
                           axisLine={false}
                           tickLine={false}
+                          interval={0}
+                          angle={-35}
+                          textAnchor="end"
+                          height={42}
                         />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
-                          axisLine={false}
-                          tickLine={false}
-                          allowDecimals={false}
-                        />
+                        <YAxis hide />
                         <Tooltip
                           contentStyle={{
                             borderRadius: 8,
@@ -650,13 +601,14 @@ export const DashboardMainSection = (): JSX.Element => {
                             fontFamily: "Inter, Helvetica",
                             fontSize: 12,
                           }}
-                          formatter={(value: number, name: string) => [
-                            `${value} eval${value !== 1 ? "s" : ""}`,
-                            name === "fullAlignment" ? "Full Alignment (GOVERN & MEASURE)" : "Non-compliant",
+                          formatter={(_value: number, name: string, props: any) => [
+                            props.payload?.module || "",
+                            name === "fullAlignment" ? "✓ Full Alignment" : "✗ Non-compliant",
                           ]}
+                          labelFormatter={(label: string) => `Run: ${label}`}
                         />
-                        <Bar dataKey="fullAlignment" fill="#009966" radius={[3, 3, 0, 0]} name="fullAlignment" />
-                        <Bar dataKey="nonCompliant" fill="#e7000b" radius={[3, 3, 0, 0]} name="nonCompliant" />
+                        <Bar dataKey="fullAlignment" fill="#009966" radius={[4, 4, 0, 0]} name="fullAlignment" stackId="a" />
+                        <Bar dataKey="nonCompliant" fill="#e7000b" radius={[4, 4, 0, 0]} name="nonCompliant" stackId="a" />
                       </BarChart>
                     </ResponsiveContainer>
                   )}
