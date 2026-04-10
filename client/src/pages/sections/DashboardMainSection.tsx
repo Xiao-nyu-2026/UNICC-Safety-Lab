@@ -249,12 +249,15 @@ export const DashboardMainSection = (): JSX.Element => {
         date: "Just now",
         reason: { text: data.summary.slice(0, 60), color: "text-[#71717b]" },
         tooltip: data.summary,
-        experts: Object.values(data.experts).map((ex) => ({
-          name: ex.name,
-          status: ex.score >= 70 ? "PASS" : "FAIL",
-          statusColor: ex.score >= 70 ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]",
-          note: ex.rationale,
-        })),
+        experts: Object.values(data.experts).map((ex) => {
+          const isPass = (ex.verdict ?? "REVIEW").toUpperCase() === "APPROVE";
+          return {
+            name: ex.name,
+            status: isPass ? "PASS" : "FAIL",
+            statusColor: isPass ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]",
+            note: Array.isArray(ex.findings) ? ex.findings[0] : (ex.rationale ?? ""),
+          };
+        }),
       };
       /* Upsert: replace if same staticEvalId already present, else prepend */
       setEvaluationsData((prev) => {
@@ -283,6 +286,7 @@ export const DashboardMainSection = (): JSX.Element => {
           verdictColor: verdictColorMap[verdict] ?? "bg-zinc-100 text-zinc-700",
           confidence: data.confidence_score,
           summary: data.summary,
+          synthesis_text: data.synthesis_text ?? data.summary,
           timestamp: new Date().toISOString(),
           experts: data.experts,
         };
@@ -608,17 +612,27 @@ export const DashboardMainSection = (): JSX.Element => {
               <button onClick={() => setEvalResult(null)} className="ml-4 text-zinc-400 hover:text-zinc-700 text-lg leading-none flex-shrink-0">✕</button>
             </div>
             <div className="grid grid-cols-3 gap-px bg-zinc-200 border-t border-zinc-200">
-              {Object.values(evalResult.experts).map((ex) => (
-                <div key={ex.name} className="flex flex-col gap-1 px-6 py-4 bg-white/70">
-                  <div className="flex items-center justify-between">
-                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-sm">{ex.name}</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ex.score >= 70 ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
-                      {ex.score}/100
-                    </span>
+              {Object.values(evalResult.experts).map((ex) => {
+                const isPass = (ex.verdict ?? "REVIEW").toUpperCase() === "APPROVE";
+                const firstFinding = Array.isArray(ex.findings) ? ex.findings[0] : (ex.rationale ?? "");
+                const firstRisk    = Array.isArray(ex.risks)    ? ex.risks[0]    : "";
+                return (
+                  <div key={ex.name} className="flex flex-col gap-1.5 px-6 py-4 bg-white/70">
+                    <div className="flex items-center justify-between">
+                      <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-sm">{ex.name}</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isPass ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
+                        {isPass ? "APPROVE" : (ex.verdict ?? "REVIEW")}
+                      </span>
+                    </div>
+                    {firstFinding && (
+                      <p className="[font-family:'Inter',Helvetica] text-xs text-zinc-500 leading-4">{firstFinding}</p>
+                    )}
+                    {firstRisk && (
+                      <p className="[font-family:'Inter',Helvetica] text-xs text-[#9f1239] leading-4">⚠ {firstRisk}</p>
+                    )}
                   </div>
-                  <p className="[font-family:'Inter',Helvetica] text-xs text-zinc-500">{ex.rationale}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

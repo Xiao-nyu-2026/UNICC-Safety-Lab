@@ -12,11 +12,22 @@ export type Agent = {
   lastEvalResult?: EvalResult | null;
 };
 
+export type ExpertData = {
+  name: string;
+  verdict: string;
+  findings: string[];
+  risks: string[];
+  /* legacy compat — may be present in older localStorage snapshots */
+  score?: number;
+  rationale?: string;
+};
+
 export type EvalResult = {
   final_verdict: string;
   confidence_score: number;
   summary: string;
-  experts: Record<string, { name: string; score: number; rationale: string }>;
+  synthesis_text?: string;
+  experts: Record<string, ExpertData>;
 };
 
 const verdictColorMap: Record<string, string> = {

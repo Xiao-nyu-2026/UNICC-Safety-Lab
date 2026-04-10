@@ -3,68 +3,83 @@ import { createServer, type Server } from "http";
 import { exec } from "child_process";
 import { storage } from "./storage";
 
+// Extract bullet-list items from a named markdown section
+function extractBullets(text: string, section: string): string[] {
+  const re = new RegExp(`###\\s*${section}\\s*\\n+([\\s\\S]*?)(?=\\n###|$)`, "i");
+  const match = text.match(re);
+  if (!match) return [];
+  return match[1]
+    .split("\n")
+    .map((l) => l.replace(/^[-*•]\s*/, "").trim())
+    .filter((l) => l.length > 3);
+}
+
+// Extract full text of a named markdown section (for synthesis display)
+function extractSection(text: string, section: string): string {
+  const re = new RegExp(`###\\s*${section}\\s*\\n+([\\s\\S]*?)(?=\\n###|$)`, "i");
+  const match = text.match(re);
+  return match ? match[1].trim() : "";
+}
+
 // Extract the RECOMMENDATION line from a markdown expert block
 function extractRecommendation(text: string): string {
   const match = text.match(/###\s*Recommendation\s*\n+([A-Z]+)/i);
   return match ? match[1].toUpperCase().trim() : "REVIEW";
 }
 
-// Extract the CONFIDENCE line and map to a numeric score
+// Extract the CONFIDENCE level and map to a numeric score
 function extractConfidence(text: string): number {
   const match = text.match(/###\s*Confidence\s*\n+(\w+)/i);
   const level = match ? match[1].toLowerCase() : "medium";
   return level === "high" ? 85 : level === "low" ? 35 : 60;
 }
 
-// Pull a short rationale from the Findings or Summary block
-function extractRationale(text: string): string {
-  const findingsMatch = text.match(/###\s*Findings\s*\n+([\s\S]*?)(?=\n###|$)/i);
-  if (findingsMatch) {
-    const firstBullet = findingsMatch[1].trim().split("\n")[0].replace(/^[-*]\s*/, "");
-    if (firstBullet) return firstBullet;
-  }
-  const summaryMatch = text.match(/###\s*Summary\s*\n+([\s\S]*?)(?=\n###|$)/i);
-  if (summaryMatch) {
-    return summaryMatch[1].trim().split("\n")[0];
-  }
-  return text.slice(0, 120).replace(/#+/g, "").trim();
-}
-
 // Map raw Python output → the shape the React frontend expects
 function transformPythonOutput(raw: Record<string, any>) {
-  const synth = raw.synthesis_text ?? raw.expert_c_text ?? "";
-  const verdict = extractRecommendation(synth) || "REVIEW";
+  const synth: string = raw.synthesis_text ?? raw.expert_c_text ?? "";
 
+  // Derive overall verdict: prefer synthesis recommendation, fallback REVIEW
+  const verdict = extractRecommendation(synth) || "REVIEW";
   const confidence = extractConfidence(synth);
 
-  // Derive a one-sentence summary from synthesis
-  const summaryMatch = (synth as string).match(/###\s*Summary\s*\n+([\s\S]*?)(?=\n###|$)/i);
-  const summary = summaryMatch
-    ? summaryMatch[1].trim().split("\n")[0]
-    : "Evaluation complete. See expert breakdown below.";
+  // One-sentence summary from the synthesis Summary block
+  const summaryLines = extractBullets(synth, "Summary");
+  const summary =
+    summaryLines[0] ??
+    extractSection(synth, "Summary").split("\n")[0] ??
+    "Evaluation complete. See expert breakdown below.";
+
+  // Full synthesis text for the Audit Synthesis card
+  const synthesisText =
+    extractSection(synth, "Summary") ||
+    extractSection(synth, "Recommendation") ||
+    synth.replace(/###.*\n/g, "").trim().slice(0, 600) ||
+    "Synthesis not available.";
+
+  function buildExpert(text: string, fallbackName: string) {
+    const findings = extractBullets(text, "Findings");
+    const risks    = extractBullets(text, "Risks");
+    const rec      = extractRecommendation(text);
+    // Defensive: if no Findings/Risks blocks, fall back to first line of Summary
+    const fallbackFinding = extractSection(text, "Summary").split("\n")[0] ?? text.slice(0, 80);
+    return {
+      name: fallbackName,
+      verdict: rec,
+      findings: findings.length > 0 ? findings : (fallbackFinding ? [fallbackFinding] : ["No specific findings reported."]),
+      risks:    risks,
+    };
+  }
 
   return {
     final_verdict: verdict,
     confidence_score: confidence,
     summary,
+    synthesis_text: synthesisText,
     experts: {
-      expert_a: {
-        name: "Security Probe",
-        score: extractConfidence(raw.expert_a_text ?? ""),
-        rationale: extractRationale(raw.expert_a_text ?? ""),
-      },
-      expert_b: {
-        name: "Compliance",
-        score: extractConfidence(raw.expert_b_text ?? ""),
-        rationale: extractRationale(raw.expert_b_text ?? ""),
-      },
-      expert_c: {
-        name: "Context Risk",
-        score: extractConfidence(raw.expert_c_text ?? ""),
-        rationale: extractRationale(raw.expert_c_text ?? ""),
-      },
+      expert_a: buildExpert(raw.expert_a_text ?? "", "Security & Compliance Probe"),
+      expert_b: buildExpert(raw.expert_b_text ?? "", "Governance & Risk Workflow"),
+      expert_c: buildExpert(raw.expert_c_text ?? "", "Contextual Risk Arbiter"),
     },
-    // also pass through the full raw data for future use
     _raw: raw,
   };
 }

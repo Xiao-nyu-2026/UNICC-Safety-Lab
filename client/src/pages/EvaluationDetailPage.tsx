@@ -632,8 +632,17 @@ type LiveReport = {
   verdictColor: string;
   confidence: number;
   summary: string;
+  synthesis_text?: string;
   timestamp: string;
-  experts: Record<string, { name: string; score: number; rationale: string }>;
+  experts: Record<string, {
+    name: string;
+    verdict?: string;
+    findings?: string[];
+    risks?: string[];
+    /* legacy compat */
+    score?: number;
+    rationale?: string;
+  }>;
 };
 
 function loadLiveReport(moduleName: string): LiveReport | null {
@@ -674,18 +683,35 @@ export const EvaluationDetailPage = (): JSX.Element => {
   };
 
   const derivedTests: DerivedTest[] = liveReport
-    ? Object.entries(liveReport.experts).map(([key, ex]) => {
-        const isPassing = ex.score >= 70;
-        const sentences = ex.rationale
-          .split(/(?<=[.!?])\s+/)
-          .map((s) => s.trim())
-          .filter((s) => s.length > 4);
-        return {
-          name: EXPERT_COL_NAMES[key] ?? ex.name,
-          detail: sentences[0] ?? ex.rationale,
-          result: isPassing ? "pass" : "fail",
-          violation: !isPassing ? (sentences[1] ?? undefined) : undefined,
-        } as DerivedTest;
+    ? Object.entries(liveReport.experts).flatMap(([key, ex]) => {
+        /* Determine verdict: prefer explicit verdict field, fallback to score */
+        const exVerdict = (ex.verdict ?? "REVIEW").toUpperCase();
+        const isPassByVerdict = exVerdict === "APPROVE" || exVerdict === "APPROVED";
+        const isPassByScore   = ex.score != null ? ex.score >= 70 : true;
+        const isPassing = exVerdict !== "REVIEW" ? isPassByVerdict : isPassByScore;
+
+        /* Use findings array first, fallback to rationale split */
+        const findingsArr: string[] = Array.isArray(ex.findings) && ex.findings.length > 0
+          ? ex.findings
+          : (ex.rationale
+              ? ex.rationale.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 4)
+              : []);
+        const risksArr: string[] = Array.isArray(ex.risks) ? ex.risks : [];
+
+        const expertLabel = EXPERT_COL_NAMES[key] ?? ex.name;
+
+        /* Create one test row per finding (pass) + one per risk (fail) */
+        const rows: DerivedTest[] = [];
+        findingsArr.slice(0, 2).forEach((f) => {
+          rows.push({ name: expertLabel, detail: f, result: isPassing ? "pass" : "fail" });
+        });
+        risksArr.slice(0, 2).forEach((r) => {
+          rows.push({ name: expertLabel, detail: r, result: "fail", violation: r });
+        });
+        if (rows.length === 0) {
+          rows.push({ name: expertLabel, detail: isPassing ? "Assessment passed all checks." : "Assessment flagged issues.", result: isPassing ? "pass" : "fail" });
+        }
+        return rows;
       })
     : [];
 
@@ -1025,14 +1051,16 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         {liveReport ? (
                           <div className="flex items-center gap-4 mt-1 flex-wrap">
                             {Object.entries(liveReport.experts).map(([key, ex]) => {
-                              const isPassing = ex.score >= 70;
+                              const exVerdict = (ex.verdict ?? "REVIEW").toUpperCase();
+                              const isPassing = exVerdict === "APPROVE" || exVerdict === "APPROVED" ||
+                                (exVerdict === "REVIEW" && ex.score != null && ex.score >= 70);
                               const cls = isPassing ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#fee2e2] text-[#9f1239]";
-                              const tag = isPassing ? "APPROVED" : "REJECTED";
+                              const tag = isPassing ? "APPROVED" : (exVerdict !== "REVIEW" ? exVerdict : "REJECTED");
                               return (
                                 <div key={key} className="flex items-center gap-1.5">
                                   <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">{ex.name}:</span>
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full [font-family:'ui-monospace',SFMono-Regular,monospace] font-bold text-[10px] tracking-wider ${cls}`}>
-                                    {tag} ({ex.score}/100)
+                                    {tag}
                                   </span>
                                 </div>
                               );
@@ -1388,31 +1416,36 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         {eval_.expertScores.map((expert, i) => {
                           const liveExpertKeys = liveReport ? Object.keys(liveReport.experts) : [];
                           const liveEx = liveReport ? liveReport.experts[liveExpertKeys[i]] : null;
-                          const livePass = liveEx ? liveEx.score >= 70 : null;
+                          const liveVerdict = liveEx ? (liveEx.verdict ?? "REVIEW").toUpperCase() : null;
+                          const livePass = liveVerdict
+                            ? (liveVerdict === "APPROVE" || liveVerdict === "APPROVED")
+                            : (liveEx?.score != null ? liveEx.score >= 70 : null);
+                          const firstNote = liveEx
+                            ? (Array.isArray(liveEx.findings) && liveEx.findings[0])
+                              || (liveEx.rationale ?? "")
+                            : expert.overallReason;
                           return (
                             <div key={i} className="flex flex-col gap-1.5 p-4 rounded-lg bg-zinc-50 border border-zinc-100" data-testid={`dialog-expert-${i}`}>
                               <div className="flex items-center justify-between gap-3">
                                 <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
                                   {liveEx?.name ?? expert.expert}
                                 </span>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  {liveEx && (
-                                    <span className="[font-family:'Inter',Helvetica] text-xs font-medium text-[#71717b]">
-                                      Score: {liveEx.score}%
-                                    </span>
-                                  )}
-                                  <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto ${
+                                <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto ${
                                     livePass !== null
                                       ? (livePass ? "bg-[#d0fae5] text-[#004f3b]" : "bg-[#ffe2e2] text-[#82181a]")
                                       : (expert.overallVerdict === "pass" ? "bg-[#d0fae5] text-[#004f3b]" : "bg-[#ffe2e2] text-[#82181a]")
                                   }`}>
-                                    {livePass !== null ? (livePass ? "Pass" : "Fail") : (expert.overallVerdict === "pass" ? "Pass" : "Fail")}
-                                  </Badge>
-                                </div>
+                                  {liveVerdict ?? (expert.overallVerdict === "pass" ? "Pass" : "Fail")}
+                                </Badge>
                               </div>
                               <p className="[font-family:'Inter',Helvetica] text-xs text-[#71717b] leading-4">
-                                {liveEx?.rationale ?? expert.overallReason}
+                                {firstNote}
                               </p>
+                              {liveEx && Array.isArray(liveEx.risks) && liveEx.risks[0] && (
+                                <p className="[font-family:'Inter',Helvetica] text-xs text-[#9f1239] leading-4 mt-0.5">
+                                  ⚠ {liveEx.risks[0]}
+                                </p>
+                              )}
                             </div>
                           );
                         })}

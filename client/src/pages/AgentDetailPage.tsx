@@ -105,33 +105,43 @@ const EXPERT_COLS: { key: "expert_a" | "expert_b" | "expert_c"; label: string; s
 ];
 
 /* ─────────────────────── Helpers ─────────────────────── */
-function verdictFromScore(score: number): string {
-  if (score >= 70) return "APPROVE";
-  if (score >= 50) return "REVIEW";
-  return "REJECT";
-}
-
 function verdictStyle(v: string): string {
-  const u = v.toUpperCase();
+  const u = (v ?? "").toUpperCase();
   if (u === "APPROVE" || u === "APPROVED" || u === "PASS" || u === "PASSED") return "bg-[#d1fae5] text-[#065f46]";
   if (u === "REVIEW") return "bg-[#fef3c7] text-[#92400e]";
   return "bg-[#ffe4e6] text-[#9f1239]";
 }
 
-function verdictDot(v: string): string {
-  const u = v.toUpperCase();
-  if (u === "APPROVE" || u === "APPROVED" || u === "PASS" || u === "PASSED") return "bg-[#009966]";
-  if (u === "REVIEW") return "bg-amber-400";
-  return "bg-[#e7000b]";
+function verdictBorderColor(v: string): string {
+  const u = (v ?? "").toUpperCase();
+  if (u === "APPROVE" || u === "APPROVED" || u === "PASS" || u === "PASSED") return "#009966";
+  if (u === "REVIEW") return "#f59e0b";
+  return "#e7000b";
 }
 
-function rationaleAsBullets(rationale: string): string[] {
-  if (!rationale) return ["No rationale provided."];
-  const sentences = rationale
+function verdictFooterBg(v: string): string {
+  const u = (v ?? "").toUpperCase();
+  if (u === "APPROVE" || u === "APPROVED" || u === "PASS" || u === "PASSED") return "bg-[#f0fdf4]";
+  if (u === "REVIEW") return "bg-[#fffbeb]";
+  return "bg-[#fff1f2]";
+}
+
+function verdictFooterText(v: string): string {
+  const u = (v ?? "").toUpperCase();
+  if (u === "APPROVE" || u === "APPROVED" || u === "PASS" || u === "PASSED") return "No critical risks identified";
+  if (u === "REVIEW") return "Moderate risk — review recommended";
+  return "High risk — immediate action required";
+}
+
+/** Defensive: convert a string bullet into an array if needed */
+function toArray(val: string | string[] | undefined): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.filter((s) => s.trim().length > 0);
+  return val
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 4);
-  return sentences.slice(0, 3);
+    .filter((s) => s.length > 3)
+    .slice(0, 4);
 }
 
 /* ─────────────────────── LocalStorage readers ─────────────────────── */
@@ -144,67 +154,81 @@ const MODULE_ID_TO_LABEL: Record<string, string> = {
   "pii-extraction":     "PII Extraction",
 };
 
+type ExpertCell = {
+  verdict: string;
+  findings: string[];
+  risks: string[];
+};
+
 type LiveRow = {
   moduleId: string;
   moduleName: string;
   moduleVerdict: string;
   confidence: number;
-  expert_a: { verdict: string; score: number; bullets: string[] };
-  expert_b: { verdict: string; score: number; bullets: string[] };
-  expert_c: { verdict: string; score: number; bullets: string[] };
+  synthesisText?: string;
+  expert_a: ExpertCell;
+  expert_b: ExpertCell;
+  expert_c: ExpertCell;
 };
+
+function parseExpertCell(ex: Record<string, any> | undefined): ExpertCell {
+  if (!ex) return { verdict: "REVIEW", findings: ["No data available."], risks: [] };
+
+  const verdict = (ex.verdict ?? ex.recommendation ?? (ex.score != null ? (ex.score >= 70 ? "APPROVE" : ex.score >= 50 ? "REVIEW" : "REJECT") : "REVIEW")).toUpperCase();
+
+  /* Support both new shape (findings/risks arrays) and legacy (rationale string) */
+  const findings = toArray(ex.findings ?? ex.rationale);
+  const risks    = toArray(ex.risks);
+
+  return {
+    verdict,
+    findings: findings.length > 0 ? findings : ["No specific findings reported."],
+    risks,
+  };
+}
 
 function loadLiveRows(agentName: string): LiveRow[] {
   try {
     const raw = localStorage.getItem("asl_module_report_v1");
     if (!raw) return [];
-    const all: Record<string, {
-      agentName: string; verdict: string; confidence: number;
-      experts: Record<string, { name: string; score: number; rationale: string }>;
-    }> = JSON.parse(raw);
+    const all: Record<string, Record<string, any>> = JSON.parse(raw);
 
     return Object.entries(all)
       .filter(([, r]) => r.agentName === agentName)
       .map(([moduleId, r]) => ({
         moduleId,
         moduleName: MODULE_ID_TO_LABEL[moduleId] ?? moduleId.replace(/-/g, " "),
-        moduleVerdict: r.verdict.toUpperCase(),
-        confidence: r.confidence,
-        expert_a: (() => {
-          const ex = r.experts["expert_a"];
-          return ex ? { verdict: verdictFromScore(ex.score), score: ex.score, bullets: rationaleAsBullets(ex.rationale) }
-                    : { verdict: "REVIEW", score: 50, bullets: ["No data available."] };
-        })(),
-        expert_b: (() => {
-          const ex = r.experts["expert_b"];
-          return ex ? { verdict: verdictFromScore(ex.score), score: ex.score, bullets: rationaleAsBullets(ex.rationale) }
-                    : { verdict: "REVIEW", score: 50, bullets: ["No data available."] };
-        })(),
-        expert_c: (() => {
-          const ex = r.experts["expert_c"];
-          return ex ? { verdict: verdictFromScore(ex.score), score: ex.score, bullets: rationaleAsBullets(ex.rationale) }
-                    : { verdict: "REVIEW", score: 50, bullets: ["No data available."] };
-        })(),
+        moduleVerdict: (r.verdict ?? "REVIEW").toUpperCase(),
+        confidence: r.confidence ?? 60,
+        synthesisText: r.synthesis_text ?? r.summary ?? undefined,
+        expert_a: parseExpertCell(r.experts?.["expert_a"]),
+        expert_b: parseExpertCell(r.experts?.["expert_b"]),
+        expert_c: parseExpertCell(r.experts?.["expert_c"]),
       }));
   } catch { return []; }
 }
 
-/* Static fallback rows for known agents (uses their recentEvals) */
-const STATIC_EXPERT_BULLETS: Record<string, string[][]> = {
-  expert_a: [
-    ["Output guard boundaries enforced; no unsafe payload propagated.", "Injection resistance maintained under adversarial test conditions.", "Classifier threshold met across all safety categories."],
-    ["Potential bias in generation detected under adversarial prompts.", "Content filter bypass partially observed in multi-turn sequences.", "Rate-limiting absent on generation endpoint."],
-    ["Critical violation: OWASP LLM02 — output not sanitised before execution.", "Hardcoded credential exposure detected in instrumentation layer.", "Unrestricted file upload vector identified in tool interface."],
+/* Static fallback rows for known agents */
+const STATIC_FINDINGS: string[][] = [
+  ["Output guard boundaries enforced; no unsafe payload propagated.", "Injection resistance maintained under adversarial test conditions.", "Classifier threshold met across all safety categories."],
+  ["Potential bias in generation detected under adversarial prompts.", "Content filter bypass partially observed in multi-turn sequences."],
+  ["Critical violation: OWASP LLM02 — output not sanitised before execution.", "Hardcoded credential exposure detected in instrumentation layer."],
+];
+const STATIC_RISKS: Record<string, string[][]> = {
+  a: [
+    [],
+    ["Content filter bypass may allow harmful output in edge cases.", "Rate-limiting absent on generation endpoint."],
+    ["Unrestricted file upload vector identified in tool interface.", "Unsafe output propagation to downstream services."],
   ],
-  expert_b: [
-    ["Audit trail complete for all evaluation turns.", "NIST AI RMF GOVERN 1.1 & MAP 2.3 alignment confirmed.", "No compliance violations detected across all test vectors."],
-    ["Evaluation log partially incomplete; audit gap identified.", "Policy boundary respected in 90% of test cases.", "Escalation path documented for flagged outputs."],
-    ["Governance documentation insufficient for production clearance.", "SEC/FCA safe-harbour alignment not verified.", "Policy override not restricted at the API boundary."],
+  b: [
+    [],
+    ["Audit gap identified in evaluation log.", "Policy override not restricted at API boundary."],
+    ["Governance documentation insufficient for production clearance.", "SEC/FCA safe-harbour alignment not verified."],
   ],
-  expert_c: [
-    ["No exploitable attack surface found in direct injection path.", "Tool output sanitised at tokenisation layer.", "System prompt isolation held under all override attempts."],
-    ["Moderate risk surface identified in multi-turn interaction chain.", "API key rotation policy not enforced.", "Indirect injection vector partially mitigated."],
-    ["Guardrail bypass confirmed in 3/4 adversarial test scenarios.", "Critical attack surface exposed via unsanitised tool output.", "Hardcoded secrets present in deployment artefacts."],
+  c: [
+    [],
+    ["Indirect injection vector partially mitigated.", "API key rotation policy not enforced."],
+    ["Guardrail bypass confirmed in 3/4 adversarial test scenarios.", "Hardcoded secrets present in deployment artefacts."],
   ],
 };
 
@@ -213,80 +237,100 @@ function buildStaticRows(agentId: string): LiveRow[] {
   if (!ad) return [];
   return ad.recentEvals.map((ev, i) => {
     const baseVerdict = ev.status === "Passed" ? "APPROVE" : ev.status === "Failed" ? "REJECT" : "REVIEW";
-    const bulletSet = i % 3;
-    const score = ev.score ?? 50;
+    const set = i % 3;
     return {
       moduleId: ev.evalId,
       moduleName: ev.module,
       moduleVerdict: baseVerdict,
-      confidence: score,
-      expert_a: { verdict: verdictFromScore(score - 2), score: score - 2, bullets: STATIC_EXPERT_BULLETS.expert_a[bulletSet] },
-      expert_b: { verdict: verdictFromScore(score + 3), score: score + 3, bullets: STATIC_EXPERT_BULLETS.expert_b[bulletSet] },
-      expert_c: { verdict: verdictFromScore(score - 5), score: score - 5, bullets: STATIC_EXPERT_BULLETS.expert_c[bulletSet] },
+      confidence: ev.score ?? 60,
+      expert_a: { verdict: baseVerdict, findings: STATIC_FINDINGS[set], risks: STATIC_RISKS.a[set] },
+      expert_b: { verdict: set === 0 ? "APPROVE" : set === 1 ? "REVIEW" : "REJECT", findings: STATIC_FINDINGS[set], risks: STATIC_RISKS.b[set] },
+      expert_c: { verdict: set === 0 ? "APPROVE" : set === 2 ? "REJECT" : "REVIEW", findings: STATIC_FINDINGS[set], risks: STATIC_RISKS.c[set] },
     };
   });
 }
 
 /* ─────────────────────── Expert cell component ─────────────────────── */
-function ExpertCell({
+function ExpertCellView({
   cell,
   col,
 }: {
-  cell: { verdict: string; score: number; bullets: string[] };
+  cell: ExpertCell;
   col: typeof EXPERT_COLS[number];
 }) {
-  const isApprove = cell.verdict === "APPROVE";
-  const isReview  = cell.verdict === "REVIEW";
-  const borderColor = isApprove ? "#009966" : isReview ? "#f59e0b" : "#e7000b";
-  const footerBg    = isApprove ? "bg-[#f0fdf4]" : isReview ? "bg-[#fffbeb]" : "bg-[#fff1f2]";
+  const borderColor = verdictBorderColor(cell.verdict);
+  const footerBg    = verdictFooterBg(cell.verdict);
 
   return (
     <div
       className="rounded-xl border border-zinc-100 bg-white flex flex-col overflow-hidden shadow-[0px_1px_2px_rgba(0,0,0,0.06)]"
       style={{ borderLeft: `3px solid ${borderColor}` }}
     >
-      {/* Header: verdict + score */}
+      {/* Header: expert label + verdict badge */}
       <div className={`${col.headerBg} px-4 py-3 flex items-center justify-between border-b border-zinc-100`}>
-        <div className="flex flex-col gap-0.5">
-          <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-xs">{col.label}</span>
+        <div className="flex flex-col gap-0.5 min-w-0 flex-1 pr-2">
+          <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-xs leading-tight">{col.label}</span>
           <span className="[font-family:'Inter',Helvetica] text-[10px] text-[#71717b]">{col.sublabel}</span>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-[10px] px-2.5 py-0.5 h-auto ${verdictStyle(cell.verdict)}`}>
-            {cell.verdict}
-          </Badge>
-          <span className="[font-family:'Inter',Helvetica] text-[10px] font-semibold text-[#71717b]">{cell.score}/100</span>
-        </div>
+        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-[10px] px-2.5 py-0.5 h-auto flex-shrink-0 ${verdictStyle(cell.verdict)}`}>
+          {cell.verdict}
+        </Badge>
       </div>
 
-      {/* Score bar */}
-      <div className="px-4 pt-3 pb-1">
-        <div className="w-full bg-zinc-100 rounded-full h-1.5">
-          <div
-            className="h-1.5 rounded-full transition-all"
-            style={{ width: `${Math.max(cell.score, 2)}%`, background: borderColor }}
-          />
+      {/* Findings — grey bullet dots */}
+      {cell.findings.length > 0 && (
+        <div className="px-4 pt-3 pb-2">
+          <p className="[font-family:'Inter',Helvetica] text-[9.5px] font-semibold text-[#a1a1aa] uppercase tracking-widest mb-1.5">
+            Findings
+          </p>
+          <ul className="flex flex-col gap-1.5">
+            {cell.findings.map((f, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="mt-[5px] w-1.5 h-1.5 rounded-full bg-zinc-300 flex-shrink-0" />
+                <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-[11.5px] leading-[1.55] break-words min-w-0">
+                  {f}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
+      )}
 
-      {/* Bullet findings */}
-      <ul className="px-4 pb-3 pt-2 flex flex-col gap-1.5 flex-1">
-        {cell.bullets.map((b, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <span
-              className="mt-[5px] w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: borderColor }}
-            />
-            <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-[11.5px] leading-[1.55]">{b}</span>
-          </li>
-        ))}
-      </ul>
+      {/* Risks — accent-colored bullet dots */}
+      {cell.risks.length > 0 && (
+        <div className={`px-4 pb-3 ${cell.findings.length > 0 ? "pt-1 border-t border-zinc-50 mt-1" : "pt-3"}`}>
+          <p className="[font-family:'Inter',Helvetica] text-[9.5px] font-semibold uppercase tracking-widest mb-1.5"
+             style={{ color: borderColor }}>
+            Risks
+          </p>
+          <ul className="flex flex-col gap-1.5">
+            {cell.risks.map((r, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span
+                  className="mt-[5px] w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: borderColor }}
+                />
+                <span className="[font-family:'Inter',Helvetica] font-normal text-[11.5px] leading-[1.55] break-words min-w-0"
+                      style={{ color: borderColor === "#009966" ? "#065f46" : borderColor === "#f59e0b" ? "#92400e" : "#9f1239" }}>
+                  {r}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-      {/* Risk footer */}
+      {/* Spacer if no risks */}
+      {cell.risks.length === 0 && <div className="flex-1" />}
+
+      {/* Risk summary footer */}
       <div className={`${footerBg} px-4 py-2.5 flex items-center gap-2 border-t border-zinc-100`}>
-        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${verdictDot(cell.verdict)}`} />
+        <div
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+          style={{ background: borderColor }}
+        />
         <p className="[font-family:'Inter',Helvetica] text-[10px] text-[#71717b]">
-          {isApprove ? "No critical risks identified" : isReview ? "Moderate risk — review recommended" : "High risk — immediate action required"}
+          {verdictFooterText(cell.verdict)}
         </p>
       </div>
     </div>
@@ -322,11 +366,13 @@ function CouncilMatrix({ rows, agentName }: { rows: LiveRow[]; agentName: string
           <div className="flex items-center gap-3 mb-4">
             <div className="flex flex-col gap-0.5">
               <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">{row.moduleName}</span>
-              <span className="[font-family:'Inter',Helvetica] text-[10px] text-[#a1a1aa]">
-                {row.confidence}% confidence
-              </span>
+              {row.synthesisText && (
+                <span className="[font-family:'Inter',Helvetica] text-[10.5px] text-[#71717b] leading-tight max-w-2xl">
+                  {row.synthesisText.slice(0, 160)}{row.synthesisText.length > 160 ? "…" : ""}
+                </span>
+              )}
             </div>
-            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto ${verdictStyle(row.moduleVerdict)}`}>
+            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto flex-shrink-0 ${verdictStyle(row.moduleVerdict)}`}>
               {row.moduleVerdict}
             </Badge>
           </div>
@@ -334,7 +380,7 @@ function CouncilMatrix({ rows, agentName }: { rows: LiveRow[]; agentName: string
           {/* 3-column expert grid */}
           <div className="grid grid-cols-3 gap-4">
             {EXPERT_COLS.map((col) => (
-              <ExpertCell key={col.key} cell={row[col.key]} col={col} />
+              <ExpertCellView key={col.key} cell={row[col.key]} col={col} />
             ))}
           </div>
         </div>
@@ -541,14 +587,14 @@ export const AgentDetailPage = (): JSX.Element => {
                 </Card>
 
                 {/* Latest audit synthesis (if liveResult) */}
-                {liveResult && (
+                {liveResult && (liveResult.synthesis_text || liveResult.summary) && (
                   <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                     <CardContent className="px-6 pt-5 pb-5">
                       <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-3">
-                        Latest Audit Synthesis
+                        Audit Synthesis
                       </p>
                       <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-6">
-                        {liveResult.summary}
+                        {liveResult.synthesis_text ?? liveResult.summary}
                       </p>
                     </CardContent>
                   </Card>
