@@ -227,7 +227,9 @@ export const DashboardMainSection = (): JSX.Element => {
         REJECTED: "bg-[#ffe4e6] text-[#9f1239]",
         REVIEW: "bg-[#fef3c7] text-[#92400e]",
       };
-      const selectedModuleLabel = TEST_MODULES.find((m) => selectedModules[0] === m.id)?.label ?? selectedModules[0] ?? "Custom Module";
+      const selectedModuleLabel = selectedModules
+        .map((mid) => TEST_MODULES.find((m) => m.id === mid)?.label ?? mid)
+        .join(", ");
       const newEval = {
         id: `EV-${Date.now()}`,
         agentId: "",
@@ -611,10 +613,13 @@ export const DashboardMainSection = (): JSX.Element => {
                   {evaluationsData.map((ev, index) => (
                     <TableRow key={index} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors" data-testid={`row-evaluation-${ev.id}`}>
 
-                      {/* Target Agent — route to evaluation detail */}
+                      {/* Target Agent — route to agent detail page */}
                       <TableCell className="pl-6">
                         <button
-                          onClick={() => setLocation(`/evaluations/${ev.id}`)}
+                          onClick={() => {
+                            const agentId = contextAgents.find((a) => a.name === ev.target)?.id;
+                            setLocation(agentId ? `/agents/${agentId}` : `/agents`);
+                          }}
                           className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm hover:underline text-left"
                           data-testid={`link-agent-${ev.id}`}
                         >
@@ -622,10 +627,10 @@ export const DashboardMainSection = (): JSX.Element => {
                         </button>
                       </TableCell>
 
-                      {/* Module — deep link to flagship evaluation detail */}
+                      {/* Module — route to evaluation detail */}
                       <TableCell className="ml-[6px] mr-[6px]">
                         <button
-                          onClick={() => setLocation("/evaluations/EV-1030")}
+                          onClick={() => setLocation(`/evaluations/${ev.id}`)}
                           className="[font-family:'Inter',Helvetica] font-normal text-[#4f39f6] text-sm hover:underline text-left transition-colors"
                           data-testid={`link-module-${ev.id}`}
                         >
