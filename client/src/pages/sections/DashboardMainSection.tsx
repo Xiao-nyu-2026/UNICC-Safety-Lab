@@ -218,46 +218,47 @@ export const DashboardMainSection = (): JSX.Element => {
     }));
   })();
 
-  // Bar: group-by-day aggregation → old-left, new-right, max 14 days
+  // Bar: continuous 14-day timeline, zero-filled, data mapped in
   const assessmentTrend = (() => {
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const todayLabel     = `${MONTHS[now.getMonth()]} ${String(now.getDate()).padStart(2,"0")}`;
-    const yest = new Date(now); yest.setDate(now.getDate() - 1);
-    const yesterdayLabel = `${MONTHS[yest.getMonth()]} ${String(yest.getDate()).padStart(2,"0")}`;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Normalise an evaluation's date string to a "Mmm DD" label
+    // Step 1 — pre-generate 14 consecutive days ending today
+    const days = Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (13 - i));   // index 0 = 13 days ago, index 13 = today
+      const label = `${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
+      return { label, dateMs: d.getTime(), fullAlignment: 0, nonCompliant: 0 };
+    });
+
+    // Build a quick lookup: label → index into days[]
+    const labelIndex = new Map(days.map((d, i) => [d.label, i]));
+
+    // Step 2 — normalise eval date → "Mmm DD" label
     const toLabel = (raw: string): string | null => {
       const s = raw.trim();
       if (!s) return null;
-      if (/just now|today/i.test(s)) return todayLabel;
-      if (/yesterday/i.test(s))      return yesterdayLabel;
+      if (/just now|today/i.test(s)) return days[13].label;          // today
+      if (/yesterday/i.test(s))      return days[12].label;          // yesterday
       const parsed = new Date(s);
       if (isNaN(parsed.getTime())) return null;
-      return `${MONTHS[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2,"0")}`;
+      return `${MONTHS[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2, "0")}`;
     };
 
-    // Accumulate into an ordered map (insertion order = chronological)
-    const map = new Map<string, { fullAlignment: number; nonCompliant: number; sortMs: number }>();
+    // Step 3 — map each evaluation into the matching bucket
     for (const ev of evaluationsData) {
       const label = toLabel(ev.date ?? "");
       if (!label) continue;
-      if (!map.has(label)) {
-        // derive a sort key from the label so we can order properly
-        const parsed = new Date(`${label}, ${now.getFullYear()}`);
-        map.set(label, { fullAlignment: 0, nonCompliant: 0, sortMs: isNaN(parsed.getTime()) ? 0 : parsed.getTime() });
-      }
-      const bucket = map.get(label)!;
-      if ((ev.verdict ?? "").toUpperCase() === "APPROVE") bucket.fullAlignment += 1;
-      else bucket.nonCompliant += 1;
+      const idx = labelIndex.get(label);
+      if (idx === undefined) continue;
+      if ((ev.verdict ?? "").toUpperCase() === "APPROVE") days[idx].fullAlignment += 1;
+      else days[idx].nonCompliant += 1;
     }
 
-    // Sort chronologically, keep last 14
-    return [...map.entries()]
-      .sort((a, b) => a[1].sortMs - b[1].sortMs)
-      .slice(-14)
-      .map(([day, { fullAlignment, nonCompliant }]) => ({ day, fullAlignment, nonCompliant }));
+    return days.map(({ label, fullAlignment, nonCompliant }) => ({
+      day: label, fullAlignment, nonCompliant,
+    }));
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
@@ -601,7 +602,7 @@ export const DashboardMainSection = (): JSX.Element => {
                 </div>
               ) : (
                 <>
-                  {assessmentTrend.length === 0 ? (
+                  {assessmentTrend.every(d => d.fullAlignment === 0 && d.nonCompliant === 0) ? (
                     <div className="h-[180px] flex items-center justify-center">
                       <p className="[font-family:'Inter',Helvetica] text-xs text-[#a1a1aa]">No evaluation data yet</p>
                     </div>
