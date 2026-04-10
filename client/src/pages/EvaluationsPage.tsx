@@ -85,10 +85,29 @@ const categoryColors: Record<string, string> = {
 const FRAMEWORK_OPTIONS = ["All Frameworks", "OWASP", "NIST"] as const;
 type FrameworkOption = typeof FRAMEWORK_OPTIONS[number];
 
+/* Module name → module ID slug (must match DashboardMainSection TEST_MODULES ids) */
+const MODULE_NAME_TO_ID: Record<string, string> = {
+  "Prompt Injection V2": "prompt-injection",
+  "Jailbreak Attempts": "jailbreak-attempts",
+  "Toxicity & Bias": "toxicity",
+  "Data Exfiltration": "data-exfiltration",
+  "Malicious Code Gen": "adversarial-prompt",
+  "Bias Detection": "toxicity",
+  "PII Leakage": "pii-extraction",
+};
+
+function loadModuleMeta(): Record<string, { lastVerdict: string; lastRun: string; lastRunAgent: string }> {
+  try {
+    const raw = localStorage.getItem("asl_module_meta_v1");
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
 export const EvaluationsPage = (): JSX.Element => {
   const [, navigate] = useLocation();
   const [exportingPDF, setExportingPDF] = useState(false);
   const [filterFramework, setFilterFramework] = useState<FrameworkOption>("All Frameworks");
+  const [moduleMeta] = useState<Record<string, { lastVerdict: string; lastRun: string; lastRunAgent: string }>>(loadModuleMeta);
 
   const filteredModules = modules.filter((mod) => {
     if (filterFramework === "All Frameworks") return true;
@@ -230,12 +249,20 @@ export const EvaluationsPage = (): JSX.Element => {
                     {filteredModules.map((mod, i) => (
                       <TableRow key={i} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors">
                         <TableCell className="pl-6 py-3">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
-                              {mod.name}
-                            </span>
-                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{mod.lastRun}</span>
-                          </div>
+                          {(() => {
+                            const mid = MODULE_NAME_TO_ID[mod.name];
+                            const meta = mid ? moduleMeta[mid] : null;
+                            return (
+                              <div className="flex flex-col gap-0.5">
+                                <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
+                                  {mod.name}
+                                </span>
+                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
+                                  {meta ? `Last run ${meta.lastRun} on ${meta.lastRunAgent}` : `Last run ${mod.lastRun}`}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell className="py-3">
                           <span className={`[font-family:'Inter',Helvetica] font-medium text-xs px-2.5 py-1 rounded-md ${categoryColors[mod.category]}`}>
@@ -252,13 +279,20 @@ export const EvaluationsPage = (): JSX.Element => {
                           </span>
                         </TableCell>
                         <TableCell className="py-3">
-                          <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${verdictStyles[mod.lastVerdict]}`}>
-                            {mod.lastVerdict}
-                          </Badge>
+                          {(() => {
+                            const mid = MODULE_NAME_TO_ID[mod.name];
+                            const meta = mid ? moduleMeta[mid] : null;
+                            const liveVerdict = meta?.lastVerdict ?? mod.lastVerdict;
+                            return (
+                              <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-3 py-1 h-auto ${verdictStyles[liveVerdict] ?? verdictStyles[mod.lastVerdict]}`}>
+                                {liveVerdict}
+                              </Badge>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell className="pr-6 py-3 text-center">
                           <button
-                            onClick={() => navigate("/evaluations/EV-1030")}
+                            onClick={() => navigate(`/evaluations/${mod.evalId}`)}
                             className="inline-flex items-center gap-1.5 [font-family:'Inter',Helvetica] font-medium text-sm text-[#4f39f6] hover:text-[#3d2bc4] hover:underline transition-colors"
                             data-testid={`button-view-report-${i}`}
                           >

@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { useAgents, EvalResult } from "@/context/AgentsContext";
 import { ImportAgentModal } from "@/components/ImportAgentModal";
 import {
-  CheckIcon,
   PlayIcon,
   UploadIcon,
   XIcon,
@@ -175,7 +174,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [auditOpen, setAuditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("UNICC-Chatbot-V2");
-  const [selectedModules, setSelectedModules] = useState<string[]>(["prompt-injection"]);
+  const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
   const [selectedStandard, setSelectedStandard] = useState("owasp");
   const [launching, setLaunching] = useState(false);
   const LS_EVALS_KEY = "asl_evaluations_v1";
@@ -197,19 +196,28 @@ export const DashboardMainSection = (): JSX.Element => {
     return () => clearTimeout(t);
   }, []);
 
-  const toggleModule = (id: string) => {
-    setSelectedModules((prev) =>
-      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
-    );
+  /* ── localStorage keys for four-dimensional sync ── */
+  const LS_MODULE_META_KEY = "asl_module_meta_v1";
+  const LS_MODULE_REPORT_KEY = "asl_module_report_v1";
+
+  /* ── Module label → canonical static eval ID map ── */
+  const MODULE_ID_TO_EVAL_ID: Record<string, string> = {
+    "prompt-injection": "EV-1029",
+    "jailbreak-attempts": "EV-1030",
+    "toxicity": "EV-1028",
+    "data-exfiltration": "EV-1027",
+    "adversarial-prompt": "EV-1031",
+    "pii-extraction": "EV-1032",
   };
 
   const handleStartAudit = async () => {
+    if (!selectedModule) return;
     setLaunching(true);
     try {
       const res = await fetch("/api/run_evaluation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentName: selectedAgent, modules: selectedModules }),
+        body: JSON.stringify({ agentName: selectedAgent, modules: [selectedModule] }),
       });
 
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -227,13 +235,14 @@ export const DashboardMainSection = (): JSX.Element => {
         REJECTED: "bg-[#ffe4e6] text-[#9f1239]",
         REVIEW: "bg-[#fef3c7] text-[#92400e]",
       };
-      const selectedModuleLabels = selectedModules
-        .map((mid) => TEST_MODULES.find((m) => m.id === mid)?.label ?? mid);
+      const moduleLabel = TEST_MODULES.find((m) => m.id === selectedModule)?.label ?? selectedModule;
+
+      /* 1. Dashboard Recent Evaluations */
+      const staticEvalId = MODULE_ID_TO_EVAL_ID[selectedModule];
       const newEval = {
-        id: `EV-${Date.now()}`,
+        id: staticEvalId ?? `EV-${Date.now()}`,
         agentId: "",
-        module: selectedModuleLabels.join(", "),
-        modules: selectedModuleLabels,
+        module: moduleLabel,
         target: selectedAgent,
         verdict,
         verdictColor: verdictColorMap[verdict] ?? "bg-zinc-100 text-zinc-700",
@@ -247,8 +256,38 @@ export const DashboardMainSection = (): JSX.Element => {
           note: ex.rationale,
         })),
       };
-      setEvaluationsData((prev) => [newEval, ...prev]);
+      /* Upsert: replace if same staticEvalId already present, else prepend */
+      setEvaluationsData((prev) => {
+        const filtered = staticEvalId ? prev.filter((e: any) => e.id !== staticEvalId) : prev;
+        return [newEval, ...filtered];
+      });
+
+      /* 2. Agent status */
       updateAgentAfterEval(selectedAgent, verdict, data);
+
+      /* 3. Evaluations list — module meta */
+      try {
+        const rawMeta = localStorage.getItem(LS_MODULE_META_KEY);
+        const meta: Record<string, any> = rawMeta ? JSON.parse(rawMeta) : {};
+        meta[selectedModule] = { lastVerdict: verdict, lastRun: "Just now", lastRunAgent: selectedAgent };
+        localStorage.setItem(LS_MODULE_META_KEY, JSON.stringify(meta));
+      } catch {}
+
+      /* 4. Evaluation Detail — module full report */
+      try {
+        const rawReport = localStorage.getItem(LS_MODULE_REPORT_KEY);
+        const report: Record<string, any> = rawReport ? JSON.parse(rawReport) : {};
+        report[selectedModule] = {
+          agentName: selectedAgent,
+          verdict,
+          verdictColor: verdictColorMap[verdict] ?? "bg-zinc-100 text-zinc-700",
+          confidence: data.confidence_score,
+          summary: data.summary,
+          timestamp: new Date().toISOString(),
+          experts: data.experts,
+        };
+        localStorage.setItem(LS_MODULE_REPORT_KEY, JSON.stringify(report));
+      } catch {}
 
       toast({
         title: `Audit complete — ${data.final_verdict}`,
@@ -832,25 +871,26 @@ export const DashboardMainSection = (): JSX.Element => {
                   <span className="[font-family:'Inter',Helvetica] font-medium text-white/80 text-xs uppercase tracking-wider">Test Configuration</span>
                 </div>
                 <p className="[font-family:'Inter',Helvetica] text-sm font-medium text-white/70 -mb-1">
-                  Select Test Modules
+                  Select Test Module
                 </p>
                 <div className="flex flex-col gap-2.5 mt-1">
                   {TEST_MODULES.map((mod) => {
-                    const checked = selectedModules.includes(mod.id);
+                    const selected = selectedModule === mod.id;
                     return (
                       <button
                         key={mod.id}
                         type="button"
-                        onClick={() => toggleModule(mod.id)}
+                        onClick={() => setSelectedModule(mod.id)}
                         className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-lg border transition-colors text-left ${
-                          checked
+                          selected
                             ? "border-[#4f39f6]/60 bg-[#4f39f6]/15"
                             : "border-white/10 bg-white/5 hover:bg-white/8"
                         }`}
-                        data-testid={`checkbox-module-${mod.id}`}
+                        data-testid={`radio-module-${mod.id}`}
                       >
-                        <span className={`w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-colors ${checked ? "bg-[#4f39f6] border-[#4f39f6]" : "border-white/25 bg-transparent"}`}>
-                          {checked && <CheckIcon className="w-3 h-3 text-white" strokeWidth={3} />}
+                        {/* Radio indicator */}
+                        <span className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center border-2 transition-colors ${selected ? "border-[#4f39f6] bg-[#4f39f6]" : "border-white/25 bg-transparent"}`}>
+                          {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
                         <span className="[font-family:'Inter',Helvetica] text-sm text-white/85">{mod.label}</span>
                         {mod.tag && (
@@ -905,7 +945,7 @@ export const DashboardMainSection = (): JSX.Element => {
               </Button>
               <Button
                 onClick={handleStartAudit}
-                disabled={launching || selectedModules.length === 0}
+                disabled={launching || !selectedModule}
                 className="h-10 px-5 bg-[#4f39f6] hover:bg-[#3d2bc4] text-white [font-family:'Inter',Helvetica] font-medium text-sm disabled:opacity-60"
                 data-testid="button-start-audit"
               >

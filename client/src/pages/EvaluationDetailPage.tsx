@@ -613,11 +613,46 @@ function loadDynamicEval(evalId: string): DynamicEval | null {
   } catch { return null; }
 }
 
+/* Map from module name (as in evalData) to the module ID used in localStorage */
+const MODULE_NAME_TO_ID: Record<string, string> = {
+  "Prompt Injection V2": "prompt-injection",
+  "Jailbreak Attempts": "jailbreak-attempts",
+  "Toxicity & Bias": "toxicity",
+  "Data Exfiltration": "data-exfiltration",
+  "Adversarial Prompt": "adversarial-prompt",
+  "PII Extraction": "pii-extraction",
+  "Malicious Code Generation": "adversarial-prompt",
+  "Bias Detection Suite": "toxicity",
+  "PII Leakage Probe": "pii-extraction",
+};
+
+type LiveReport = {
+  agentName: string;
+  verdict: string;
+  verdictColor: string;
+  confidence: number;
+  summary: string;
+  timestamp: string;
+  experts: Record<string, { name: string; score: number; rationale: string }>;
+};
+
+function loadLiveReport(moduleName: string): LiveReport | null {
+  try {
+    const moduleId = MODULE_NAME_TO_ID[moduleName];
+    if (!moduleId) return null;
+    const raw = localStorage.getItem("asl_module_report_v1");
+    if (!raw) return null;
+    const all = JSON.parse(raw);
+    return all[moduleId] ?? null;
+  } catch { return null; }
+}
+
 export const EvaluationDetailPage = (): JSX.Element => {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const eval_ = evalData[id ?? ""] ?? null;
   const dynamicEval = !eval_ ? loadDynamicEval(id ?? "") : null;
+  const liveReport = eval_ ? loadLiveReport(eval_.module) : null;
   const [whyOpen, setWhyOpen] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [codeViewOpen, setCodeViewOpen] = useState(false);
@@ -845,6 +880,30 @@ export const EvaluationDetailPage = (): JSX.Element => {
                     </div>
                   </section>
 
+                  {/* ── Live Run Banner ── */}
+                  {liveReport && (
+                    <div
+                      className="w-full rounded-xl border border-[#c4b5fd]/40 flex items-start gap-4 px-6 py-4"
+                      style={{ background: "linear-gradient(135deg, rgba(79,57,246,0.07) 0%, rgba(109,40,217,0.05) 100%)" }}
+                      data-testid="banner-live-result"
+                    >
+                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#ede9fe] border border-[#c4b5fd]/50 flex items-center justify-center mt-0.5">
+                        <svg className="w-4 h-4 text-[#4f39f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 6v6l4 2" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <p className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm">
+                          Latest Live Run — {liveReport.agentName}
+                        </p>
+                        <p className="[font-family:'Inter',Helvetica] text-xs text-[#52525c] leading-4 max-w-2xl">
+                          Verdict: <span className="font-semibold">{liveReport.verdict}</span> · Confidence: {liveReport.confidence}% · {liveReport.summary}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Score + stats row */}
                   <section className="grid grid-cols-4 gap-4 w-full">
                     {/* Card 1 — Evaluation Verdict */}
@@ -854,17 +913,31 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         "Failed":  { label: "REJECTED",  cls: "bg-[#ffe4e6] text-[#9f1239]" },
                         "Running": { label: "PENDING",   cls: "bg-[#fef3c7] text-[#92400e]" },
                       };
-                      const vd = verdictMap[eval_.status] ?? { label: "REVIEW", cls: "bg-[#fef3c7] text-[#92400e]" };
+                      const liveVerdictMap: Record<string, { label: string; cls: string }> = {
+                        "APPROVE":  { label: "APPROVED",  cls: "bg-[#d1fae5] text-[#065f46]" },
+                        "APPROVED": { label: "APPROVED",  cls: "bg-[#d1fae5] text-[#065f46]" },
+                        "REJECT":   { label: "REJECTED",  cls: "bg-[#ffe4e6] text-[#9f1239]" },
+                        "REJECTED": { label: "REJECTED",  cls: "bg-[#ffe4e6] text-[#9f1239]" },
+                        "REVIEW":   { label: "REVIEW",    cls: "bg-[#fef3c7] text-[#92400e]" },
+                      };
+                      const vd = liveReport
+                        ? (liveVerdictMap[liveReport.verdict] ?? verdictMap[eval_.status] ?? { label: "REVIEW", cls: "bg-[#fef3c7] text-[#92400e]" })
+                        : (verdictMap[eval_.status] ?? { label: "REVIEW", cls: "bg-[#fef3c7] text-[#92400e]" });
                       return (
                         <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                           <CardContent className="pt-6 pb-5 px-6">
                             <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">
                               Evaluation Verdict
                             </p>
-                            <div className="mt-3">
+                            <div className="mt-3 flex flex-col gap-1">
                               <span className={`inline-flex items-center px-4 py-1.5 rounded-full [font-family:'Inter',Helvetica] font-bold text-base tracking-wide ${vd.cls}`}>
                                 {vd.label}
                               </span>
+                              {liveReport && (
+                                <span className="[font-family:'Inter',Helvetica] text-[10px] text-[#71717b] mt-1">
+                                  Live · {liveReport.agentName} · {liveReport.confidence}% confidence
+                                </span>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -1247,32 +1320,51 @@ export const EvaluationDetailPage = (): JSX.Element => {
                       <div className="flex flex-col gap-4 pt-1">
                         <p className="[font-family:'Inter',Helvetica] text-sm text-[#71717b]">
                           The overall verdict is determined by the combined assessment of three independent expert reviewers.
+                          {liveReport && (
+                            <span className="ml-1 font-medium text-[#4f39f6]">
+                              Showing live results from the latest run on {liveReport.agentName}.
+                            </span>
+                          )}
                         </p>
-                        {eval_.expertScores.map((expert, i) => (
-                          <div key={i} className="flex flex-col gap-1.5 p-4 rounded-lg bg-zinc-50 border border-zinc-100" data-testid={`dialog-expert-${i}`}>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
-                                {expert.expert}
-                              </span>
-                              <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto flex-shrink-0 ${
-                                expert.overallVerdict === "pass"
-                                  ? "bg-[#d0fae5] text-[#004f3b]"
-                                  : "bg-[#ffe2e2] text-[#82181a]"
-                              }`}>
-                                {expert.overallVerdict === "pass" ? "Pass" : "Fail"}
-                              </Badge>
+                        {eval_.expertScores.map((expert, i) => {
+                          const liveExpertKeys = liveReport ? Object.keys(liveReport.experts) : [];
+                          const liveEx = liveReport ? liveReport.experts[liveExpertKeys[i]] : null;
+                          const livePass = liveEx ? liveEx.score >= 70 : null;
+                          return (
+                            <div key={i} className="flex flex-col gap-1.5 p-4 rounded-lg bg-zinc-50 border border-zinc-100" data-testid={`dialog-expert-${i}`}>
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
+                                  {liveEx?.name ?? expert.expert}
+                                </span>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {liveEx && (
+                                    <span className="[font-family:'Inter',Helvetica] text-xs font-medium text-[#71717b]">
+                                      Score: {liveEx.score}%
+                                    </span>
+                                  )}
+                                  <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-3 py-1 h-auto ${
+                                    livePass !== null
+                                      ? (livePass ? "bg-[#d0fae5] text-[#004f3b]" : "bg-[#ffe2e2] text-[#82181a]")
+                                      : (expert.overallVerdict === "pass" ? "bg-[#d0fae5] text-[#004f3b]" : "bg-[#ffe2e2] text-[#82181a]")
+                                  }`}>
+                                    {livePass !== null ? (livePass ? "Pass" : "Fail") : (expert.overallVerdict === "pass" ? "Pass" : "Fail")}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <p className="[font-family:'Inter',Helvetica] text-xs text-[#71717b] leading-4">
+                                {liveEx?.rationale ?? expert.overallReason}
+                              </p>
                             </div>
-                            <p className="[font-family:'Inter',Helvetica] text-xs text-[#71717b] leading-4">
-                              {expert.overallReason}
-                            </p>
-                          </div>
-                        ))}
+                          );
+                        })}
                         <div className="pt-1 border-t border-zinc-100">
                           <p className="[font-family:'Inter',Helvetica] text-sm text-zinc-700">
                             <span className="font-semibold">Overall: </span>
-                            {eval_.status === "Passed"
-                              ? `Passed — all experts concluded the evaluation met the required safety, governance, and security standards.`
-                              : `Failed — one or more experts identified critical issues that must be resolved before deployment.`}
+                            {liveReport
+                              ? `${liveReport.verdict} — ${liveReport.summary}`
+                              : eval_.status === "Passed"
+                                ? `Passed — all experts concluded the evaluation met the required safety, governance, and security standards.`
+                                : `Failed — one or more experts identified critical issues that must be resolved before deployment.`}
                           </p>
                         </div>
                       </div>
