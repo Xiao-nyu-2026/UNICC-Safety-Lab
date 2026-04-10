@@ -130,14 +130,6 @@ export const AgentsPage = (): JSX.Element => {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
-                  onClick={() => setImportOpen(true)}
-                  className="h-10 px-4 bg-[#4f39f6] hover:bg-[#3d2bc4] text-white [font-family:'Inter',Helvetica] font-medium text-sm rounded-lg"
-                  data-testid="button-import-agent"
-                >
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Import Agent
-                </Button>
               </div>
             </section>
 
