@@ -218,19 +218,66 @@ export const DashboardMainSection = (): JSX.Element => {
     }));
   })();
 
-  // Bar: last 7 evaluations (or fewer), each as one run
+  // Bar: 7-day window keyed to real calendar dates
   const assessmentTrend = (() => {
-    const slice = evaluationsData.slice(-7);
-    if (slice.length === 0) return [];
-    return slice.map((ev, i) => {
-      const label = `#${i + 1}`;
-      const isApprove = (ev.verdict ?? "").toUpperCase() === "APPROVE";
+    // Build a 7-day window ending today
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Generate the last 7 days as { label, dateMs } pairs
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (6 - i));          // index 0 = 6 days ago, index 6 = today
       return {
-        day: label,
-        fullAlignment: isApprove ? 1 : 0,
-        nonCompliant: isApprove ? 0 : 1,
+        label: `${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`,
+        dateMs: d.getTime(),
       };
     });
+
+    // Buckets: label → { fullAlignment, nonCompliant }
+    const buckets: Record<string, { fullAlignment: number; nonCompliant: number }> = {};
+    for (const { label } of days) buckets[label] = { fullAlignment: 0, nonCompliant: 0 };
+
+    const yesterdayMs = today.getTime() - 86_400_000;
+
+    for (const ev of evaluationsData) {
+      const raw = (ev.date ?? "").trim();
+      let targetMs: number | null = null;
+
+      if (/just now|today/i.test(raw)) {
+        targetMs = today.getTime();
+      } else if (/yesterday/i.test(raw)) {
+        targetMs = yesterdayMs;
+      } else if (raw) {
+        // Parse "Apr 07, 2026" or "Apr 7, 2026"
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          parsed.setHours(0, 0, 0, 0);
+          targetMs = parsed.getTime();
+        }
+      }
+
+      if (targetMs === null) continue;
+
+      // Find matching bucket
+      const match = days.find((d) => d.dateMs === targetMs);
+      if (!match) continue;
+
+      const bucket = buckets[match.label];
+      const v = (ev.verdict ?? "").toUpperCase();
+      if (v === "APPROVE") {
+        bucket.fullAlignment += 1;
+      } else {
+        bucket.nonCompliant += 1;
+      }
+    }
+
+    return days.map(({ label }) => ({
+      day: label,
+      fullAlignment: buckets[label].fullAlignment,
+      nonCompliant: buckets[label].nonCompliant,
+    }));
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
@@ -592,8 +639,7 @@ export const DashboardMainSection = (): JSX.Element => {
                           tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
                           axisLine={false}
                           tickLine={false}
-                          domain={[0, 1]}
-                          ticks={[0, 1]}
+                          allowDecimals={false}
                         />
                         <Tooltip
                           contentStyle={{
@@ -603,7 +649,7 @@ export const DashboardMainSection = (): JSX.Element => {
                             fontSize: 12,
                           }}
                           formatter={(value: number, name: string) => [
-                            value === 1 ? "✓" : "✗",
+                            `${value} eval${value !== 1 ? "s" : ""}`,
                             name === "fullAlignment" ? "Full Alignment (GOVERN & MEASURE)" : "Non-compliant",
                           ]}
                         />
