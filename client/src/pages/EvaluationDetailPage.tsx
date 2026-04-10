@@ -665,9 +665,39 @@ export const EvaluationDetailPage = (): JSX.Element => {
     }, 1800);
   };
 
-  const passed = eval_?.tests.filter((t) => t.result === "pass").length ?? 0;
-  const failed = eval_?.tests.filter((t) => t.result === "fail").length ?? 0;
-  const total = eval_?.tests.length ?? 0;
+  /* ── Derive live test cases from expert rationale when liveReport exists ── */
+  type DerivedTest = { name: string; detail: string; result: "pass" | "fail"; violation?: string };
+  const EXPERT_COL_NAMES: Record<string, string> = {
+    expert_a: "Security & Compliance Probe",
+    expert_b: "Governance & Risk Workflow",
+    expert_c: "Contextual Risk Arbiter",
+  };
+
+  const derivedTests: DerivedTest[] = liveReport
+    ? Object.entries(liveReport.experts).map(([key, ex]) => {
+        const isPassing = ex.score >= 70;
+        const sentences = ex.rationale
+          .split(/(?<=[.!?])\s+/)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 4);
+        return {
+          name: EXPERT_COL_NAMES[key] ?? ex.name,
+          detail: sentences[0] ?? ex.rationale,
+          result: isPassing ? "pass" : "fail",
+          violation: !isPassing ? (sentences[1] ?? undefined) : undefined,
+        } as DerivedTest;
+      })
+    : [];
+
+  const activeTests = liveReport ? derivedTests : (eval_?.tests ?? []);
+  const passed = activeTests.filter((t) => t.result === "pass").length;
+  const failed = activeTests.filter((t) => t.result === "fail").length;
+  const total  = activeTests.length;
+
+  /* ── Live verdict meta ── */
+  const liveIsRejected = liveReport &&
+    (liveReport.verdict === "REJECT" || liveReport.verdict === "REJECTED" || liveReport.verdict === "FAIL" || liveReport.verdict === "FAILED");
+  const showArbiterBanner = liveIsRejected || eval_?.status === "Failed";
 
   return (
     <TooltipProvider>
@@ -843,7 +873,10 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         )}
                       </div>
                       <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                        {eval_.agent} · {eval_.date}
+                        {liveReport?.agentName ?? eval_.agent} · {liveReport ? "Just now" : `${eval_.date} · ${eval_.time}`}
+                        {liveReport && (
+                          <span className="ml-2 text-[#4f39f6] font-medium text-xs">[Live]</span>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -963,7 +996,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                   </section>
 
                   {/* ── Final Arbiter Verdict Banner ── */}
-                  {eval_.status === "Failed" && (
+                  {showArbiterBanner && (
                     <div
                       className="w-full rounded-xl border border-[#fca5a5] flex items-start gap-4 px-6 py-5"
                       style={{ background: "linear-gradient(135deg, rgba(127,29,29,0.10) 0%, rgba(185,28,28,0.07) 100%)" }}
@@ -978,26 +1011,49 @@ export const EvaluationDetailPage = (): JSX.Element => {
                             FINAL ARBITER VERDICT
                           </span>
                           <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#991b1b] text-white [font-family:'Inter',Helvetica] font-bold text-xs tracking-widest uppercase">
-                            REJECTED
+                            {liveReport?.verdict ?? "REJECTED"}
                           </span>
+                          {liveReport && (
+                            <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#9f1239]">
+                              {liveReport.confidence}% confidence · {liveReport.agentName}
+                            </span>
+                          )}
                         </div>
                         <p className="[font-family:'Inter',Helvetica] font-normal text-[#9f1239] text-sm leading-5">
-                          Automatic rejection triggered due to consensus on LLM01 vulnerability. All three expert reviewers returned a failing verdict — deployment is blocked pending remediation.
+                          {liveReport?.summary ?? "Automatic rejection triggered due to consensus on LLM01 vulnerability. All three expert reviewers returned a failing verdict — deployment is blocked pending remediation."}
                         </p>
-                        <div className="flex items-center gap-4 mt-1 flex-wrap">
-                          {[
-                            { label: "Safety Expert", tag: "CRITICAL FAIL", cls: "bg-[#fee2e2] text-[#9f1239]" },
-                            { label: "Governance Expert", tag: "NON-COMPLIANT", cls: "bg-[#fef3c7] text-[#92400e]" },
-                            { label: "Security Expert", tag: "EXPLOITED", cls: "bg-[#fee2e2] text-[#9f1239]" },
-                          ].map((v) => (
-                            <div key={v.label} className="flex items-center gap-1.5">
-                              <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">{v.label}:</span>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full [font-family:'ui-monospace',SFMono-Regular,monospace] font-bold text-[10px] tracking-wider ${v.cls}`}>
-                                {v.tag}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        {liveReport ? (
+                          <div className="flex items-center gap-4 mt-1 flex-wrap">
+                            {Object.entries(liveReport.experts).map(([key, ex]) => {
+                              const isPassing = ex.score >= 70;
+                              const cls = isPassing ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#fee2e2] text-[#9f1239]";
+                              const tag = isPassing ? "APPROVED" : "REJECTED";
+                              return (
+                                <div key={key} className="flex items-center gap-1.5">
+                                  <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">{ex.name}:</span>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full [font-family:'ui-monospace',SFMono-Regular,monospace] font-bold text-[10px] tracking-wider ${cls}`}>
+                                    {tag} ({ex.score}/100)
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-4 mt-1 flex-wrap">
+                            {[
+                              { label: "Safety Expert", tag: "CRITICAL FAIL", cls: "bg-[#fee2e2] text-[#9f1239]" },
+                              { label: "Governance Expert", tag: "NON-COMPLIANT", cls: "bg-[#fef3c7] text-[#92400e]" },
+                              { label: "Security Expert", tag: "EXPLOITED", cls: "bg-[#fee2e2] text-[#9f1239]" },
+                            ].map((v) => (
+                              <div key={v.label} className="flex items-center gap-1.5">
+                                <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b]">{v.label}:</span>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full [font-family:'ui-monospace',SFMono-Regular,monospace] font-bold text-[10px] tracking-wider ${v.cls}`}>
+                                  {v.tag}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1012,10 +1068,13 @@ export const EvaluationDetailPage = (): JSX.Element => {
                           </h2>
                           <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
                             {total} tests · {passed} passed · {failed} failed
+                            {liveReport && (
+                              <span className="ml-2 text-[11px] text-[#4f39f6]">· derived from live expert findings</span>
+                            )}
                           </p>
                         </div>
                         <div className="flex flex-col divide-y divide-zinc-100">
-                          {eval_.tests.map((test, i) => (
+                          {activeTests.map((test, i) => (
                             <div key={i} className="flex items-start justify-between px-6 py-4 gap-4">
                               <div className="flex items-start gap-3 flex-1 min-w-0">
                                 {test.result === "pass" ? (
