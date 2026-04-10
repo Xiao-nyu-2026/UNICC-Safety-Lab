@@ -34,21 +34,17 @@ import {
   Legend,
 } from "recharts";
 
-const vulnDistribution = [
-  { name: "Prompt Injection (LLM01)", value: 45, color: "#e7000b" },
-  { name: "Insecure Output (LLM02)", value: 35, color: "#f97316" },
-  { name: "Sensitive Data (LLM06)", value: 20, color: "#f59e0b" },
-];
-
-const assessmentTrend = [
-  { day: "Mon", fullAlignment: 22, nonCompliant: 4 },
-  { day: "Tue", fullAlignment: 18, nonCompliant: 6 },
-  { day: "Wed", fullAlignment: 25, nonCompliant: 3 },
-  { day: "Thu", fullAlignment: 20, nonCompliant: 7 },
-  { day: "Fri", fullAlignment: 24, nonCompliant: 5 },
-  { day: "Sat", fullAlignment: 15, nonCompliant: 2 },
-  { day: "Sun", fullAlignment: 19, nonCompliant: 8 },
-];
+/* ── Module → OWASP colour palette ── */
+const MODULE_COLORS: Record<string, string> = {
+  "Prompt Injection V2":      "#e7000b",
+  "Prompt Injection":         "#e7000b",
+  "Jailbreak Attempts":       "#f97316",
+  "Toxicity & Bias":          "#f59e0b",
+  "Data Exfiltration":        "#ec4899",
+  "Adversarial Prompt":       "#8b5cf6",
+  "PII Extraction":           "#3b82f6",
+};
+const MODULE_FALLBACK_COLORS = ["#e7000b","#f97316","#f59e0b","#8b5cf6","#3b82f6","#ec4899","#14b8a6"];
 
 
 const INITIAL_EVALUATIONS = [
@@ -195,6 +191,47 @@ export const DashboardMainSection = (): JSX.Element => {
     const t = setTimeout(() => setChartLoading(false), 1400);
     return () => clearTimeout(t);
   }, []);
+
+  /* ── Dynamic chart data derived from evaluationsData ── */
+
+  // Donut: count evaluations per module, compute percentages
+  const vulnDistribution = (() => {
+    const counts: Record<string, number> = {};
+    for (const ev of evaluationsData) {
+      const raw = (ev as any).modules;
+      const modules: string[] = Array.isArray(raw) && raw.length > 0
+        ? raw
+        : typeof ev.module === "string" && ev.module.trim()
+          ? ev.module.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [];
+      for (const m of modules) {
+        counts[m] = (counts[m] ?? 0) + 1;
+      }
+    }
+    const total = Object.values(counts).reduce((s, n) => s + n, 0);
+    if (total === 0) return [];
+    const keys = Object.keys(counts);
+    return keys.map((name, i) => ({
+      name,
+      value: Math.round((counts[name] / total) * 100),
+      color: MODULE_COLORS[name] ?? MODULE_FALLBACK_COLORS[i % MODULE_FALLBACK_COLORS.length],
+    }));
+  })();
+
+  // Bar: last 7 evaluations (or fewer), each as one run
+  const assessmentTrend = (() => {
+    const slice = evaluationsData.slice(-7);
+    if (slice.length === 0) return [];
+    return slice.map((ev, i) => {
+      const label = `#${i + 1}`;
+      const isApprove = (ev.verdict ?? "").toUpperCase() === "APPROVE";
+      return {
+        day: label,
+        fullAlignment: isApprove ? 1 : 0,
+        nonCompliant: isApprove ? 0 : 1,
+      };
+    });
+  })();
 
   /* ── localStorage keys for four-dimensional sync ── */
   const LS_MODULE_META_KEY = "asl_module_meta_v1";
@@ -433,59 +470,66 @@ export const DashboardMainSection = (): JSX.Element => {
                   Based on OWASP LLM Top 10
                 </p>
               </div>
-              <div className="flex flex-1 min-h-0 gap-6">
-                {/* Pie fills remaining height */}
-                <div className="flex-1 min-w-0 min-h-[180px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={vulnDistribution}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius="38%"
-                        outerRadius="62%"
-                        paddingAngle={3}
-                        dataKey="value"
-                      >
-                        {vulnDistribution.map((entry, index) => (
-                          <Cell key={index} fill={entry.color} stroke="none" />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: 8,
-                          border: "1px solid #e4e4e7",
-                          fontFamily: "Inter, Helvetica",
-                          fontSize: 12,
-                        }}
-                        formatter={(value: number, name: string) => [`${value}%`, name]}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+              {vulnDistribution.length === 0 ? (
+                <div className="flex flex-1 min-h-[180px] items-center justify-center flex-col gap-2">
+                  <div className="w-28 h-28 rounded-full border-[12px] border-zinc-100" />
+                  <p className="[font-family:'Inter',Helvetica] text-xs text-[#a1a1aa] mt-2">No data yet</p>
                 </div>
-                {/* Legend — vertically centred */}
-                <div className="flex flex-col justify-center gap-5 w-[160px] flex-shrink-0">
-                  {vulnDistribution.map((item, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <div className="flex flex-col gap-0.5">
-                        <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-800 text-xs leading-4">
-                          {item.name}
-                        </span>
-                        <span
-                          className="[font-family:'Inter',Helvetica] font-bold text-base leading-5"
-                          style={{ color: item.color }}
+              ) : (
+                <div className="flex flex-1 min-h-0 gap-6">
+                  {/* Pie fills remaining height */}
+                  <div className="flex-1 min-w-0 min-h-[180px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={vulnDistribution}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius="38%"
+                          outerRadius="62%"
+                          paddingAngle={3}
+                          dataKey="value"
                         >
-                          {item.value}%
-                        </span>
+                          {vulnDistribution.map((entry, index) => (
+                            <Cell key={index} fill={entry.color} stroke="none" />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 8,
+                            border: "1px solid #e4e4e7",
+                            fontFamily: "Inter, Helvetica",
+                            fontSize: 12,
+                          }}
+                          formatter={(value: number, name: string) => [`${value}%`, name]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {/* Legend — vertically centred */}
+                  <div className="flex flex-col justify-center gap-4 w-[175px] flex-shrink-0">
+                    {vulnDistribution.map((item, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <span
+                          className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="[font-family:'Inter',Helvetica] font-medium text-zinc-800 text-xs leading-4">
+                            {item.name}
+                          </span>
+                          <span
+                            className="[font-family:'Inter',Helvetica] font-bold text-base leading-5"
+                            style={{ color: item.color }}
+                          >
+                            {item.value}%
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -529,37 +573,46 @@ export const DashboardMainSection = (): JSX.Element => {
                   ))}
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={assessmentTrend} barSize={14} barCategoryGap="30%">
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-                    <XAxis
-                      dataKey="day"
-                      tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
-                      axisLine={false}
-                      tickLine={false}
-                      domain={[0, 30]}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 8,
-                        border: "1px solid #e4e4e7",
-                        fontFamily: "Inter, Helvetica",
-                        fontSize: 12,
-                      }}
-                      formatter={(value: number, name: string) => [
-                        value,
-                        name === "fullAlignment" ? "Full Alignment (GOVERN & MEASURE)" : "Non-compliant",
-                      ]}
-                    />
-                    <Bar dataKey="fullAlignment" fill="#009966" radius={[3, 3, 0, 0]} name="fullAlignment" />
-                    <Bar dataKey="nonCompliant" fill="#e7000b" radius={[3, 3, 0, 0]} name="nonCompliant" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <>
+                  {assessmentTrend.length === 0 ? (
+                    <div className="h-[180px] flex items-center justify-center">
+                      <p className="[font-family:'Inter',Helvetica] text-xs text-[#a1a1aa]">No evaluation data yet</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={180}>
+                      <BarChart data={assessmentTrend} barSize={18} barCategoryGap="35%">
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                        <XAxis
+                          dataKey="day"
+                          tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: "#71717b", fontFamily: "Inter, Helvetica" }}
+                          axisLine={false}
+                          tickLine={false}
+                          domain={[0, 1]}
+                          ticks={[0, 1]}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 8,
+                            border: "1px solid #e4e4e7",
+                            fontFamily: "Inter, Helvetica",
+                            fontSize: 12,
+                          }}
+                          formatter={(value: number, name: string) => [
+                            value === 1 ? "✓" : "✗",
+                            name === "fullAlignment" ? "Full Alignment (GOVERN & MEASURE)" : "Non-compliant",
+                          ]}
+                        />
+                        <Bar dataKey="fullAlignment" fill="#009966" radius={[3, 3, 0, 0]} name="fullAlignment" />
+                        <Bar dataKey="nonCompliant" fill="#e7000b" radius={[3, 3, 0, 0]} name="nonCompliant" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </>
               )}
 
               {/* Custom NIST legend */}
@@ -637,10 +690,9 @@ export const DashboardMainSection = (): JSX.Element => {
           </section>
         )}
 
-        {/* Bottom: Evaluations table + Right sidebar */}
-        <section className="flex gap-6 w-full">
-          {/* Recent Evaluations table */}
-          <Card className="flex-1 border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] overflow-visible">
+        {/* Bottom: Recent Evaluations table — full width */}
+        <section className="w-full">
+          <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] overflow-visible">
             <CardContent className="p-0 overflow-visible">
               <div className="flex items-center justify-between px-6 py-6">
                 <div className="flex flex-col">
@@ -732,86 +784,6 @@ export const DashboardMainSection = (): JSX.Element => {
               </Table>
             </CardContent>
           </Card>
-
-          {/* Right sidebar */}
-          <div className="w-[300px] flex-shrink-0 flex flex-col gap-4">
-
-            {/* Expert Modules Health */}
-            <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-              <CardContent className="px-6 pt-5 pb-5">
-                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-4">
-                  Expert Modules Health
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {[
-                    "Security & Compliance Probe",
-                    "Governance & Risk Workflow",
-                    "Contextual Risk Arbiter",
-                  ].map((name, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">
-                        {name}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#009966] opacity-60" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#009966]" />
-                        </span>
-                        <span className="[font-family:'Inter',Helvetica] font-medium text-[#009966] text-xs">
-                          Online
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Standards Alignment */}
-            <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-              <CardContent className="px-6 pt-5 pb-5">
-                <div className="mb-4">
-                  <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm">
-                    Standards Alignment
-                  </h3>
-                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs mt-0.5">
-                    Framework coverage for EV-1029
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {/* OWASP — FAILED */}
-                  <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 hover:border-[#f87171] transition-colors cursor-default">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
-                        OWASP LLM Top 10
-                      </span>
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#ffe4e6] text-[#9f1239]">
-                        FAILED
-                      </span>
-                    </div>
-                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#b91c1c] text-xs leading-4">
-                      Violated: LLM02 (Insecure Output)
-                    </p>
-                  </div>
-                  {/* NIST — PASSED */}
-                  <div className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3 hover:border-[#4ade80] transition-colors cursor-default">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-900 text-sm">
-                        NIST AI RMF
-                      </span>
-                      <span className="[font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 rounded-full bg-[#d1fae5] text-[#065f46]">
-                        PASSED
-                      </span>
-                    </div>
-                    <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs leading-4">
-                      Aligned with GOVERN 1.1 &amp; MAP 2.3
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-          </div>
 
         </section>
       </main>
