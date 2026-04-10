@@ -8,6 +8,7 @@ import {
   ShieldCheckIcon,
 } from "lucide-react";
 import { useParams, useLocation, useSearch } from "wouter";
+import { useAgents } from "@/context/AgentsContext";
 import { SidebarSection } from "./sections/SidebarSection";
 import { PageHeader } from "./sections/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -129,6 +130,10 @@ export const AgentDetailPage = (): JSX.Element => {
   const [, navigate] = useLocation();
   const search = useSearch();
   const fromEval = new URLSearchParams(search).get("from");
+
+  const { agents: contextAgents } = useAgents();
+  const liveAgent = contextAgents.find((a) => a.id === id);
+  const liveResult = liveAgent?.lastEvalResult ?? null;
 
   const agent = agentData[id ?? ""] ?? null;
   const [exportingPDF, setExportingPDF] = useState(false);
@@ -520,6 +525,76 @@ export const AgentDetailPage = (): JSX.Element => {
                       </CardContent>
                     </Card>
                 </section>
+
+                {/* ── Live Evaluation Results (from last run) ── */}
+                {liveResult && (
+                  <section className="w-full">
+                    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <CardContent className="p-0">
+                        <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
+                          <div>
+                            <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
+                              Latest Evaluation Results
+                            </h2>
+                            <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                              From most recent automated safety audit — {liveAgent?.lastEval}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${
+                              liveResult.final_verdict.toUpperCase().includes("APPROVE") ? "bg-[#d1fae5] text-[#065f46]" :
+                              liveResult.final_verdict.toUpperCase().includes("REJECT") ? "bg-[#ffe4e6] text-[#9f1239]" :
+                              "bg-[#fef3c7] text-[#92400e]"
+                            }`}>
+                              {liveResult.final_verdict}
+                            </Badge>
+                            <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm">
+                              Confidence: <span className="font-semibold text-zinc-950">{liveResult.confidence_score}%</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Summary */}
+                        <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
+                          <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-1.5">
+                            Summary
+                          </p>
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
+                            {liveResult.summary}
+                          </p>
+                        </div>
+
+                        {/* Three-expert grid */}
+                        <div className="grid grid-cols-3 divide-x divide-zinc-100">
+                          {Object.values(liveResult.experts).map((ex) => {
+                            const isPassing = ex.score >= 70;
+                            return (
+                              <div key={ex.name} className="flex flex-col gap-3 px-6 py-5">
+                                <div className="flex items-start justify-between gap-2">
+                                  <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">
+                                    {ex.name}
+                                  </h3>
+                                  <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-0.5 rounded-full ${isPassing ? "bg-[#d1fae5] text-[#065f46]" : "bg-[#ffe4e6] text-[#9f1239]"}`}>
+                                    {ex.score}/100
+                                  </span>
+                                </div>
+                                <div className="w-full bg-zinc-100 rounded-full h-1.5">
+                                  <div
+                                    className={`h-1.5 rounded-full ${isPassing ? "bg-[#00bc7d]" : "bg-[#e7000b]"}`}
+                                    style={{ width: `${ex.score}%` }}
+                                  />
+                                </div>
+                                <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
+                                  {ex.rationale}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </section>
+                )}
               </>
             )}
           </main>

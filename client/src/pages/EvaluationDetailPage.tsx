@@ -598,10 +598,26 @@ const evalData: Record<string, {
 
 const EXPERTS = ["Expert A — Safety", "Expert B — Governance", "Expert C — Security"];
 
+type DynamicEval = {
+  id: string; module: string; target: string; verdict: string; verdictColor: string;
+  date: string; tooltip: string;
+  experts: { name: string; status: string; statusColor: string; note: string }[];
+};
+
+function loadDynamicEval(evalId: string): DynamicEval | null {
+  try {
+    const raw = localStorage.getItem("asl_evaluations_v1");
+    if (!raw) return null;
+    const list: DynamicEval[] = JSON.parse(raw);
+    return list.find((e) => e.id === evalId) ?? null;
+  } catch { return null; }
+}
+
 export const EvaluationDetailPage = (): JSX.Element => {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const eval_ = evalData[id ?? ""] ?? null;
+  const dynamicEval = !eval_ ? loadDynamicEval(id ?? "") : null;
   const [whyOpen, setWhyOpen] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [codeViewOpen, setCodeViewOpen] = useState(false);
@@ -637,10 +653,79 @@ export const EvaluationDetailPage = (): JSX.Element => {
                 Back to Evaluations
               </button>
 
-              {!eval_ ? (
+              {!eval_ && !dynamicEval ? (
                 <p className="[font-family:'Inter',Helvetica] text-[#71717b] text-sm">
                   Evaluation {id} not found.
                 </p>
+              ) : !eval_ && dynamicEval ? (
+                /* ── Dynamic Evaluation View ── */
+                <div className="flex flex-col gap-6 w-full">
+                  {/* Title */}
+                  <section className="flex items-start justify-between w-full">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-3">
+                        <h1 className="[font-family:'Inter',Helvetica] font-bold text-zinc-950 text-2xl tracking-[-0.60px] leading-8">
+                          {dynamicEval.module}
+                        </h1>
+                        <Badge className={`${dynamicEval.verdictColor} border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs h-auto px-3 py-1`}>
+                          {dynamicEval.verdict}
+                        </Badge>
+                      </div>
+                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
+                        {dynamicEval.target} · {dynamicEval.date} · {dynamicEval.id}
+                      </p>
+                    </div>
+                  </section>
+
+                  {/* Summary card */}
+                  <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="px-6 py-5">
+                      <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-[#71717b] uppercase tracking-wider mb-2">
+                        Summary
+                      </p>
+                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
+                        {dynamicEval.tooltip}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Three-expert grid */}
+                  <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                    <CardContent className="p-0">
+                      <div className="px-6 py-5 border-b border-zinc-100">
+                        <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-lg tracking-[-0.45px]">
+                          Expert Panel Assessment
+                        </h2>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5 mt-0.5">
+                          Independent expert verdicts for this evaluation
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 divide-x divide-zinc-100">
+                        {dynamicEval.experts.map((ex) => {
+                          const isPassing = ex.status === "PASS";
+                          return (
+                            <div key={ex.name} className="flex flex-col gap-3 px-6 py-6">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm leading-5">
+                                  {ex.name}
+                                </h3>
+                                <Badge className={`${ex.statusColor} border-transparent rounded-full flex-shrink-0 [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto`}>
+                                  {ex.status}
+                                </Badge>
+                              </div>
+                              <div className={`w-full h-1.5 rounded-full ${isPassing ? "bg-[#d1fae5]" : "bg-[#ffe4e6]"}`}>
+                                <div className={`h-1.5 rounded-full ${isPassing ? "bg-[#00bc7d]" : "bg-[#e7000b]"}`} style={{ width: isPassing ? "100%" : "40%" }} />
+                              </div>
+                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm leading-5">
+                                {ex.note}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               ) : (
                 <>
                   {/* Title row */}

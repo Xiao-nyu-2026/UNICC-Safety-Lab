@@ -191,7 +191,6 @@ export const DashboardMainSection = (): JSX.Element => {
   }, [evaluationsData]);
 
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
-  const [selectedEvalForReport, setSelectedEvalForReport] = useState<typeof INITIAL_EVALUATIONS[number] | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setChartLoading(false), 1400);
@@ -612,10 +611,10 @@ export const DashboardMainSection = (): JSX.Element => {
                   {evaluationsData.map((ev, index) => (
                     <TableRow key={index} className="border-[#0000001a] hover:bg-zinc-50/60 transition-colors" data-testid={`row-evaluation-${ev.id}`}>
 
-                      {/* Target Agent — opens evaluation report modal */}
+                      {/* Target Agent — route to evaluation detail */}
                       <TableCell className="pl-6">
                         <button
-                          onClick={() => setSelectedEvalForReport(ev)}
+                          onClick={() => setLocation(`/evaluations/${ev.id}`)}
                           className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm hover:underline text-left"
                           data-testid={`link-agent-${ev.id}`}
                         >
@@ -916,95 +915,6 @@ export const DashboardMainSection = (): JSX.Element => {
         </div>
       )}
 
-      {/* ── Evaluation Report Modal (from Recent Evaluations table) ── */}
-      {selectedEvalForReport && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(15,10,30,0.60)", backdropFilter: "blur(6px)" }}
-          onClick={() => setSelectedEvalForReport(null)}
-          data-testid="modal-eval-report-backdrop"
-        >
-          <div
-            className="relative w-full max-w-xl mx-4 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
-            style={{ background: "linear-gradient(145deg,#1e1533 0%,#16112a 100%)" }}
-            onClick={(e) => e.stopPropagation()}
-            data-testid="modal-eval-report"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
-              <div>
-                <h2 className="[font-family:'Inter',Helvetica] font-semibold text-white text-lg leading-7">
-                  Evaluation Report
-                </h2>
-                <p className="[font-family:'Inter',Helvetica] text-xs text-white/50 mt-0.5">
-                  {selectedEvalForReport.target} · {selectedEvalForReport.module} · {selectedEvalForReport.id}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedEvalForReport(null)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                data-testid="button-close-eval-report-modal"
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-5 flex flex-col gap-4">
-              {/* Verdict + date */}
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${selectedEvalForReport.verdictColor}`}>
-                  {selectedEvalForReport.verdict}
-                </span>
-                <span className="[font-family:'Inter',Helvetica] text-xs text-white/40 ml-auto">
-                  {selectedEvalForReport.date}
-                </span>
-              </div>
-
-              {/* Summary / tooltip */}
-              <div className="rounded-lg border border-white/10 px-4 py-3" style={{ background: "rgba(255,255,255,0.05)" }}>
-                <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-white/60 uppercase tracking-wider mb-1.5">
-                  Summary
-                </p>
-                <p className="[font-family:'Inter',Helvetica] text-sm text-white/80 leading-5">
-                  {selectedEvalForReport.tooltip}
-                </p>
-              </div>
-
-              {/* Expert breakdown */}
-              {selectedEvalForReport.experts && selectedEvalForReport.experts.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <p className="[font-family:'Inter',Helvetica] text-xs font-semibold text-white/60 uppercase tracking-wider">
-                    Expert Panel
-                  </p>
-                  {selectedEvalForReport.experts.map((ex: { name: string; status: string; statusColor: string; note: string }) => (
-                    <div key={ex.name} className="rounded-lg border border-white/10 px-4 py-3 flex flex-col gap-1" style={{ background: "rgba(255,255,255,0.04)" }}>
-                      <div className="flex items-center justify-between">
-                        <span className="[font-family:'Inter',Helvetica] font-semibold text-white text-sm">{ex.name}</span>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ex.statusColor}`}>
-                          {ex.status}
-                        </span>
-                      </div>
-                      <p className="[font-family:'Inter',Helvetica] text-xs text-white/55 leading-4">{ex.note}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end px-6 py-4 border-t border-white/10">
-              <Button
-                onClick={() => setSelectedEvalForReport(null)}
-                className="h-9 px-5 bg-white/10 hover:bg-white/15 text-white [font-family:'Inter',Helvetica] font-medium text-sm border border-white/15"
-                data-testid="button-close-eval-report-footer"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
