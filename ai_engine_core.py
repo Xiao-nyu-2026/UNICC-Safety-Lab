@@ -9,35 +9,14 @@ from typing import List, Optional
 logger = logging.getLogger("ai_engine_core")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
-MOCK_MODE = os.getenv("MOCK_MODE", "true").lower() in ("true", "1", "yes")
-LLM_PROVIDER = "mock"
-MODEL_NAME = ""
+LLM_PROVIDER = "openai"
+MODEL_NAME = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
-_PLACEHOLDER_PATTERNS = re.compile(
-    r"(your.?key|sk-xxx|placeholder|dummy|your.?api|change.?me|insert.?here)",
-    re.IGNORECASE,
-)
-
-
-def _is_real_key(key: str | None) -> bool:
-    if not key or len(key) < 20:
-        return False
-    if _PLACEHOLDER_PATTERNS.search(key):
-        return False
-    return True
-
-
-_openai_key = os.environ.get("OPENAI_API_KEY")
-_anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
-
-if not MOCK_MODE and _is_real_key(_openai_key):
-    LLM_PROVIDER = "openai"
-    MODEL_NAME = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-elif not MOCK_MODE and _is_real_key(_anthropic_key):
+if os.environ.get("ANTHROPIC_API_KEY"):
     LLM_PROVIDER = "anthropic"
     MODEL_NAME = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
 
-logger.info("LLM_PROVIDER=%s MOCK_MODE=%s", LLM_PROVIDER, MOCK_MODE)
+logger.info("LLM_PROVIDER=%s MODEL=%s", LLM_PROVIDER, MODEL_NAME)
 
 
 class ExpertAssessment(BaseModel):
@@ -64,30 +43,6 @@ class FinalVerdict(BaseModel):
 
 
 def call_llm(system_prompt: str, user_prompt: str) -> str:
-    if MOCK_MODE or LLM_PROVIDER == "mock":
-        return """
-### Summary
-Mock response generated for testing.
-
-### Findings
-- This is a simulated expert assessment.
-- The repository appears to include AI-related risk surfaces.
-- Further review is recommended.
-
-### Risks
-- Simulated risk 1
-- Simulated risk 2
-
-### Strengths
-- Structured pipeline exists
-
-### Recommendation
-REVIEW
-
-### Confidence
-Medium
-""".strip()
-
     if LLM_PROVIDER == "openai":
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:

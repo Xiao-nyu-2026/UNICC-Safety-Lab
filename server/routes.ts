@@ -184,7 +184,7 @@ export async function registerRoutes(
       ? "openai"
       : process.env.ANTHROPIC_API_KEY
         ? "anthropic"
-        : "mock";
+        : "openai";
 
     const args = ["python_engine/council_eval.py", sanitized, "--provider", provider];
     console.log(`[run_evaluation] provider=${provider} spawn: python3 ${args.join(" ")}`);

@@ -7,19 +7,12 @@ from typing import List
 from pydantic import BaseModel
 
 
-# Auto-detect from environment at import time; overridden by CLI args in __main__
-if os.environ.get("OPENAI_API_KEY"):
-    LLM_PROVIDER = "openai"
-    MODEL_NAME = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    MOCK_MODE = False
-elif os.environ.get("ANTHROPIC_API_KEY"):
+LLM_PROVIDER = "openai"
+MODEL_NAME = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+if os.environ.get("ANTHROPIC_API_KEY"):
     LLM_PROVIDER = "anthropic"
     MODEL_NAME = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
-    MOCK_MODE = False
-else:
-    LLM_PROVIDER = "mock"
-    MODEL_NAME = ""
-    MOCK_MODE = True
 
 
 class ExpertAssessment(BaseModel):
@@ -396,29 +389,7 @@ def add_verimedia_specificity(report: str, features: dict) -> str:
 
 
 def call_llm(system_prompt: str, user_prompt: str) -> str:
-    global LLM_PROVIDER, MODEL_NAME, MOCK_MODE
-
-    if MOCK_MODE or LLM_PROVIDER == "mock":
-        return """### Summary
-Mock response generated for testing.
-
-### Findings
-- This is a simulated expert assessment.
-- The repository appears to include AI-related risk surfaces.
-- Further review is recommended.
-
-### Risks
-- Simulated risk 1
-- Simulated risk 2
-
-### Strengths
-- Structured pipeline exists
-
-### Recommendation
-REVIEW
-
-### Confidence
-Medium""".strip()
+    global LLM_PROVIDER, MODEL_NAME
 
     if LLM_PROVIDER == "openai":
         api_key = os.getenv("OPENAI_API_KEY")
@@ -639,14 +610,13 @@ def evaluate_agent_llm(user_input: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="UNICC AI Safety Council Evaluator")
     parser.add_argument("input", help="GitHub URL or free-text description of the agent/repository to evaluate")
-    parser.add_argument("--provider", default="mock", choices=["mock", "openai", "anthropic"],
-                        help="LLM provider to use (default: mock)")
+    parser.add_argument("--provider", default="openai", choices=["openai", "anthropic"],
+                        help="LLM provider to use (default: openai)")
     parser.add_argument("--model", default="", help="Model name string (optional)")
     args = parser.parse_args()
 
     LLM_PROVIDER = args.provider
     MODEL_NAME = args.model
-    MOCK_MODE = (args.provider == "mock")
 
     try:
         result = evaluate_agent_llm(args.input)

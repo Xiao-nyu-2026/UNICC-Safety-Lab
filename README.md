@@ -31,7 +31,7 @@ The integration of Project 2's AI core into this dashboard is not a simple API p
 As a tool designed for the **UNICC AI Sandbox**, this project adheres to the highest ethical standards for institutional AI deployment:
 
 * **Transparency & Auditability:** By moving away from "black-box" external APIs and deploying on the **NYU DGX Spark cluster**, we ensure every evaluation is deterministic and auditable. Every decision made by the AI Council is logged with a specific rationale to ensure human-in-the-loop oversight.
-* **Bias Mitigation:** Our testing environment includes specific **"Bias Detection" probes** (see `test/UNICC_Testing_Valuation_Report.pdf`) that check for gender, age, and nationality skew. If a model exceeds the **80-point compliance threshold**, it is flagged for manual review to prevent institutional harm.
+* **Bias Mitigation:** Our testing environment includes specific **"Bias Detection" probes** (see `test file/UNICC_Testing_Valuation_Report.pdf`) that check for gender, age, and nationality skew. If a model exceeds the **80-point compliance threshold**, it is flagged for manual review to prevent institutional harm.
 * **Alignment with UN Values:** The lab is specifically designed to ensure AI systems are "safe, trustworthy, and aligned with institutional values before deployment". This directly supports the **Sustainable Development Goals (SDGs)** by fostering responsible innovation.
 
 ##  Empirical Testing & Validation Results

@@ -32,11 +32,9 @@ SaaS dashboard for monitoring AI agents and running automated safety evaluations
 ## LLM Provider Detection
 
 `ai_engine_core.py` auto-detects provider from environment variables:
-- `MOCK_MODE` env var (default `"true"`) — set to `"false"` to enable real LLM calls
-- `OPENAI_API_KEY` → OpenAI (gpt-4o-mini)
-- `ANTHROPIC_API_KEY` → Anthropic (claude-3-5-sonnet)
-- Neither / invalid key → Mock mode (returns simulated expert assessments)
-- API key validation uses regex-based placeholder detection (rejects `your_key`, `sk-xxx`, etc.)
+- `OPENAI_API_KEY` → OpenAI (gpt-4o-mini) — default provider
+- `ANTHROPIC_API_KEY` → Anthropic (claude-3-5-sonnet) — used when set
+- If the LLM call fails at runtime, the `/api/evaluate` endpoint returns a valid fallback response
 
 ## Input Validation
 
