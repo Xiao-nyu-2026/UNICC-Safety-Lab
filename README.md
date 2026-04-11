@@ -1,13 +1,8 @@
 # UNICC AI Safety Lab - Integration & UX Dashboard
 
-![Python](https://img.shields.io/badge/Backend-Python%20%7C%20FastAPI-3776AB?logo=python&logoColor=white)
-![LLM](https://img.shields.io/badge/Powered%20by-OpenAI-412991?logo=openai&logoColor=white)
-![Compliance](https://img.shields.io/badge/Compliance-NIST%20RMF%20%7C%20OWASP-23B95B)
 
 ## Project Overview
 The **UNICC AI Safety Lab** is an enterprise-grade evaluation dashboard developed for the United Nations International Computing Centre (UNICC) Sandbox. It provides a robust, visual, and automated way to assess the safety, compliance, and security of AI agents before they are deployed. This capstone project directly addresses a critical gap in AI governance: how can organizations ensure AI systems are safe, trustworthy, and aligned with institutional values before deployment? Rather than relying on external APIs or black-box systems, the AI Safety Lab will provide UNICC with an auditable, controllable, and governance-aligned testing environment. 
-
-The main business problem is that many AI systems are like "black boxes," so organizations do not know if they are safe or trustworthy, which carries a big risk for international organizations like the UNICC. My project helps build an AI Safety Lab on a private platform, so the client does not have to rely on external APIs. The UNICC will benefit from a "Council of Experts" system that checks AI agents from different perspectives to ensure they cause no harm. By completing this project, the client can test their AI tools in a secure environment before using them in the real world. This will make AI adoption in the UN system more trustworthy and transparent.
 
 Based on the **"Council of Experts"** architecture, this system integrates three distinct AI evaluation modules (Safety, Governance, and Contextual Risk) and aggregates their findings into actionable decisions (APPROVE / REVIEW / REJECT) based on **NIST AI RMF** and **OWASP LLM Top 10** standards.
 
@@ -33,9 +28,9 @@ To ensure the reliability of the AI Safety Lab, we conducted empirical testing u
 * **Effective Council Arbitration:** The multi-module ensemble demonstrated its ability to synthesize differing expert opinions (Safety, Governance, Contextual Risk) into actionable deployment verdicts (e.g., successfully approving compliant agents while rejecting vulnerable models).
 * **Actionable Reporting:** The platform successfully generated comprehensive compliance audit reports for both models and agents, proving its readiness for enterprise deployment.
 
-*For the full technical audits and detailed metrics, please refer to the documents located in the `test/` folder of this repository:*
-* `test/UNICC_Testing_Valuation_Report.pdf` *(Demonstrates a REJECT verdict with detailed vulnerability detection logs)*
-* `test/UNICC_Testing_Agent_Report.pdf` *(Demonstrates an APPROVE verdict for a compliant support agent)*
+*For the full technical audits and detailed metrics, please refer to the documents located in the `test file/` folder of this repository:*
+* `test file/UNICC_Testing_Valuation_Report.pdf` *(Demonstrates a REJECT verdict with detailed vulnerability detection logs)*
+* `test file/UNICC_Testing_Agent_Report.pdf` *(Demonstrates an APPROVE verdict for a compliant support agent)*
 
 ---
 
@@ -74,6 +69,19 @@ npm run dev
 # or `npm start` depending on your specific package.json script
 ```
 The application will now be running at `http://localhost:3000` (or the port specified by Replit).
+
+---
+
+##  Core AI Engine & Prompt Engineering
+The system is powered by a robust backend AI engine (originally prototyped in Jupyter Notebooks and integrated via `ai_engine_core.py`). The core AI implementation features:
+
+* **Pydantic Data Validation:** Strict schema enforcement (`ExpertAssessment`, `CritiqueRound`, `FinalVerdict`) ensuring the LLM outputs structured, predictable JSON/Markdown matrices instead of raw text.
+* **LLM Agnostic Router:** The engine supports both `OpenAI (GPT-4o)` and `Anthropic (Claude 3.5 Sonnet)`, allowing for cross-model verification.
+* **Specialized System Prompts:**
+  * `Expert A (Safety):` Engineered to detect jailbreaks, toxicity, and multimodal moderation blind spots.
+  * `Expert B (Governance):` Fine-tuned for auditability, trace control, and institutional deployment readiness.
+  * `Expert C (Security):` Focused on application-layer risks (e.g., untrusted file uploads, missing auth).
+* **Multi-Turn Critique & Synthesis:** An automated arbitration layer that forces the models to resolve disagreements and output a final definitive `APPROVE / REVIEW / REJECT` decision.
 
 ---
 
