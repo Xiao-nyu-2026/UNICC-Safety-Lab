@@ -948,9 +948,6 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         {liveReport?.agentName ?? latestByModule?.target ?? eval_.agent}
                         {" · "}
                         {liveReport ? "Just now" : latestByModule ? latestByModule.date : `${eval_.date} · ${eval_.time}`}
-                        {(liveReport || latestByModule) && (
-                          <span className="ml-2 text-[#4f39f6] font-medium text-xs">[Live]</span>
-                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 print:hidden">
@@ -1055,7 +1052,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                               </span>
                               {liveReport && (
                                 <span className="[font-family:'Inter',Helvetica] text-[10px] text-[#71717b] mt-1">
-                                  Live · {liveReport.agentName} · {liveReport.confidence}% confidence
+                                  {liveReport.agentName} · {liveReport.confidence}% confidence
                                 </span>
                               )}
                             </div>
