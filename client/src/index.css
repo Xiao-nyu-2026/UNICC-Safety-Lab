@@ -204,3 +204,97 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* ─── Print / Export Report styles ─── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 16mm 14mm 16mm 14mm;
+  }
+
+  html, body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove overflow constraints so all content flows across pages */
+  .h-screen,
+  [class*="h-screen"] {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .overflow-hidden,
+  [class*="overflow-hidden"] {
+    overflow: visible !important;
+  }
+
+  .overflow-y-auto,
+  .no-scrollbar {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Keep all background colours (badges, banners, cards) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Flatten the sidebar-main flex layout */
+  .flex.print\:block,
+  body > #root > div,
+  #root {
+    display: block !important;
+  }
+
+  /* Cards: no elevation shadow, avoid breaking inside */
+  .shadow-\[0px_1px_2px_-1px_\#0000001a\,0px_1px_3px_\#0000001a\],
+  [class*="shadow"] {
+    box-shadow: 0 0 0 1px #e4e4e7 !important;
+  }
+
+  /* Avoid page breaks inside cards and sections */
+  section,
+  [data-testid^="card-"],
+  .rounded-xl,
+  .rounded-lg {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Expert cards grid: stack to 2 columns for A4 width */
+  .grid.grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Stat cards: keep in a row */
+  .grid.grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Keep banners together */
+  [data-testid="banner-live-result"],
+  [data-testid="banner-arbiter-verdict"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Remove sticky/fixed positioning from anything remaining */
+  .sticky, .fixed {
+    position: relative !important;
+  }
+
+  /* Dialog overlays — never print */
+  [role="dialog"],
+  [data-radix-popper-content-wrapper] {
+    display: none !important;
+  }
+
+  /* Tooltips — never print */
+  [data-radix-tooltip-content] {
+    display: none !important;
+  }
+}

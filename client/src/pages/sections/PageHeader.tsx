@@ -46,7 +46,7 @@ export const PageHeader = ({ placeholder = "Search evaluations, agents..." }: Pa
   };
 
   return (
-    <header className="flex w-full h-16 items-center justify-between px-8 py-0 bg-white border-b border-zinc-200 sticky top-0 z-10">
+    <header className="flex w-full h-16 items-center justify-between px-8 py-0 bg-white border-b border-zinc-200 sticky top-0 z-10 print:hidden">
       <div className="relative flex-1 max-w-[448px]">
         <SearchIcon className="absolute top-2.5 left-3 w-4 h-4 text-[#09090b80]" />
         <Input

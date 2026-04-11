@@ -773,17 +773,17 @@ export const EvaluationDetailPage = (): JSX.Element => {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen overflow-hidden bg-neutral-50">
+      <div className="flex h-screen overflow-hidden bg-neutral-50 print:block print:h-auto print:overflow-visible print:bg-white">
         <SidebarSection />
-        <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="flex-1 overflow-y-auto no-scrollbar print:overflow-visible print:h-auto">
           <div className="flex flex-col items-start w-full">
             <PageHeader placeholder="Search evaluations..." />
 
-            <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6">
+            <main className="flex flex-col w-full items-start px-8 pt-8 pb-8 gap-6 print:px-6 print:pt-6 print:pb-6 print:gap-4">
               {/* Breadcrumb / back */}
               <button
                 onClick={() => navigate("/evaluations")}
-                className="flex items-center gap-2 text-[#71717b] hover:text-zinc-950 [font-family:'Inter',Helvetica] text-sm transition-colors"
+                className="flex items-center gap-2 text-[#71717b] hover:text-zinc-950 [font-family:'Inter',Helvetica] text-sm transition-colors print:hidden"
                 data-testid="button-back-to-evaluations"
               >
                 <ArrowLeftIcon className="w-4 h-4" />
@@ -953,7 +953,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 print:hidden">
                       <Button
                         variant="outline"
                         onClick={handleExportPDF}
@@ -986,6 +986,12 @@ export const EvaluationDetailPage = (): JSX.Element => {
                       </Button>
                     </div>
                   </section>
+
+                  {/* ── Print-only report header ── */}
+                  <div className="hidden print:block w-full border-b border-zinc-200 pb-4 mb-2">
+                    <p className="text-xs text-zinc-400 uppercase tracking-widest font-semibold mb-1">UNICC AI Safety Lab — Evaluation Report</p>
+                    <p className="text-[11px] text-zinc-400">Generated: {new Date().toLocaleString()}</p>
+                  </div>
 
                   {/* ── Live Run Banner — shows when liveReport exists OR latestByModule has a record ── */}
                   {(liveReport || latestByModule) && (
