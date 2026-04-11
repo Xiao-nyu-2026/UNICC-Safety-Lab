@@ -32,9 +32,16 @@ SaaS dashboard for monitoring AI agents and running automated safety evaluations
 ## LLM Provider Detection
 
 `ai_engine_core.py` auto-detects provider from environment variables:
+- `MOCK_MODE` env var (default `"true"`) — set to `"false"` to enable real LLM calls
 - `OPENAI_API_KEY` → OpenAI (gpt-4o-mini)
 - `ANTHROPIC_API_KEY` → Anthropic (claude-3-5-sonnet)
-- Neither / invalid → Mock mode (returns simulated expert assessments)
+- Neither / invalid key → Mock mode (returns simulated expert assessments)
+- API key validation uses regex-based placeholder detection (rejects `your_key`, `sk-xxx`, etc.)
+
+## Input Validation
+
+- `POST /api/evaluate` validates `repoUrl` against `^https?://github\.com/...` regex
+- Legacy `/api/run_evaluation` sanitizes `agentName` to alphanumeric + dashes only
 
 ## localStorage Keys (v2)
 

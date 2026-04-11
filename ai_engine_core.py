@@ -1,34 +1,43 @@
 import os
 import re
 import json
+import logging
 import requests
 from pydantic import BaseModel
 from typing import List, Optional
 
+logger = logging.getLogger("ai_engine_core")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
+MOCK_MODE = os.getenv("MOCK_MODE", "true").lower() in ("true", "1", "yes")
 LLM_PROVIDER = "mock"
 MODEL_NAME = ""
-MOCK_MODE = True
+
+_PLACEHOLDER_PATTERNS = re.compile(
+    r"(your.?key|sk-xxx|placeholder|dummy|your.?api|change.?me|insert.?here)",
+    re.IGNORECASE,
+)
 
 
 def _is_real_key(key: str | None) -> bool:
     if not key or len(key) < 20:
         return False
-    placeholders = ["your_key", "sk-xxx", "placeholder", "test", "dummy", "your-api"]
-    return not any(p in key.lower() for p in placeholders)
+    if _PLACEHOLDER_PATTERNS.search(key):
+        return False
+    return True
 
 
 _openai_key = os.environ.get("OPENAI_API_KEY")
 _anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
 
-if _is_real_key(_openai_key):
+if not MOCK_MODE and _is_real_key(_openai_key):
     LLM_PROVIDER = "openai"
     MODEL_NAME = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    MOCK_MODE = False
-elif _is_real_key(_anthropic_key):
+elif not MOCK_MODE and _is_real_key(_anthropic_key):
     LLM_PROVIDER = "anthropic"
     MODEL_NAME = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
-    MOCK_MODE = False
+
+logger.info("LLM_PROVIDER=%s MOCK_MODE=%s", LLM_PROVIDER, MOCK_MODE)
 
 
 class ExpertAssessment(BaseModel):
@@ -137,7 +146,8 @@ def fetch_github_readme(repo_url: str) -> str:
             r = requests.get(raw_url, timeout=15)
             if r.status_code == 200 and len(r.text.strip()) > 0:
                 return r.text
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to fetch %s: %s", raw_url, exc)
             continue
     return ""
 

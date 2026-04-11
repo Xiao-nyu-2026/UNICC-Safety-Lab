@@ -1,11 +1,16 @@
 import os
 import re
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 
 from ai_engine_core import evaluate_agent, ExpertAssessment, FinalVerdict
+
+logger = logging.getLogger("main")
+
+GITHUB_URL_RE = re.compile(r"^https?://github\.com/[\w\-\.]+/[\w\-\.]+/?$")
 
 app = FastAPI(
     title="UNICC AI Safety Lab API",
@@ -84,6 +89,16 @@ class EvaluateRequest(BaseModel):
     agentName: str
     repoUrl: Optional[str] = None
     modules: Optional[List[str]] = None
+
+    @field_validator("repoUrl")
+    @classmethod
+    def validate_repo_url(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v.strip() == "":
+            return None
+        cleaned = v.strip()
+        if not GITHUB_URL_RE.match(cleaned):
+            raise ValueError("repoUrl must be a valid GitHub repository URL")
+        return cleaned
 
 
 class AgentResponse(BaseModel):

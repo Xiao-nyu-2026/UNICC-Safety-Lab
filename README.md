@@ -20,7 +20,21 @@ The development of the AI Safety Lab is divided into three integrated capstone p
 * **One-Click Audit Reports:** Generates and exports comprehensive, professional PDF testing reports for compliance officers.
 * **Empirical Testing & Validation:** Includes real-world testing data using past UNICC AI projects. Please refer to the `UNICC_Testing_Validation_Report.pdf` document included in this repository for the comprehensive system audit and validation results.
 
-###  Empirical Testing & Validation Results
+## Deep Dive: The Council of Experts Integration
+The integration of Project 2's AI core into this dashboard is not a simple API passthrough. It implements a **sophisticated multi-turn orchestration**:
+
+* **Prompt Engineering & Model Persona:** Each expert (Safety, Governance, Security) is constrained by a specialized system prompt that forces a unique perspective. For example, the **Safety Expert** focuses on end-user harm and multimodal blind spots, while the **Security Expert** specifically probes for application-layer attack surfaces.
+* **Structured Output Validation:** We utilize **Pydantic models** to ensure that unstructured LLM reasoning is converted into structured JSON data. This allows the dashboard to render the Comparison Matrix and determine if there is a "Hard Block" (e.g., Expert A rejects due to OWASP LLM01 violation).
+* **Arbitration Logic:** The system doesn't just average the scores. It follows a **"Weighted Consensus"** model where critical safety failures trigger an automatic **REJECT** verdict, regardless of other experts' confidence.
+
+## Responsible AI & Critical Analysis
+As a tool designed for the **UNICC AI Sandbox**, this project adheres to the highest ethical standards for institutional AI deployment:
+
+* **Transparency & Auditability:** By moving away from "black-box" external APIs and deploying on the **NYU DGX Spark cluster**, we ensure every evaluation is deterministic and auditable. Every decision made by the AI Council is logged with a specific rationale to ensure human-in-the-loop oversight.
+* **Bias Mitigation:** Our testing environment includes specific **"Bias Detection" probes** (see `test/UNICC_Testing_Valuation_Report.pdf`) that check for gender, age, and nationality skew. If a model exceeds the **80-point compliance threshold**, it is flagged for manual review to prevent institutional harm.
+* **Alignment with UN Values:** The lab is specifically designed to ensure AI systems are "safe, trustworthy, and aligned with institutional values before deployment". This directly supports the **Sustainable Development Goals (SDGs)** by fostering responsible innovation.
+
+##  Empirical Testing & Validation Results
 To ensure the reliability of the AI Safety Lab, we conducted empirical testing using real-world AI models and agents from past UNICC projects (Fall 2024 and Spring 2025). 
 
 **Key Findings & Relevance:**

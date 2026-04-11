@@ -31,8 +31,7 @@ export const ImportAgentModal = ({ open, onClose }: Props) => {
 
   const handleAddAgent = () => {
     if (!form.name.trim()) return;
-    const idx = agents.length + 1;
-    const newId = `AGT-${String(idx + 10).padStart(3, "0")}`;
+    const newId = `AGT-${crypto.randomUUID().split("-")[0].toUpperCase()}`;
     const newAgent: Agent = {
       name: form.name.trim(),
       id: newId,
