@@ -214,18 +214,18 @@ export const DashboardMainSection = (): JSX.Element => {
     }));
   })();
 
-  // Bar: active-dates-only — collect real eval dates, group, sort, last 14
+  // Bar: group ALL evals by day first, sort oldest→newest, then slice last 14 unique active days
   const assessmentTrend = (() => {
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    /* Helper: normalise any date string → "Mmm DD" bucket key */
     const toLabel = (raw: string): string | null => {
       const s = (raw ?? "").trim();
       if (!s) return null;
-      if (/just now|today/i.test(s)) {
+      if (/just now|today/i.test(s))
         return `${MONTHS[today.getMonth()]} ${String(today.getDate()).padStart(2, "0")}`;
-      }
       if (/yesterday/i.test(s)) {
         const y = new Date(today);
         y.setDate(today.getDate() - 1);
@@ -236,6 +236,7 @@ export const DashboardMainSection = (): JSX.Element => {
       return `${MONTHS[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2, "0")}`;
     };
 
+    /* Helper: turn a "Mmm DD" label back into a sortable timestamp */
     const toDateMs = (label: string): number => {
       const [mon, day] = label.split(" ");
       const idx = MONTHS.indexOf(mon);
@@ -245,6 +246,7 @@ export const DashboardMainSection = (): JSX.Element => {
       return d.getTime();
     };
 
+    /* ── STEP 1: Group ALL records by day — no slice here ── */
     const buckets: Record<string, { fullAlignment: number; nonCompliant: number }> = {};
     for (const ev of evaluationsData) {
       const label = toLabel(ev.date ?? "");
@@ -254,8 +256,12 @@ export const DashboardMainSection = (): JSX.Element => {
       else buckets[label].nonCompliant += 1;
     }
 
-    return Object.entries(buckets)
-      .sort(([a], [b]) => toDateMs(a) - toDateMs(b))
+    /* ── STEP 2: Convert to array and sort oldest → newest ── */
+    const sortedDays = Object.entries(buckets)
+      .sort(([a], [b]) => toDateMs(a) - toDateMs(b));
+
+    /* ── STEP 3: Slice LAST 14 unique active days, then map ── */
+    return sortedDays
       .slice(-14)
       .map(([label, { fullAlignment, nonCompliant }]) => ({
         day: label, fullAlignment, nonCompliant,
