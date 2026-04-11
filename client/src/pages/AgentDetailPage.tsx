@@ -112,6 +112,21 @@ function verdictStyle(v: string): string {
   return "bg-[#ffe4e6] text-[#9f1239]";
 }
 
+function scoreToVerdict(score: number | null): "APPROVE" | "REVIEW" | "REJECT" | null {
+  if (score === null) return null;
+  if (score >= 80) return "APPROVE";
+  if (score >= 50) return "REVIEW";
+  return "REJECT";
+}
+
+function verdictToLabel(v: string | null): string {
+  if (!v) return "Pending";
+  if (v === "APPROVE") return "Compliant";
+  if (v === "REVIEW") return "Review Required";
+  if (v === "REJECT") return "Non-Compliant";
+  return v;
+}
+
 function verdictBorderColor(v: string): string {
   const u = (v ?? "").toUpperCase();
   if (u === "APPROVE" || u === "APPROVED" || u === "PASS" || u === "PASSED") return "#009966";
@@ -416,11 +431,10 @@ export const AgentDetailPage = (): JSX.Element => {
   const displayStatusColor = agent?.statusColor ?? liveAgent?.statusColor ?? "bg-zinc-100 text-zinc-600";
   const displayEvalCount  = agent?.evalCount  ?? liveAgent?.evalCount  ?? 0;
   const displayLastEval   = agent?.lastEval   ?? liveAgent?.lastEval   ?? "Never";
-  const displaySafetyScore = agent?.safetyScore
-    ?? (liveResult ? liveResult.confidence_score : null);
-  const displayScoreColor = displaySafetyScore !== null
-    ? (displaySafetyScore >= 80 ? "text-[#009966]" : displaySafetyScore >= 50 ? "text-[#b45309]" : "text-[#e7000b]")
-    : "text-zinc-400";
+  /* Compliance Status: derive from liveResult verdict, or score-based verdict from static data */
+  const displayLatestVerdict: string | null =
+    liveResult ? liveResult.final_verdict.toUpperCase()
+    : scoreToVerdict(agent?.safetyScore ?? null);
   const displayDescription = agent?.description
     ?? `${displayName} is an imported AI agent registered in the Safety Lab. Run a security audit from the Dashboard to generate a full safety assessment and populate the Council of Experts matrix.`;
   const displayFlags = agent?.securityFlags ?? [];
@@ -517,34 +531,39 @@ export const AgentDetailPage = (): JSX.Element => {
 
             {/* ── Stats Cards ── */}
             <section className="grid grid-cols-3 gap-4 w-full">
-              {/* Safety Score */}
+              {/* Compliance Status */}
               <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                 <CardContent className="pt-6 pb-5 px-6">
-                  <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Safety Score</p>
-                  {liveResult ? (
-                    <div className="mt-2">
-                      <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto ${verdictStyle(liveResult.final_verdict)}`}>
-                        {liveResult.final_verdict}
-                      </Badge>
-                      <div className="mt-2 w-full bg-zinc-100 rounded-full h-1.5">
-                        <div className="h-1.5 rounded-full bg-[#4f39f6]" style={{ width: `${liveResult.confidence_score}%` }} />
-                      </div>
-                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1.5">
-                        {liveResult.confidence_score}% confidence
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <p className={`[font-family:'Inter',Helvetica] font-bold text-2xl leading-8 mt-1 ${displayScoreColor}`}>
-                        {displaySafetyScore !== null ? `${displaySafetyScore}%` : "—"}
-                      </p>
-                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
-                        {displaySafetyScore !== null
-                          ? (displaySafetyScore >= 80 ? "Within safe threshold" : displaySafetyScore >= 50 ? "Borderline — review required" : "Below minimum threshold")
-                          : "No evaluations run yet"}
-                      </p>
-                    </>
-                  )}
+                  <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">Compliance Status</p>
+                  <div className="mt-2 flex flex-col gap-1">
+                    {displayLatestVerdict ? (
+                      <>
+                        <Badge
+                          className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto w-fit ${verdictStyle(displayLatestVerdict)}`}
+                          data-testid="badge-compliance-status"
+                        >
+                          {verdictToLabel(displayLatestVerdict)}
+                        </Badge>
+                        {liveResult && (
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
+                            {liveResult.confidence_score}% confidence · Latest verdict
+                          </p>
+                        )}
+                        {!liveResult && (
+                          <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">
+                            {displayLatestVerdict === "APPROVE" ? "Meets all safety requirements" : displayLatestVerdict === "REVIEW" ? "Borderline — manual review required" : "Critical issues — remediation required"}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-sm px-3 py-1 h-auto w-fit bg-zinc-100 text-zinc-400">
+                          Pending
+                        </Badge>
+                        <p className="[font-family:'Inter',Helvetica] font-normal text-[#a1a1aa] text-xs leading-4 mt-1">No evaluations run yet</p>
+                      </>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
 

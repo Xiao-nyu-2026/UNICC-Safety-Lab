@@ -209,7 +209,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState("UNICC-Chatbot-V2");
+  const [selectedAgent, setSelectedAgent] = useState(() => contextAgents[0]?.name ?? "");
   const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
 
   const [launching, setLaunching] = useState(false);
@@ -389,9 +389,10 @@ export const DashboardMainSection = (): JSX.Element => {
 
       /* 1. Dashboard Recent Evaluations */
       const staticEvalId = MODULE_ID_TO_EVAL_ID[selectedModule];
+      const foundAgentId = contextAgents.find((a) => a.name === selectedAgent)?.id ?? "";
       const newEval = {
         id: staticEvalId ?? `EV-${Date.now()}`,
-        agentId: "",
+        agentId: foundAgentId,
         module: moduleLabel,
         target: selectedAgent,
         verdict,
@@ -900,7 +901,7 @@ export const DashboardMainSection = (): JSX.Element => {
                         <button
                           onClick={() => {
                             const agentId =
-                              (ev as any).agentId ??
+                              (ev as any).agentId ||
                               contextAgents.find((a) => a.name === ev.target)?.id;
                             setLocation(agentId ? `/agents/${agentId}` : `/agents`);
                           }}
