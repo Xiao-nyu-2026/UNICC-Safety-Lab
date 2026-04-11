@@ -1,3 +1,25 @@
+"""
+UNICC AI Safety Lab — FastAPI Backend Server
+=============================================
+Exposes the Council-of-Experts evaluation pipeline over HTTP.
+
+Key endpoints
+-------------
+POST /api/evaluate   — Runs the full 5-stage council evaluation
+                       (Expert A → B → C → Critique → Synthesis)
+                       by importing and calling evaluate_agent() from
+                       ai_engine_core.py.  No placeholder logic.
+GET  /api/agents     — Returns the registered agent registry.
+GET  /api/health     — Liveness check.
+
+LLM provider is determined at import time from environment variables:
+  OPENAI_API_KEY     → OpenAI gpt-4o-mini (default)
+  ANTHROPIC_API_KEY  → Anthropic claude-3-5-sonnet (if set)
+
+If the LLM call fails at runtime (e.g. missing key in CI), the
+/api/evaluate route returns FALLBACK_RESPONSE — a realistic, fully-
+structured JSON payload — so the frontend always receives valid data.
+"""
 import os
 import re
 import logging

@@ -362,18 +362,31 @@ export const DashboardMainSection = (): JSX.Element => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 90_000);
-      const res = await fetch("/api/run_evaluation", {
+
+      // Resolve the selected agent's repoUrl if available
+      const agentObj = contextAgents.find((a) => a.name === selectedAgent);
+      const repoUrl = (agentObj as any)?.repoUrl ?? undefined;
+
+      // Call the FastAPI /api/evaluate endpoint (proxied through Express)
+      const res = await fetch("/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentName: selectedAgent, modules: [selectedModule] }),
+        body: JSON.stringify({
+          agentName: selectedAgent,
+          ...(repoUrl ? { repoUrl } : {}),
+          modules: [selectedModule],
+        }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.detail ?? `Server error: ${res.status}`);
+      }
 
       const data: EvalResult = await res.json();
-      console.log("[run_evaluation] result:", data);
+      console.log("[/api/evaluate] result:", data);
       setEvalResult(data);
       setAuditOpen(false);
 
@@ -450,7 +463,7 @@ export const DashboardMainSection = (): JSX.Element => {
         duration: 6000,
       });
     } catch (err) {
-      console.error("[run_evaluation] error:", err);
+      console.error("[/api/evaluate] error:", err);
       toast({
         title: "Evaluation failed",
         description: "Could not reach the evaluation API. Check the console.",
