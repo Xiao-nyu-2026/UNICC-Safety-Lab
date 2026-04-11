@@ -7,9 +7,19 @@ from typing import List
 from pydantic import BaseModel
 
 
-LLM_PROVIDER = "mock"
-MODEL_NAME = ""
-MOCK_MODE = True
+# Auto-detect from environment at import time; overridden by CLI args in __main__
+if os.environ.get("OPENAI_API_KEY"):
+    LLM_PROVIDER = "openai"
+    MODEL_NAME = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    MOCK_MODE = False
+elif os.environ.get("ANTHROPIC_API_KEY"):
+    LLM_PROVIDER = "anthropic"
+    MODEL_NAME = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+    MOCK_MODE = False
+else:
+    LLM_PROVIDER = "mock"
+    MODEL_NAME = ""
+    MOCK_MODE = True
 
 
 class ExpertAssessment(BaseModel):

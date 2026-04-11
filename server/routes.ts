@@ -96,12 +96,20 @@ export async function registerRoutes(
       return res.status(400).json({ error: "agentName is required" });
     }
 
+    // Auto-detect LLM provider from Replit Secrets
+    const provider = process.env.OPENAI_API_KEY
+      ? "openai"
+      : process.env.ANTHROPIC_API_KEY
+        ? "anthropic"
+        : "mock";
+
     const safeAgent = String(agentName).replace(/"/g, '\\"');
-    const cmd = `python3 python_engine/council_eval.py "${safeAgent}"`;
+    const cmd = `python3 python_engine/council_eval.py "${safeAgent}" --provider ${provider}`;
 
-    console.log(`[run_evaluation] executing: ${cmd}`);
+    console.log(`[run_evaluation] provider=${provider} executing: ${cmd}`);
 
-    exec(cmd, { env: process.env }, (error, stdout, stderr) => {
+    // 90-second timeout — real LLM calls (3 experts + critique + synthesis) take time
+    exec(cmd, { env: process.env, timeout: 90_000 }, (error, stdout, stderr) => {
       if (stderr) {
         console.warn(`[run_evaluation] stderr: ${stderr}`);
       }

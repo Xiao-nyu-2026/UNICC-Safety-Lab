@@ -286,11 +286,15 @@ export const DashboardMainSection = (): JSX.Element => {
     if (!selectedModule) return;
     setLaunching(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90_000);
       const res = await fetch("/api/run_evaluation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ agentName: selectedAgent, modules: [selectedModule] }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
