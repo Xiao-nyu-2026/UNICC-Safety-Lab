@@ -764,7 +764,9 @@ export const DashboardMainSection = (): JSX.Element => {
                       <TableCell className="pl-6">
                         <button
                           onClick={() => {
-                            const agentId = contextAgents.find((a) => a.name === ev.target)?.id;
+                            const agentId =
+                              (ev as any).agentId ??
+                              contextAgents.find((a) => a.name === ev.target)?.id;
                             setLocation(agentId ? `/agents/${agentId}` : `/agents`);
                           }}
                           className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm hover:underline text-left"

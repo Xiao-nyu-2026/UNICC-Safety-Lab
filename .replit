@@ -46,4 +46,4 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "your_key_here in your .env file"
