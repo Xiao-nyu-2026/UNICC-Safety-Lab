@@ -592,13 +592,20 @@ export const DashboardMainSection = (): JSX.Element => {
                 </div>
               ) : (
                 <>
-                  {assessmentTrend.every(d => d.fullAlignment === 0 && d.nonCompliant === 0) ? (
-                    <div className="h-[180px] flex items-center justify-center">
-                      <p className="[font-family:'Inter',Helvetica] text-xs text-[#a1a1aa]">No evaluation data yet</p>
-                    </div>
-                  ) : (
+                  {(() => {
+                    const compactChartData = assessmentTrend.filter(
+                      (item) => item.fullAlignment > 0 || item.nonCompliant > 0
+                    );
+                    if (compactChartData.length === 0) return (
+                      <div className="h-[180px] flex items-center justify-center">
+                        <p className="[font-family:'Inter',Helvetica] text-xs text-[#a1a1aa]">No evaluation data yet</p>
+                      </div>
+                    );
+                    const chartPx = Math.max(compactChartData.length * 72 + 32, 200);
+                    return (
+                    <div style={{ maxWidth: chartPx }}>
                     <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={assessmentTrend} barSize={22} barCategoryGap="8%" barGap={0}>
+                      <BarChart data={compactChartData} barSize={28} barCategoryGap={10} barGap={0}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
                         <XAxis
                           dataKey="day"
@@ -634,27 +641,29 @@ export const DashboardMainSection = (): JSX.Element => {
                         <Bar dataKey="nonCompliant" fill="#e7000b" radius={[4, 4, 0, 0]} name="nonCompliant" stackId="a" />
                       </BarChart>
                     </ResponsiveContainer>
-                  )}
+                    </div>
+                    );
+                  })()}
                 </>
               )}
 
-              {/* Custom NIST legend */}
+              {/* Chart legend */}
               <div className="flex items-start gap-6 mt-3 pt-3 border-t border-zinc-100 flex-wrap">
                 <div className="flex items-start gap-2">
                   <span className="w-3 h-3 rounded-sm bg-[#009966] flex-shrink-0 mt-0.5" />
                   <div className="flex flex-col">
-                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">Full Alignment</span>
+                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">Passed</span>
                     <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[11px] leading-4">
-                      Compliant with NIST GOVERN &amp; MEASURE core standards
+                      Passed all safety and compliance framework checks
                     </span>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="w-3 h-3 rounded-sm bg-[#e7000b] flex-shrink-0 mt-0.5" />
                   <div className="flex flex-col">
-                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">Non-compliant</span>
+                    <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-xs">Failed</span>
                     <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-[11px] leading-4">
-                      Unresolved risk management items flagged
+                      Security vulnerabilities or compliance risks flagged
                     </span>
                   </div>
                 </div>
