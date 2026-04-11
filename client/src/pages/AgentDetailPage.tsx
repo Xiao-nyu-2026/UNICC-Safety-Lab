@@ -502,7 +502,7 @@ export const AgentDetailPage = (): JSX.Element => {
                   </Badge>
                 </div>
                 <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                  {displayId} · {displayType} · {displayEvalCount.toLocaleString()} evals run · Last evaluated {displayLastEval}
+                  Last evaluated {displayLastEval}
                 </p>
               </div>
               <Button
