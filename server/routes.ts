@@ -1,7 +1,69 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { exec } from "child_process";
+import { spawn } from "child_process";
+import http from "http";
 import { storage } from "./storage";
+
+const FASTAPI_PORT = 8000;
+let fastapiReady = false;
+
+function startFastAPI() {
+  const py = spawn("python3", ["main.py"], {
+    env: { ...process.env, FASTAPI_PORT: String(FASTAPI_PORT) },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  py.stdout?.on("data", (d: Buffer) => {
+    const msg = d.toString();
+    console.log(`[fastapi] ${msg.trim()}`);
+    if (msg.includes("Uvicorn running") || msg.includes("Started server")) {
+      fastapiReady = true;
+    }
+  });
+  py.stderr?.on("data", (d: Buffer) => {
+    const msg = d.toString();
+    console.log(`[fastapi] ${msg.trim()}`);
+    if (msg.includes("Uvicorn running") || msg.includes("Application startup complete")) {
+      fastapiReady = true;
+    }
+  });
+  py.on("exit", (code) => {
+    console.warn(`[fastapi] process exited with code ${code}`);
+    fastapiReady = false;
+    setTimeout(startFastAPI, 3000);
+  });
+  console.log(`[fastapi] spawned on port ${FASTAPI_PORT}`);
+}
+
+function proxyToFastAPI(
+  method: string,
+  path: string,
+  body: string | null,
+  res: any
+) {
+  const opts: http.RequestOptions = {
+    hostname: "127.0.0.1",
+    port: FASTAPI_PORT,
+    path,
+    method,
+    headers: { "Content-Type": "application/json" },
+    timeout: 90_000,
+  };
+  const proxyReq = http.request(opts, (proxyRes) => {
+    let data = "";
+    proxyRes.on("data", (chunk: Buffer) => (data += chunk.toString()));
+    proxyRes.on("end", () => {
+      res.status(proxyRes.statusCode ?? 200);
+      res.setHeader("Content-Type", "application/json");
+      res.end(data);
+    });
+  });
+  proxyReq.on("error", (err: Error) => {
+    console.error(`[proxy] error: ${err.message}`);
+    res.status(502).json({ error: "FastAPI backend unavailable", detail: err.message });
+  });
+  if (body) proxyReq.write(body);
+  proxyReq.end();
+}
 
 // Extract bullet-list items from a named markdown section
 function extractBullets(text: string, section: string): string[] {
@@ -21,10 +83,13 @@ function extractSection(text: string, section: string): string {
   return match ? match[1].trim() : "";
 }
 
-// Extract the RECOMMENDATION line from a markdown expert block
 function extractRecommendation(text: string): string {
-  const match = text.match(/###\s*Recommendation\s*\n+([A-Z]+)/i);
-  return match ? match[1].toUpperCase().trim() : "REVIEW";
+  for (const section of ["Final Verdict", "Recommendation"]) {
+    const re = new RegExp(`###\\s*${section}\\s*\\n+([A-Z]+)`, "i");
+    const match = text.match(re);
+    if (match) return match[1].toUpperCase().trim();
+  }
+  return "REVIEW";
 }
 
 // Extract the CONFIDENCE level and map to a numeric score
@@ -89,36 +154,56 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  startFastAPI();
+
+  app.get("/api/agents", (_req, res) => {
+    proxyToFastAPI("GET", "/api/agents", null, res);
+  });
+
+  app.post("/api/evaluate", (req, res) => {
+    proxyToFastAPI("POST", "/api/evaluate", JSON.stringify(req.body), res);
+  });
+
+  app.get("/api/health", (_req, res) => {
+    proxyToFastAPI("GET", "/api/health", null, res);
+  });
+
   app.post("/api/run_evaluation", (req, res) => {
     const { agentName, modules } = req.body;
 
-    if (!agentName) {
+    if (!agentName || typeof agentName !== "string") {
       return res.status(400).json({ error: "agentName is required" });
     }
 
-    // Auto-detect LLM provider from Replit Secrets
+    const sanitized = agentName.replace(/[^a-zA-Z0-9\-_.\s]/g, "");
+    if (!sanitized || sanitized.length > 100) {
+      return res.status(400).json({ error: "Invalid agentName" });
+    }
+
     const provider = process.env.OPENAI_API_KEY
       ? "openai"
       : process.env.ANTHROPIC_API_KEY
         ? "anthropic"
         : "mock";
 
-    const safeAgent = String(agentName).replace(/"/g, '\\"');
-    const cmd = `python3 python_engine/council_eval.py "${safeAgent}" --provider ${provider}`;
+    const args = ["python_engine/council_eval.py", sanitized, "--provider", provider];
+    console.log(`[run_evaluation] provider=${provider} spawn: python3 ${args.join(" ")}`);
 
-    console.log(`[run_evaluation] provider=${provider} executing: ${cmd}`);
+    const child = spawn("python3", args, { env: process.env, timeout: 90_000 });
+    let stdout = "";
+    let stderr = "";
 
-    // 90-second timeout — real LLM calls (3 experts + critique + synthesis) take time
-    exec(cmd, { env: process.env, timeout: 90_000 }, (error, stdout, stderr) => {
+    child.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
+    child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
+
+    child.on("close", (code) => {
       if (stderr) {
         console.warn(`[run_evaluation] stderr: ${stderr}`);
       }
-
-      if (error) {
-        console.error(`[run_evaluation] exec error: ${error.message}`);
-        return res.status(500).json({ error: error.message, stderr });
+      if (code !== 0) {
+        console.error(`[run_evaluation] exited with code ${code}`);
+        return res.status(500).json({ error: "Evaluation process failed" });
       }
-
       try {
         const raw = JSON.parse(stdout);
         const result = transformPythonOutput(raw);
@@ -126,11 +211,7 @@ export async function registerRoutes(
         return res.json(result);
       } catch (parseErr) {
         console.error(`[run_evaluation] JSON parse error. stdout was:\n${stdout}`);
-        return res.status(500).json({
-          error: "Failed to parse Python output as JSON",
-          stdout,
-          stderr,
-        });
+        return res.status(500).json({ error: "Failed to parse evaluation output" });
       }
     });
   });

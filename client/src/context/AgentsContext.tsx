@@ -79,6 +79,24 @@ export const AgentsProvider = ({ children }: { children: ReactNode }) => {
   const [agents, setAgents] = useState<Agent[]>(() => loadAgents());
 
   useEffect(() => {
+    fetch("/api/agents")
+      .then((r) => {
+        if (!r.ok) throw new Error("API unavailable");
+        return r.json();
+      })
+      .then((data: Agent[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const merged = data.map((apiAgent) => {
+            const local = agents.find((a) => a.id === apiAgent.id);
+            return local ? { ...apiAgent, lastEvalResult: local.lastEvalResult, status: local.status, statusColor: local.statusColor, lastEval: local.lastEval } : apiAgent;
+          });
+          setAgents(merged);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     saveAgents(agents);
   }, [agents]);
 
