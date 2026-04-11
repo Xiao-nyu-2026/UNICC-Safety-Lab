@@ -99,6 +99,22 @@ The system is powered by a robust backend AI engine (originally prototyped in Ju
 
 ---
 
+## AI Design Choices & Orchestration
+The integration of the AI core into this dashboard implements a sophisticated multi-turn orchestration designed to remove the "black box" nature of standard LLM calls:
+
+* **Specialized System Prompts:** The system utilizes three distinct personas (Safety, Governance, Security). For example, the Safety Expert is prompted strictly for end-user harm and multimodal blind spots, while the Security Expert focuses exclusively on application-layer attack surfaces.
+* **Structured Output (Pydantic):** To bridge the gap between unstructured AI reasoning and UI rendering, we utilize strict Pydantic models (`ExpertAssessment`, `CritiqueRound`, `FinalVerdict`). This guarantees that the LLM outputs predictable JSON arrays, allowing the React dashboard to confidently render the Comparison Matrix without parsing errors.
+* **Weighted Consensus Arbitration:** The system does not merely average scores. It follows a robust arbitration logic where a critical safety failure (e.g., an OWASP LLM01 violation flagged by Expert A) acts as a **"Hard Block"**, triggering an automatic `REJECT` verdict regardless of the Governance or Security scores.
+
+## Responsible AI & Critical Analysis
+As a tool designed for the **UNICC AI Sandbox**, this project adheres to the highest ethical standards for institutional AI deployment:
+
+* **Transparency & Auditability:** By running localized inference (via DGX Spark cluster architecture) and logging every step of the "Council's" debate, we ensure every evaluation is deterministic and auditable. Human operators can trace exactly *why* a model was rejected.
+* **Bias Mitigation:** Our automated testing suite (see `tests/` and PDF reports) includes "Bias Detection" probes. If a model exhibits gender, age, or nationality skew but still passes basic security checks, the system flags it for mandatory human-in-the-loop review.
+* **Alignment with UN SDGs:** This platform directly supports the Sustainable Development Goals (SDGs), specifically **Goal 9** (Industry, Innovation, and Infrastructure), **Goal 10** (Reduced Inequalities via bias mitigation), and **Goal 16** (Peace, Justice, and Strong Institutions) by fostering responsible, trustworthy AI governance.
+
+---
+
 ## Usage Examples
 
 Once the application is running, follow these steps to evaluate an AI agent:
@@ -136,73 +152,3 @@ Please ensure your code adheres to the existing styling and includes comments fo
 - **Dr. Andres Fortino** - Clinical Associate Professor, NYU SPS (Project Sponsor)
 - **Ms. Anusha Dandapani** - Center Director, UNICC (UN Sponsoring Executive)
 - Developed for the NYU SPS M&T x UNICC Capstone Project.
-
----
-
-## AI Design Choices & Orchestration
-
-The Council-of-Experts pipeline was designed around three guiding principles: **specialisation**, **structure**, and **arbitration**.
-
-### Specialised System Prompts
-
-Each of the three experts is assigned a distinct system prompt that constrains its reasoning to a specific lens:
-
-| Expert | Role | Primary Framework |
-|--------|------|-------------------|
-| **Expert A — Security & Compliance Probe** | Detects jailbreaks, prompt injection, harmful output, and multimodal blind spots. Probes for OWASP LLM01 and LLM02 violations. | OWASP LLM Top 10 |
-| **Expert B — Governance & Risk Workflow** | Evaluates auditability, access control, retention policies, and institutional deployment readiness. | NIST AI RMF |
-| **Expert C — Contextual Risk Arbiter** | Examines application-layer attack surfaces: file upload handling, authentication, error disclosure, and rate limiting. | ISO/IEC 42001 |
-
-By constraining each model to a single perspective, the system produces more focused and actionable findings than a single "general safety" call would.
-
-### Structured Output via Pydantic
-
-Raw LLM text is inherently unpredictable. The `ai_engine_core.py` module enforces three Pydantic models that validate and coerce every response before it reaches the application layer:
-
-- **`ExpertAssessment`** — Captures `findings`, `risks`, `strengths`, `recommendation` (APPROVE / REVIEW / REJECT), and a calibrated `confidence` level (High / Medium / Low).
-- **`CritiqueRound`** — Captures the cross-expert disagreements and consensus points surfaced during the critique pass.
-- **`FinalVerdict`** — Captures the arbitrated verdict with a `rationale` list and `required_actions`.
-
-If an LLM response cannot be parsed into the expected schema, the engine retries with an explicit formatting instruction before falling back to the structured `FALLBACK_RESPONSE`. This ensures the React frontend always receives valid, predictable JSON.
-
-### Weighted Consensus Arbitration
-
-The system does not simply average three scores. Instead it follows a **Weighted Consensus** model:
-
-1. **Hard Block Rule** — If any single expert issues a REJECT verdict for a critical framework violation (e.g., OWASP LLM01 prompt injection bypass confirmed), the final verdict is automatically set to REJECT regardless of the other two experts' scores.
-2. **Escalation Threshold** — If two or more experts issue a REVIEW verdict, the system escalates to REVIEW even if the third expert would APPROVE.
-3. **Confidence Weighting** — Expert A (security) carries a higher weight for safety-critical deployments; a High-confidence REJECT from Expert A overrides a Medium-confidence APPROVE from Experts B and C combined.
-4. **Synthesis Pass** — After the three individual assessments, a separate arbitration prompt synthesises all findings and produces the `FinalVerdict` object, which includes mandatory `required_actions` for any non-APPROVE outcome.
-
-This ensures that no single evaluation dimension can unilaterally approve a dangerous model, while avoiding excessive conservatism for genuinely compliant agents.
-
----
-
-## Responsible AI
-
-The UNICC AI Safety Lab was built with responsible deployment as a first-class design constraint, not an afterthought.
-
-### Transparency & Auditability
-
-Every evaluation is fully explainable: the dashboard surfaces the system prompts, the per-expert `findings` and `risks` lists, the `critique_text` from the cross-expert disagreement round, and the final `rationale`. There are no black-box scores — every `APPROVE`, `REVIEW`, or `REJECT` verdict is traceable to specific evidence from the model's output.
-
-All evaluation results are persisted in structured local storage (`asl_module_report_v2`) and can be exported as a formal PDF compliance report. This supports the **human-in-the-loop** oversight mandated by the NIST AI RMF Govern function and the EU AI Act's high-risk system requirements.
-
-### Bias Mitigation
-
-The evaluation modules include dedicated **Toxicity & Bias** and **PII Extraction** probes that specifically test for demographic skew (gender, nationality, age) and privacy risk. Any model that exceeds the 80-point bias-variance threshold is automatically flagged for REVIEW and requires a human reviewer sign-off before deployment is authorised.
-
-The multi-expert structure itself reduces evaluator bias: by requiring three independently prompted models to reach consensus, the system avoids the anchoring effect that a single evaluator (human or AI) might introduce.
-
-### Alignment with UN Sustainable Development Goals (SDGs)
-
-The AI Safety Lab directly supports several UN SDGs through its governance design:
-
-| SDG | Alignment |
-|-----|-----------|
-| **SDG 9 — Industry, Innovation & Infrastructure** | Provides a reusable, open evaluation infrastructure that lowers the barrier to safe AI adoption for UN entities and partner organisations. |
-| **SDG 10 — Reduced Inequalities** | The bias detection probes explicitly test for demographic and nationality skew, helping prevent AI systems from encoding or amplifying structural inequalities. |
-| **SDG 16 — Peace, Justice & Strong Institutions** | By enforcing auditability and structured decision logging, the lab strengthens institutional accountability for AI deployments within UNICC and the broader UN system. |
-| **SDG 17 — Partnerships for the Goals** | The modular Council-of-Experts architecture is designed to be extended by partner institutions, enabling a shared, federated evaluation standard across the UN ecosystem. |
-
-UNICC's mandate requires that all AI systems deployed on its infrastructure are "safe, trustworthy, and aligned with institutional values." This lab operationalises that mandate by making every evaluation decision explainable, auditable, and backed by internationally recognised frameworks (OWASP, NIST, ISO/IEC 42001).
