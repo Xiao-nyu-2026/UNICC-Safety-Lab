@@ -1,54 +1,49 @@
 # ─────────────────────────────────────────────
-# Stage 1: Build the React + Express frontend
+# Stage 1: Build the React frontend
 # ─────────────────────────────────────────────
-FROM node:20-slim AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
-# Install dependencies first for better layer caching
 COPY package*.json ./
 RUN npm ci
 
-# Copy only the source files needed for the build
-COPY vite.config.ts tsconfig*.json ./
-COPY client/ ./client/
-COPY server/ ./server/
-COPY shared/ ./shared/
-
+COPY . .
 RUN npm run build
 
 
 # ─────────────────────────────────────────────
-# Stage 2: Production runtime
-# node:20-slim already includes Node.js — no apt install needed
+# Stage 2: Python + FastAPI runtime
 # ─────────────────────────────────────────────
-FROM node:20-slim AS runtime
+FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
-# Install Python and pip (much lighter than installing Node via apt-get)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 # Install Python dependencies
 COPY requirements.txt ./
-RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Node production dependencies
-COPY package*.json ./
-RUN npm ci --omit=dev
-
-# Copy Python engine source
+# Copy Python source
 COPY ai_engine_core.py ./
 COPY main.py ./
 COPY python_engine/ ./python_engine/
 
-# Copy compiled output from build stage
+# Copy built frontend from stage 1 into Express's public directory
 COPY --from=frontend-builder /app/dist ./dist
 
-# Expose the single public port
+# Copy the Node/Express server files needed to serve the frontend
+COPY server/ ./server/
+COPY shared/ ./shared/
+
+# Install Node.js (needed to run Express + serve static frontend)
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Expose the single public port (Express + FastAPI both started internally)
 EXPOSE 5000
 
-# FastAPI starts as a subprocess of Express (see server/routes.ts)
-CMD ["node", "dist/index.js"]
+# FastAPI starts as a subprocess of Express (see server/routes.ts startFastAPI)
+CMD ["node", "dist/server/index.js"]
