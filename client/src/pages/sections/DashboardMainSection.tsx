@@ -169,7 +169,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
 
   const [launching, setLaunching] = useState(false);
-  const LS_EVALS_KEY = "asl_evaluations_v1";
+  const LS_EVALS_KEY = "asl_evaluations_v2";
   const [evaluationsData, setEvaluationsData] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_EVALS_KEY);
@@ -269,8 +269,8 @@ export const DashboardMainSection = (): JSX.Element => {
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
-  const LS_MODULE_META_KEY = "asl_module_meta_v1";
-  const LS_MODULE_REPORT_KEY = "asl_module_report_v1";
+  const LS_MODULE_META_KEY = "asl_module_meta_v2";
+  const LS_MODULE_REPORT_KEY = "asl_module_report_v2";
 
   /* ── Module label → canonical static eval ID map ── */
   const MODULE_ID_TO_EVAL_ID: Record<string, string> = {

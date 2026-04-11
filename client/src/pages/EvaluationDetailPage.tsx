@@ -611,7 +611,7 @@ type DynamicEval = {
 
 function loadDynamicEval(evalId: string): DynamicEval | null {
   try {
-    const raw = localStorage.getItem("asl_evaluations_v1");
+    const raw = localStorage.getItem("asl_evaluations_v2");
     if (!raw) return null;
     const list: DynamicEval[] = JSON.parse(raw);
     return list.find((e) => e.id === evalId) ?? null;
@@ -654,7 +654,7 @@ function loadLiveReport(moduleName: string): LiveReport | null {
   try {
     const moduleId = MODULE_NAME_TO_ID[moduleName];
     if (!moduleId) return null;
-    const raw = localStorage.getItem("asl_module_report_v1");
+    const raw = localStorage.getItem("asl_module_report_v2");
     if (!raw) return null;
     const all = JSON.parse(raw);
     return all[moduleId] ?? null;
