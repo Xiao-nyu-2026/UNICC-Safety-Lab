@@ -34,6 +34,50 @@ import {
   Legend,
 } from "recharts";
 
+/* ── Expert Council Status card helpers ── */
+const EXPERT_PANEL_COLS = [
+  { key: "expert_a" as const, label: "Security & Compliance Probe", sublabel: "AI safety / harmful output risk" },
+  { key: "expert_b" as const, label: "Governance & Risk Workflow",  sublabel: "Governance / policy / institutional" },
+  { key: "expert_c" as const, label: "Contextual Risk Arbiter",     sublabel: "Application security / attack surface" },
+];
+
+function normalizeVerdict(v: string | undefined): "APPROVE" | "REVIEW" | "REJECT" {
+  const u = (v ?? "").toUpperCase();
+  if (u === "APPROVE" || u === "APPROVED" || u === "PASS") return "APPROVE";
+  if (u === "REJECT"  || u === "REJECTED" || u === "FAIL")  return "REJECT";
+  return "REVIEW";
+}
+
+function expertBadgeStyle(v: string) {
+  if (v === "APPROVE") return "bg-[#d1fae5] text-[#065f46]";
+  if (v === "REJECT")  return "bg-[#ffe4e6] text-[#9f1239]";
+  if (v === "IDLE")    return "bg-zinc-100 text-zinc-400";
+  return "bg-[#fef3c7] text-[#92400e]";
+}
+
+function expertDotColor(v: string) {
+  if (v === "APPROVE") return "#009966";
+  if (v === "REJECT")  return "#e7000b";
+  if (v === "IDLE")    return "#d4d4d8";
+  return "#f59e0b";
+}
+
+function loadLatestModuleReport(): Record<string, any> | null {
+  try {
+    const raw = localStorage.getItem("asl_module_report_v2");
+    if (!raw) return null;
+    const all: Record<string, any> = JSON.parse(raw);
+    const entries = Object.entries(all);
+    if (entries.length === 0) return null;
+    entries.sort(([, a], [, b]) => {
+      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return tb - ta;
+    });
+    return entries[0][1];
+  } catch { return null; }
+}
+
 /* ── Module → OWASP colour palette ── */
 const MODULE_COLORS: Record<string, string> = {
   "Prompt Injection V2":      "#e7000b",
@@ -187,6 +231,36 @@ export const DashboardMainSection = (): JSX.Element => {
     const t = setTimeout(() => setChartLoading(false), 1400);
     return () => clearTimeout(t);
   }, []);
+
+  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v2 ── */
+  const latestEval = evaluationsData.length > 0 ? evaluationsData[0] : null;
+  const latestModuleReport = loadLatestModuleReport();
+
+  const expertStatuses = EXPERT_PANEL_COLS.map((col, i) => {
+    if (!latestEval) {
+      return { label: col.label, sublabel: col.sublabel, verdict: "IDLE", note: "Waiting for evaluations" };
+    }
+    // Primary: read from asl_module_report_v2 expert_a/b/c with recommendation or verdict
+    const reportEx = latestModuleReport?.experts?.[col.key];
+    if (reportEx) {
+      const v = normalizeVerdict(reportEx.recommendation ?? reportEx.verdict);
+      const firstFinding = Array.isArray(reportEx.findings) ? reportEx.findings[0] : (reportEx.rationale ?? "");
+      return { label: col.label, sublabel: col.sublabel, verdict: v, note: firstFinding || undefined };
+    }
+    // Fallback: evaluationsData[0].experts array positional mapping
+    const arrEx = Array.isArray(latestEval.experts) ? latestEval.experts[i] : null;
+    if (arrEx) {
+      return { label: col.label, sublabel: col.sublabel, verdict: normalizeVerdict(arrEx.status), note: arrEx.note || undefined };
+    }
+    return { label: col.label, sublabel: col.sublabel, verdict: "REVIEW", note: undefined };
+  });
+
+  const councilConfidence: number | null =
+    latestModuleReport?.confidence ?? latestModuleReport?.confidence_score ?? null;
+  const councilAgentName: string | null =
+    latestModuleReport?.agentName ?? latestEval?.target ?? null;
+  const councilModule: string | null =
+    latestEval?.module ?? null;
 
   /* ── Dynamic chart data derived from evaluationsData ── */
 
@@ -677,6 +751,67 @@ export const DashboardMainSection = (): JSX.Element => {
                     </span>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Expert Council Status — persistent card, always visible */}
+        <section className="w-full">
+          <Card className="w-full border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] overflow-hidden">
+            <CardContent className="p-0">
+              {/* Card Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
+                <div className="flex flex-col gap-0.5">
+                  <h2 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-base tracking-[-0.40px]">
+                    Expert Council Status
+                  </h2>
+                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
+                    {latestEval
+                      ? `Latest run — ${councilAgentName ?? "Unknown Agent"}${councilModule ? ` · ${councilModule}` : ""}`
+                      : "No evaluations run yet"}
+                  </p>
+                </div>
+                {councilConfidence !== null && latestEval && (
+                  <span className="[font-family:'Inter',Helvetica] text-sm font-semibold px-3 py-1 rounded-full bg-zinc-100 text-zinc-600">
+                    {councilConfidence}% confidence
+                  </span>
+                )}
+              </div>
+              {/* Three Expert Panels */}
+              <div className="grid grid-cols-3 divide-x divide-zinc-100">
+                {expertStatuses.map((ex) => {
+                  const isIdle = ex.verdict === "IDLE";
+                  return (
+                    <div key={ex.label} className="flex flex-col gap-2 px-6 py-5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                          <span className="[font-family:'Inter',Helvetica] font-semibold text-zinc-800 text-sm leading-tight">
+                            {ex.label}
+                          </span>
+                          <span className="[font-family:'Inter',Helvetica] text-[11px] text-[#a1a1aa] leading-tight">
+                            {ex.sublabel}
+                          </span>
+                        </div>
+                        <span
+                          className={`flex-shrink-0 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${expertBadgeStyle(ex.verdict)}`}
+                          data-testid={`badge-expert-${ex.label.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {ex.verdict}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: expertDotColor(ex.verdict) }}
+                        />
+                        <p className={`[font-family:'Inter',Helvetica] text-xs leading-4 ${isIdle ? "text-zinc-400 italic" : "text-zinc-500"}`}>
+                          {ex.note ?? (isIdle ? "Waiting for evaluations" : "No findings reported")}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
