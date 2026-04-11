@@ -603,6 +603,10 @@ const EXPERT_LIVE_KEYS: Record<string, string> = {
   "Expert C — Security": "expert_c",
 };
 
+/* Consistent slugify — must match the dashboard's badge click logic */
+const slugify = (s: string) =>
+  s.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
 type DynamicEval = {
   id: string; module: string; modules?: string[]; target: string; verdict: string; verdictColor: string;
   date: string; tooltip: string;
@@ -629,7 +633,27 @@ const MODULE_NAME_TO_ID: Record<string, string> = {
   "Malicious Code Generation": "adversarial-prompt",
   "Bias Detection Suite": "toxicity",
   "PII Leakage Probe": "pii-extraction",
+  "Malicious Code Gen": "adversarial-prompt",
+  "Bias Detection": "toxicity",
 };
+
+/* Reverse map: slug → module name (built from slugifying MODULE_NAME_TO_ID keys) */
+const SLUG_TO_MODULE: Record<string, string> = Object.fromEntries(
+  Object.keys(MODULE_NAME_TO_ID).map((name) => [slugify(name), name])
+);
+
+/* Load the most recent evaluation record for a given module from the global ledger */
+function loadLatestEvalByModule(moduleName: string): DynamicEval | null {
+  try {
+    const raw = localStorage.getItem("asl_evaluations_v2");
+    if (!raw) return null;
+    const list: DynamicEval[] = JSON.parse(raw);
+    const matches = list.filter(
+      (e) => e.module === moduleName || (e as any).modules?.includes(moduleName)
+    );
+    return matches.length > 0 ? matches[0] : null;
+  } catch { return null; }
+}
 
 type LiveReport = {
   agentName: string;
@@ -664,9 +688,26 @@ function loadLiveReport(moduleName: string): LiveReport | null {
 export const EvaluationDetailPage = (): JSX.Element => {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const eval_ = evalData[id ?? ""] ?? null;
+
+  /* ── Slug detection: /evaluations/jailbreak-attempts → "Jailbreak Attempts" ── */
+  const slugModuleName = SLUG_TO_MODULE[id ?? ""] ?? null;
+
+  /* eval_: try direct evalData ID lookup first, then slug → match by module name */
+  const eval_ =
+    evalData[id ?? ""] ??
+    (slugModuleName
+      ? Object.values(evalData).find((e) => e.module === slugModuleName) ?? null
+      : null);
+
+  /* Latest evaluation record from the global ledger for this module */
+  const latestByModule = slugModuleName ? loadLatestEvalByModule(slugModuleName) : null;
+
+  /* Dynamic eval: only used when no static evalData entry found (raw live-run eval ID) */
   const dynamicEval = !eval_ ? loadDynamicEval(id ?? "") : null;
-  const liveReport = eval_ ? loadLiveReport(eval_.module) : null;
+
+  /* Live report: keyed by module name — use eval_.module if found, else the slug's module name */
+  const resolvedModuleName = eval_?.module ?? slugModuleName ?? null;
+  const liveReport = resolvedModuleName ? loadLiveReport(resolvedModuleName) : null;
   const [whyOpen, setWhyOpen] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [codeViewOpen, setCodeViewOpen] = useState(false);
@@ -904,8 +945,10 @@ export const EvaluationDetailPage = (): JSX.Element => {
                         )}
                       </div>
                       <p className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-sm leading-5">
-                        {liveReport?.agentName ?? eval_.agent} · {liveReport ? "Just now" : `${eval_.date} · ${eval_.time}`}
-                        {liveReport && (
+                        {liveReport?.agentName ?? latestByModule?.target ?? eval_.agent}
+                        {" · "}
+                        {liveReport ? "Just now" : latestByModule ? latestByModule.date : `${eval_.date} · ${eval_.time}`}
+                        {(liveReport || latestByModule) && (
                           <span className="ml-2 text-[#4f39f6] font-medium text-xs">[Live]</span>
                         )}
                       </p>
@@ -944,8 +987,8 @@ export const EvaluationDetailPage = (): JSX.Element => {
                     </div>
                   </section>
 
-                  {/* ── Live Run Banner ── */}
-                  {liveReport && (
+                  {/* ── Live Run Banner — shows when liveReport exists OR latestByModule has a record ── */}
+                  {(liveReport || latestByModule) && (
                     <div
                       className="w-full rounded-xl border border-[#c4b5fd]/40 flex items-start gap-4 px-6 py-4"
                       style={{ background: "linear-gradient(135deg, rgba(79,57,246,0.07) 0%, rgba(109,40,217,0.05) 100%)" }}
@@ -959,11 +1002,18 @@ export const EvaluationDetailPage = (): JSX.Element => {
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <p className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm">
-                          Latest Live Run — {liveReport.agentName}
+                          Latest Run — {liveReport?.agentName ?? latestByModule?.target}
                         </p>
                         <p className="[font-family:'Inter',Helvetica] text-xs text-[#52525c] leading-4 max-w-2xl">
-                          Verdict: <span className="font-semibold">{liveReport.verdict}</span> · Confidence: {liveReport.confidence}% · {liveReport.summary}
+                          Verdict: <span className="font-semibold">{liveReport?.verdict ?? latestByModule?.verdict}</span>
+                          {liveReport && <> · Confidence: {liveReport.confidence}% · {liveReport.summary}</>}
+                          {!liveReport && latestByModule?.tooltip && <> · {latestByModule.tooltip}</>}
                         </p>
+                        {latestByModule && (
+                          <p className="[font-family:'Inter',Helvetica] text-[11px] text-[#71717b] mt-0.5">
+                            Target Agent: {latestByModule.target} · {latestByModule.date}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1008,11 +1058,19 @@ export const EvaluationDetailPage = (): JSX.Element => {
                       );
                     })()}
                     {/* Cards 2–4 */}
-                    {[
-                      { label: "Tests Passed", value: String(passed), color: "text-[#009966]" },
-                      { label: "Tests Failed", value: String(failed), color: failed > 0 ? "text-[#e7000b]" : "text-zinc-950" },
-                      { label: "Security Flags", value: String(eval_.flags.length), color: eval_.flags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950" },
-                    ].map((item, i) => (
+                    {(() => {
+                      const liveRiskCount = liveReport
+                        ? Object.values(liveReport.experts).reduce(
+                            (acc, ex) => acc + (Array.isArray(ex.risks) ? ex.risks.length : 0), 0
+                          )
+                        : null;
+                      const flagCount = liveRiskCount ?? eval_.flags.length;
+                      return [
+                        { label: "Tests Passed", value: String(passed), color: "text-[#009966]" },
+                        { label: "Tests Failed", value: String(failed), color: failed > 0 ? "text-[#e7000b]" : "text-zinc-950" },
+                        { label: "Security Flags", value: String(flagCount), color: flagCount > 0 ? "text-[#ff2d78]" : "text-zinc-950" },
+                      ];
+                    })().map((item, i) => (
                       <Card key={i} className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                         <CardContent className="pt-6 pb-5 px-6">
                           <p className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm leading-5">

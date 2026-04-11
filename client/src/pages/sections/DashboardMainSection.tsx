@@ -776,24 +776,28 @@ export const DashboardMainSection = (): JSX.Element => {
                         </button>
                       </TableCell>
 
-                      {/* Module — normalise to array, always render as badges */}
+                      {/* Module — normalise to array, each badge navigates to its own slug */}
                       <TableCell className="ml-[6px] mr-[6px] py-3">
-                        <button
-                          onClick={() => setLocation(`/evaluations/${ev.id}`)}
-                          className="flex flex-wrap gap-1 text-left"
-                          data-testid={`link-module-${ev.id}`}
-                        >
+                        <div className="flex flex-wrap gap-1">
                           {((): string[] => {
                             const raw = (ev as any).modules;
                             if (Array.isArray(raw) && raw.length > 0) return raw;
                             if (typeof ev.module === "string" && ev.module.trim()) return ev.module.split(",").map((s: string) => s.trim()).filter(Boolean);
                             return ["—"];
                           })().map((m: string) => (
-                            <span key={m} className="px-2 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium hover:bg-violet-200 transition-colors whitespace-nowrap">
+                            <button
+                              key={m}
+                              onClick={() => {
+                                const slug = m.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                                setLocation(`/evaluations/${slug}`);
+                              }}
+                              className="px-2 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium hover:bg-violet-200 transition-colors whitespace-nowrap"
+                              data-testid={`link-module-${ev.id}`}
+                            >
                               {m}
-                            </span>
+                            </button>
                           ))}
-                        </button>
+                        </div>
                       </TableCell>
 
                       {/* Verdict + reason caption + hover tooltip */}
