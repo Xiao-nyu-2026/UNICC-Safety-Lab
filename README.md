@@ -127,6 +127,27 @@ As a tool designed for the **UNICC AI Sandbox**, this project adheres to the hig
 
 ---
 
+## How to Run Locally
+
+To run the full-stack AI Safety Lab environment locally, you must start both the frontend UI and the Python backend server concurrently.
+
+### 1. Start the AI Backend (FastAPI)
+Open a terminal in the root directory, install dependencies, and start the ASGI server:
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+### 2. Start the Frontend Dashboard (React)
+Open a **second, separate terminal** in the root directory and start the development server:
+```bash
+npm install
+npm run dev
+```
+*(Note: The frontend is pre-configured to proxy all `/api/*` requests to the Python backend running on port 8000).*
+
+---
+
 ## Usage Examples
 
 Once the application is running, follow these steps to evaluate an AI agent:
