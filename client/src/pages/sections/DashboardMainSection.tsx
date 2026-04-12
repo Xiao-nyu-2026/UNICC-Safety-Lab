@@ -64,7 +64,7 @@ function expertDotColor(v: string) {
 
 function loadLatestModuleReport(): Record<string, any> | null {
   try {
-    const raw = localStorage.getItem("asl_module_report_v2");
+    const raw = localStorage.getItem("asl_module_report_v3");
     if (!raw) return null;
     const all: Record<string, any> = JSON.parse(raw);
     const entries = Object.entries(all);
@@ -213,7 +213,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
 
   const [launching, setLaunching] = useState(false);
-  const LS_EVALS_KEY = "asl_evaluations_v2";
+  const LS_EVALS_KEY = "asl_evaluations_v3";
   const [evaluationsData, setEvaluationsData] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_EVALS_KEY);
@@ -232,7 +232,7 @@ export const DashboardMainSection = (): JSX.Element => {
     return () => clearTimeout(t);
   }, []);
 
-  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v2 ── */
+  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v3 ── */
   const latestEval = evaluationsData.length > 0 ? evaluationsData[0] : null;
   const latestModuleReport = loadLatestModuleReport();
 
@@ -240,7 +240,7 @@ export const DashboardMainSection = (): JSX.Element => {
     if (!latestEval) {
       return { label: col.label, sublabel: col.sublabel, verdict: "IDLE", note: "Waiting for evaluations" };
     }
-    // Primary: read from asl_module_report_v2 expert_a/b/c with recommendation or verdict
+    // Primary: read from asl_module_report_v3 expert_a/b/c with recommendation or verdict
     const reportEx = latestModuleReport?.experts?.[col.key];
     if (reportEx) {
       const v = normalizeVerdict(reportEx.recommendation ?? reportEx.verdict);
@@ -343,8 +343,8 @@ export const DashboardMainSection = (): JSX.Element => {
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
-  const LS_MODULE_META_KEY = "asl_module_meta_v2";
-  const LS_MODULE_REPORT_KEY = "asl_module_report_v2";
+  const LS_MODULE_META_KEY = "asl_module_meta_v3";
+  const LS_MODULE_REPORT_KEY = "asl_module_report_v3";
 
   /* ── Module label → canonical static eval ID map ── */
   const MODULE_ID_TO_EVAL_ID: Record<string, string> = {

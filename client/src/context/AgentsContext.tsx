@@ -47,7 +47,7 @@ const INITIAL_AGENTS: Agent[] = [
   { name: "Support-Agent-V2", id: "AGT-006", type: "Conversational AI", status: "Inactive", statusColor: "bg-zinc-100 text-zinc-500", lastEval: "5 days ago", evalCount: 103 },
 ];
 
-const LS_AGENTS_KEY = "asl_agents_v2";
+const LS_AGENTS_KEY = "asl_agents_v3";
 
 function loadAgents(): Agent[] {
   try {
