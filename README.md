@@ -42,9 +42,21 @@ To ensure the reliability of the AI Safety Lab, we conducted empirical testing u
 * **Effective Council Arbitration:** The multi-module ensemble demonstrated its ability to synthesize differing expert opinions (Safety, Governance, Contextual Risk) into actionable deployment verdicts (e.g., successfully approving compliant agents while rejecting vulnerable models).
 * **Actionable Reporting:** The platform successfully generated comprehensive compliance audit reports for both models and agents, proving its readiness for enterprise deployment.
 
-*For the full technical audits and detailed metrics, please refer to the documents located in the `test file/` folder of this repository:*
-* `test file/UNICC_Testing_Valuation_Report.pdf` *(Demonstrates a REJECT verdict with detailed vulnerability detection logs)*
-* `test file/UNICC_Testing_Agent_Report.pdf` *(Demonstrates an APPROVE verdict for a compliant support agent)*
+
+## Testing & Validation Strategy
+To ensure enterprise-grade reliability and auditability, this project implements a dual-track testing strategy, clearly separating automated code validation from manual compliance auditing. You will find two distinct testing directories in this repository:
+
+### 1. Automated Testing (`tests/`)
+This directory contains the executable Python test suite designed for continuous integration (CI) and regression testing.
+* **Content:** Contains `test_main.py` with **34 automated unit and integration tests**.
+* **Coverage:** Validates all FastAPI endpoints (`/api/evaluate`, `/api/agents`, `/api/health`), input validation logic (422 handling), and the core algorithmic functions within `ai_engine_core.py`.
+* **How to run:** Run `pytest tests/test_main.py -v` in the terminal.
+
+### 2. Manual Audit & Validation Reports (`test file/`)
+This directory serves as the evidence room for human-in-the-loop compliance. It contains static PDF reports generated during real-world stress testing of the AI Council.
+* **`UNICC_Testing_Valuation_Report.pdf`:** Demonstrates a strict `REJECT` workflow, detailing how the Safety and Security experts successfully caught and flagged vulnerability injections.
+* **`UNICC_Testing_Agent_Report.pdf`:** Demonstrates a clean `APPROVE` workflow for a compliant agent, serving as a baseline for acceptable performance.
+* **Purpose:** These reports act as verifiable proof for stakeholders that the system's arbitration logic performs accurately under simulated edge cases.
 
 ---
 
