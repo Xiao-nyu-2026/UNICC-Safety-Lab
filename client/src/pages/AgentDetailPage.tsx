@@ -429,7 +429,6 @@ export const AgentDetailPage = (): JSX.Element => {
   const displayType       = agent?.type       ?? liveAgent?.type       ?? "AI Agent";
   const displayStatus     = agent?.status     ?? liveAgent?.status     ?? "UNTESTED";
   const displayStatusColor = agent?.statusColor ?? liveAgent?.statusColor ?? "bg-zinc-100 text-zinc-600";
-  const displayEvalCount  = agent?.evalCount  ?? liveAgent?.evalCount  ?? 0;
   const displayLastEval   = agent?.lastEval   ?? liveAgent?.lastEval   ?? "Never";
   /* Compliance Status: derive from liveResult verdict, or score-based verdict from static data */
   const displayLatestVerdict: string | null =
@@ -444,6 +443,9 @@ export const AgentDetailPage = (): JSX.Element => {
   const matrixRows = lsRows.length > 0 ? lsRows : (agent ? buildStaticRows(id ?? "") : []);
   const totalFindings = matrixRows.reduce((acc, r) =>
     acc + [r.expert_a, r.expert_b, r.expert_c].filter((ex) => ex.verdict !== "APPROVE").length, 0);
+
+  /* Total Evaluations = actual number of evaluation rows recorded for this agent */
+  const displayEvalCount = matrixRows.length;
 
   /* Not found */
   if (!agent && !liveAgent) {
