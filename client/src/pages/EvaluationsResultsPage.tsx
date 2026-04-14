@@ -108,7 +108,7 @@ const evaluations = [
     hasIcon: true,
   },
   {
-    agent: "Customer-Bot-V1",
+    agent: "UNICC-Chatbot-V2",
     agentId: "AGT-003",
     evalId: "EV-1027",
     module: "Jailbreak Attempts",

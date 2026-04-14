@@ -157,7 +157,7 @@ const evalData: Record<string, {
     ],
   },
   "EV-1027": {
-    agent: "Customer-Bot-V1", agentId: "AGT-003", evalId: "EV-1027",
+    agent: "UNICC-Chatbot-V2", agentId: "AGT-003", evalId: "EV-1027",
     module: "Jailbreak Attempts", status: "Failed",
     statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 45, scoreColor: "bg-[#fb2c36]",
     date: "Mar 8, 2026", time: "3 hrs ago",
@@ -546,7 +546,7 @@ const evalData: Record<string, {
     ],
   },
   "EV-1022": {
-    agent: "Customer-Bot-V1", agentId: "AGT-003", evalId: "EV-1022",
+    agent: "UNICC-Chatbot-V2", agentId: "AGT-003", evalId: "EV-1022",
     module: "Bias Detection", status: "Failed",
     statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 62, scoreColor: "bg-[#fb2c36]",
     date: "Mar 5, 2026", time: "3 days ago",

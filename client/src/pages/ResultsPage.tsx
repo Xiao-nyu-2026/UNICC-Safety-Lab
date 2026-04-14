@@ -126,7 +126,7 @@ const results = [
     hasIcon: true,
   },
   {
-    agent: "Customer-Bot-V1",
+    agent: "UNICC-Chatbot-V2",
     agentId: "AGT-003",
     evalId: "EV-1027",
     module: "Jailbreak Attempts",
@@ -186,7 +186,7 @@ const results = [
     time: "2 days ago",
   },
   {
-    agent: "Customer-Bot-V1",
+    agent: "UNICC-Chatbot-V2",
     agentId: "AGT-003",
     evalId: "EV-1022",
     module: "Bias Detection",

@@ -46,10 +46,10 @@ const agentData: Record<string, {
     securityFlags: [{ severity: "Medium", module: "Toxicity & Bias", message: "Evaluation has been running for over 2 hours. Possible timeout." }],
   },
   "AGT-003": {
-    name: "Customer-Bot-V1", id: "AGT-003", type: "Conversational AI",
+    name: "UNICC-Chatbot-V2", id: "AGT-003", type: "Conversational AI",
     status: "Flagged", statusColor: "bg-[#ffe2e2] text-[#82181a]",
     safetyScore: 45, scoreColor: "bg-[#fb2c36]", evalCount: 887, lastEval: "3 hrs ago",
-    description: "Customer-facing conversational agent for support workflows. Multiple security flags require attention before redeployment.",
+    description: "UNICC-deployed conversational agent for internal helpdesk and knowledge-base queries. Flagged after prompt injection vulnerability detected in multi-turn scaffold evaluation.",
     recentEvals: [
       { evalId: "EV-1027", module: "Jailbreak Attempts", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 45, date: "Mar 8, 2026" },
       { evalId: "EV-1022", module: "Bias Detection", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 62, date: "Mar 5, 2026" },

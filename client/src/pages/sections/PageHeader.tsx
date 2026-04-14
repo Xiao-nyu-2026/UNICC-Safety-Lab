@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const AUDIT_NOTIFICATIONS = [
   "EV-1029: GPT-4-Turbo-Prod audit completed — Score 99 (Passed)",
-  "EV-1027: Customer-Bot-V1 Jailbreak test failed — Score 45",
+  "EV-1027: UNICC-Chatbot-V2 Jailbreak test failed — Score 45",
   "EV-1028: Llama-3-Custom Toxicity & Bias evaluation is running",
   "EV-1026: GPT-4-Turbo-Prod Data Exfiltration test passed — Score 100",
   "EV-1025: Code-Gen-Agent Malicious Code audit completed — Score 95",
