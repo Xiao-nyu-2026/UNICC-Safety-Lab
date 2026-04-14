@@ -936,10 +936,7 @@ export const DashboardMainSection = (): JSX.Element => {
                           })().map((m: string) => (
                             <button
                               key={m}
-                              onClick={() => {
-                                const slug = m.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                                setLocation(`/evaluations/${slug}`);
-                              }}
+                              onClick={() => setLocation(`/evaluations/${ev.id}`)}
                               className="px-2 py-0.5 bg-violet-100 text-violet-800 rounded-md text-xs font-medium hover:bg-violet-200 transition-colors whitespace-nowrap"
                               data-testid={`link-module-${ev.id}`}
                             >
