@@ -66,13 +66,13 @@ const verdictStyles: Record<string, string> = {
 };
 
 const modules = [
-  { name: "Prompt Injection V2", evalId: "EV-1030", category: "Security", tests: 240, avgDuration: "8 min", lastRun: "10 mins ago", framework: "OWASP LLM01", lastVerdict: "REJECT" },
-  { name: "Toxicity & Bias", evalId: "EV-1028", category: "Safety", tests: 180, avgDuration: "12 min", lastRun: "1 hr ago", framework: "NIST AI RMF", lastVerdict: "APPROVE" },
-  { name: "Jailbreak Attempts", evalId: "EV-1029", category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago", framework: "OWASP LLM01", lastVerdict: "REJECT" },
-  { name: "Data Exfiltration", evalId: "EV-1027", category: "Security", tests: 160, avgDuration: "6 min", lastRun: "5 hrs ago", framework: "OWASP LLM06", lastVerdict: "APPROVE" },
-  { name: "Malicious Code Gen", evalId: "EV-1030", category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago", framework: "OWASP LLM04", lastVerdict: "REVIEW" },
-  { name: "Bias Detection", evalId: "EV-1028", category: "Fairness", tests: 140, avgDuration: "9 min", lastRun: "1 day ago", framework: "NIST AI RMF", lastVerdict: "APPROVE" },
-  { name: "PII Leakage", evalId: "EV-1032", category: "Privacy", tests: 120, avgDuration: "7 min", lastRun: "2 days ago", framework: "OWASP LLM06", lastVerdict: "REJECT" },
+  { name: "Prompt Injection V2", evalId: "EV-1030", agentId: "AGT-003", agent: "UNICC-Chatbot-V2",    category: "Security", tests: 240, avgDuration: "8 min",  lastRun: "10 mins ago", framework: "OWASP LLM01", lastVerdict: "REJECT" },
+  { name: "Toxicity & Bias",     evalId: "EV-1028", agentId: "AGT-002", agent: "Llama-3-Custom",       category: "Safety",   tests: 180, avgDuration: "12 min", lastRun: "1 hr ago",    framework: "NIST AI RMF", lastVerdict: "APPROVE" },
+  { name: "Jailbreak Attempts",  evalId: "EV-1029", agentId: "AGT-001", agent: "GPT-4-Turbo-Prod",     category: "Security", tests: 320, avgDuration: "15 min", lastRun: "3 hrs ago",   framework: "OWASP LLM01", lastVerdict: "REJECT" },
+  { name: "Data Exfiltration",   evalId: "EV-1027", agentId: "AGT-004", agent: "Code-Gen-Agent",       category: "Security", tests: 160, avgDuration: "6 min",  lastRun: "5 hrs ago",   framework: "OWASP LLM06", lastVerdict: "APPROVE" },
+  { name: "Malicious Code Gen",  evalId: "EV-1025", agentId: "AGT-004", agent: "Code-Gen-Agent",       category: "Security", tests: 200, avgDuration: "10 min", lastRun: "1 day ago",   framework: "OWASP LLM04", lastVerdict: "REVIEW" },
+  { name: "Bias Detection",      evalId: "EV-1022", agentId: "AGT-003", agent: "UNICC-Chatbot-V2",    category: "Fairness", tests: 140, avgDuration: "9 min",  lastRun: "1 day ago",   framework: "NIST AI RMF", lastVerdict: "APPROVE" },
+  { name: "PII Leakage",         evalId: "EV-1032", agentId: "AGT-006", agent: "Support-Agent-V2",    category: "Privacy",  tests: 120, avgDuration: "7 min",  lastRun: "2 days ago",  framework: "OWASP LLM06", lastVerdict: "REJECT" },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -231,17 +231,18 @@ export const EvaluationsPage = (): JSX.Element => {
                 <Table className="table-fixed w-full">
                   <TableHeader>
                     <TableRow className="border-[#0000001a]">
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[35%]">Module Name</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[15%]">Category</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[20%]">Framework</TableHead>
-                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[15%]">Last Verdict</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm pl-6 w-[25%]">Module Name</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[18%]">Agent</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[12%]">Category</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[17%]">Framework</TableHead>
+                      <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[13%]">Last Verdict</TableHead>
                       <TableHead className="[font-family:'Inter',Helvetica] font-medium text-[#71717b] text-sm w-[15%] text-center pr-6">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredModules.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-10 [font-family:'Inter',Helvetica] text-sm text-[#71717b]">
+                          <TableCell colSpan={6} className="text-center py-10 [font-family:'Inter',Helvetica] text-sm text-[#71717b]">
                             No modules match the selected framework.
                           </TableCell>
                         </TableRow>
@@ -258,11 +259,20 @@ export const EvaluationsPage = (): JSX.Element => {
                                   {mod.name}
                                 </span>
                                 <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">
-                                  {meta ? `Last run ${meta.lastRun} on ${meta.lastRunAgent}` : `Last run ${mod.lastRun}`}
+                                  {meta ? `Last run ${meta.lastRun}` : `Last run ${mod.lastRun}`}
                                 </span>
                               </div>
                             );
                           })()}
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <button
+                            onClick={() => navigate(`/agents/${mod.agentId}`)}
+                            className="[font-family:'Inter',Helvetica] font-semibold text-[#4f39f6] text-sm hover:underline text-left truncate max-w-full block"
+                            data-testid={`link-agent-module-${i}`}
+                          >
+                            {mod.agent}
+                          </button>
                         </TableCell>
                         <TableCell className="py-3">
                           <span className={`[font-family:'Inter',Helvetica] font-medium text-xs px-2.5 py-1 rounded-md ${categoryColors[mod.category]}`}>
