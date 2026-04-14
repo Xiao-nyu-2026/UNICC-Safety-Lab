@@ -54,21 +54,23 @@ const agentData: Record<string, {
     safetyScore: 45, scoreColor: "bg-[#fb2c36]", evalCount: 887, lastEval: "3 hrs ago",
     description: "UNICC-deployed conversational agent for internal helpdesk and knowledge-base queries. Flagged after prompt injection vulnerability detected in multi-turn scaffold evaluation.",
     recentEvals: [
-      { evalId: "EV-1027", module: "Jailbreak Attempts", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 45, date: "Mar 8, 2026" },
+      { evalId: "EV-1030", module: "Prompt Injection V2", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: null, date: "Apr 09, 2026" },
       { evalId: "EV-1022", module: "Bias Detection", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 62, date: "Mar 5, 2026" },
-      { evalId: "EV-1011", module: "Prompt Injection V2", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 88, date: "Feb 28, 2026" },
     ],
     securityFlags: [
-      { severity: "High", module: "Jailbreak Attempts", message: "Score 45 below threshold (80). Manual review required before next deployment." },
+      { severity: "High", module: "Prompt Injection V2", message: "Multi-turn scaffold caused model to adopt unsafe persona — prompt boundary bypass confirmed on turn 3. OWASP LLM01 critical violation." },
       { severity: "High", module: "Bias Detection", message: "Bias score 62 significantly below threshold. Gender and age bias detected." },
     ],
   },
   "AGT-004": {
     name: "Code-Gen-Agent", id: "AGT-004", type: "Code Generation",
     status: "Active", statusColor: "bg-[#d0fae5] text-[#004f3b]",
-    safetyScore: 95, scoreColor: "bg-[#00bc7d]", evalCount: 234, lastEval: "1 day ago",
+    safetyScore: 95, scoreColor: "bg-[#00bc7d]", evalCount: 234, lastEval: "Apr 05, 2026",
     description: "Code generation agent used in internal developer tooling. Restricted to code-related prompts.",
-    recentEvals: [{ evalId: "EV-1025", module: "Malicious Code Gen", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 95, date: "Mar 7, 2026" }],
+    recentEvals: [
+      { evalId: "EV-1027", module: "Data Exfiltration", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 95, date: "Apr 05, 2026" },
+      { evalId: "EV-1025", module: "Malicious Code Gen", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 95, date: "Mar 7, 2026" },
+    ],
     securityFlags: [],
   },
   "AGT-005": {
@@ -98,7 +100,7 @@ const agentData: Record<string, {
     status: "Flagged", statusColor: "bg-[#ffe2e2] text-[#82181a]",
     safetyScore: 31, scoreColor: "bg-[#fb2c36]", evalCount: 67, lastEval: "2 days ago",
     description: "LLM fine-tuned on financial advisory data. Flagged for adversarial prompt vulnerabilities that bypass financial guardrails.",
-    recentEvals: [{ evalId: "EV-1031", module: "Adversarial Prompt", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 31, date: "Oct 20, 2023" }],
+    recentEvals: [{ evalId: "EV-1031", module: "Adversarial Prompt", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 31, date: "Apr 03, 2026" }],
     securityFlags: [
       { severity: "High", module: "Adversarial Prompt", message: "Guardrails bypassed in 3/4 adversarial prompt test cases. OWASP LLM01 violation." },
       { severity: "High", module: "Regulatory Compliance", message: "Financial advice output not aligned with SEC/FCA safe-harbour requirements." },
