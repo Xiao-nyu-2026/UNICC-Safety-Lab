@@ -632,40 +632,97 @@ export const AgentDetailPage = (): JSX.Element => {
               </div>
 
               {/* Security Flags sidebar */}
-              <div className="w-[280px] flex-shrink-0">
-                <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${displayFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
-                  <CardContent className="px-6 pt-5 pb-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <ShieldAlertIcon className={`w-4 h-4 ${displayFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
-                      <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${displayFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
-                        Security Flags
-                      </h3>
-                      <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${displayFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
-                        {displayFlags.length}
-                      </Badge>
-                    </div>
-                    {displayFlags.length === 0 ? (
-                      <div className="flex items-center gap-2 py-2">
-                        <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
-                        <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">No active security flags</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        {displayFlags.map((flag, i) => (
-                          <div key={i} className={`p-3 rounded-lg border ${flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"}`}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" : flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" : "bg-zinc-100 text-zinc-700"}`}>
-                                {flag.severity}
+              <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
+                {agent?.id === "AGT-003" ? (
+                  <>
+                    {/* UNICC-Chatbot-V2: green security posture */}
+                    <Card className="border-[#bbf7d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <CardContent className="px-6 pt-5 pb-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
+                          <h3 className="[font-family:'Inter',Helvetica] font-semibold text-sm text-[#065f46]">
+                            Security Flags
+                          </h3>
+                          <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto bg-[#d1fae5] text-[#065f46]">
+                            0
+                          </Badge>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {[
+                            "XSS Protection Active",
+                            "Input Sanitization Validated",
+                            "Deterministic Audit Trails",
+                          ].map((label) => (
+                            <div key={label} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-[#f0fdf4] border border-[#bbf7d0]">
+                              <ShieldCheckIcon className="w-3.5 h-3.5 text-[#00bc7d] flex-shrink-0" />
+                              <span className="[font-family:'Inter',Helvetica] font-medium text-[#065f46] text-xs">{label}</span>
+                              <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-[10px] px-2 py-0.5 h-auto ml-auto bg-[#d1fae5] text-[#059669]">
+                                Verified
                               </Badge>
-                              <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{flag.module}</span>
                             </div>
-                            <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">{flag.message}</p>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Risk Metrics — green */}
+                    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <CardContent className="px-6 pt-5 pb-5">
+                        <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-3">
+                          Risk Metrics
+                        </h3>
+                        <div className="flex flex-col gap-2.5">
+                          {([
+                            { label: "Malware Scanning",  value: "Passed",    cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "RBAC Enforcement",  value: "Verified",   cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "Contextual Risk",   value: "LOW",        cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "NIST RMF Alignment",value: "Compliant",  cls: "bg-[#d1fae5] text-[#065f46]" },
+                          ] as { label: string; value: string; cls: string }[]).map(({ label, value, cls }) => (
+                            <div key={label} className="flex items-center justify-between">
+                              <span className="[font-family:'Inter',Helvetica] text-xs text-[#52525c]">{label}</span>
+                              <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto ${cls}`}>
+                                {value}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <Card className={`shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a] ${displayFlags.length > 0 ? "border-[#ffc0d0]" : "border-zinc-200"}`}>
+                    <CardContent className="px-6 pt-5 pb-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShieldAlertIcon className={`w-4 h-4 ${displayFlags.length > 0 ? "text-[#ff2d78]" : "text-[#71717b]"}`} />
+                        <h3 className={`[font-family:'Inter',Helvetica] font-semibold text-sm ${displayFlags.length > 0 ? "text-[#ff2d78]" : "text-zinc-950"}`}>
+                          Security Flags
+                        </h3>
+                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto ${displayFlags.length > 0 ? "bg-[#ffe0eb] text-[#ff2d78]" : "bg-zinc-100 text-zinc-500"}`}>
+                          {displayFlags.length}
+                        </Badge>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      {displayFlags.length === 0 ? (
+                        <div className="flex items-center gap-2 py-2">
+                          <ShieldCheckIcon className="w-4 h-4 text-[#00bc7d]" />
+                          <span className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-sm">No active security flags</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {displayFlags.map((flag, i) => (
+                            <div key={i} className={`p-3 rounded-lg border ${flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"}`}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" : flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" : "bg-zinc-100 text-zinc-700"}`}>
+                                  {flag.severity}
+                                </Badge>
+                                <span className="[font-family:'Inter',Helvetica] font-normal text-[#71717b] text-xs">{flag.module}</span>
+                              </div>
+                              <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">{flag.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </section>
 

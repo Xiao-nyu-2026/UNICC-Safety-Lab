@@ -1205,68 +1205,124 @@ export const EvaluationDetailPage = (): JSX.Element => {
 
                     {/* Right: score bar + security flags */}
                     <div className="flex flex-col gap-4 w-[280px] flex-shrink-0">
-                      <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                        <CardContent className="px-6 pt-6 pb-6">
-                          <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-4">
-                            Pass Rate
-                          </h3>
-                          <div className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className="[font-family:'Inter',Helvetica] text-sm text-zinc-700">Passed</span>
-                                <span className="[font-family:'Inter',Helvetica] font-semibold text-[#009966] text-sm">
-                                  {total > 0 ? Math.round((passed / total) * 100) : 0}%
-                                </span>
+                      {eval_.evalId === "EV-1030" ? (
+                        <>
+                          {/* Prompt Injection V2 — REJECT hardcoded sidebar */}
+                          <Card className="border-[#ffc0d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                            <CardContent className="px-6 pt-5 pb-5">
+                              <div className="flex items-center gap-2 mb-3">
+                                <ShieldAlertIcon className="w-4 h-4 text-[#ff2d78]" />
+                                <h3 className="[font-family:'Inter',Helvetica] font-semibold text-[#ff2d78] text-sm">
+                                  Security Flags
+                                </h3>
+                                <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto bg-[#ffe0eb] text-[#ff2d78]">
+                                  3
+                                </Badge>
                               </div>
-                              <Progress value={total > 0 ? (passed / total) * 100 : 0} className="h-2 bg-zinc-100" indicatorClassName="bg-[#00bc7d]" />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className="[font-family:'Inter',Helvetica] text-sm text-zinc-700">Failed</span>
-                                <span className="[font-family:'Inter',Helvetica] font-semibold text-[#e7000b] text-sm">
-                                  {total > 0 ? Math.round((failed / total) * 100) : 0}%
-                                </span>
-                              </div>
-                              <Progress value={total > 0 ? (failed / total) * 100 : 0} className="h-2 bg-zinc-100" indicatorClassName="bg-[#fb2c36]" />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Security flags */}
-                      {eval_.flags.length > 0 && (
-                        <Card className="border-[#ffc0d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
-                          <CardContent className="px-6 pt-5 pb-5">
-                            <div className="flex items-center gap-2 mb-3">
-                              <ShieldAlertIcon className="w-4 h-4 text-[#ff2d78]" />
-                              <h3 className="[font-family:'Inter',Helvetica] font-semibold text-[#ff2d78] text-sm">
-                                Security Flags
-                              </h3>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              {eval_.flags.map((flag, i) => (
-                                <div key={i} className={`p-3 rounded-lg border ${
-                                  flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
-                                }`}>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
-                                      flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
-                                      flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
-                                      "bg-zinc-100 text-zinc-700"
-                                    }`}>
-                                      {flag.severity}
+                              <div className="flex flex-col gap-2">
+                                {[
+                                  "OWASP LLM01 Vulnerability",
+                                  "Missing Input Sanitization",
+                                  "No Audit Trails",
+                                ].map((label) => (
+                                  <div key={label} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-[#fff0f5] border border-[#ffc0d0]">
+                                    <ShieldAlertIcon className="w-3.5 h-3.5 text-[#ff2d78] flex-shrink-0" />
+                                    <span className="[font-family:'Inter',Helvetica] font-medium text-[#9f1239] text-xs">{label}</span>
+                                    <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-[10px] px-2 py-0.5 h-auto ml-auto bg-[#ffe0eb] text-[#ff2d78]">
+                                      Failed
                                     </Badge>
                                   </div>
-                                  <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
-                                    {flag.message}
-                                  </p>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                          {/* Risk Metrics — red */}
+                          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                            <CardContent className="px-6 pt-5 pb-5">
+                              <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-3">
+                                Risk Metrics
+                              </h3>
+                              <div className="flex flex-col gap-2.5">
+                                {([
+                                  { label: "Malware Scanning",   value: "Failed",           cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                                  { label: "RBAC Enforcement",   value: "Bypassed",          cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                                  { label: "Contextual Risk",    value: "HIGH (CRITICAL)",   cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                                  { label: "NIST RMF Alignment", value: "Non-Compliant",     cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                                ] as { label: string; value: string; cls: string }[]).map(({ label, value, cls }) => (
+                                  <div key={label} className="flex items-center justify-between">
+                                    <span className="[font-family:'Inter',Helvetica] text-xs text-[#52525c]">{label}</span>
+                                    <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto ${cls}`}>
+                                      {value}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </>
+                      ) : (
+                        <>
+                          <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                            <CardContent className="px-6 pt-6 pb-6">
+                              <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-4">
+                                Pass Rate
+                              </h3>
+                              <div className="flex flex-col gap-3">
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="[font-family:'Inter',Helvetica] text-sm text-zinc-700">Passed</span>
+                                    <span className="[font-family:'Inter',Helvetica] font-semibold text-[#009966] text-sm">
+                                      {total > 0 ? Math.round((passed / total) * 100) : 0}%
+                                    </span>
+                                  </div>
+                                  <Progress value={total > 0 ? (passed / total) * 100 : 0} className="h-2 bg-zinc-100" indicatorClassName="bg-[#00bc7d]" />
                                 </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="[font-family:'Inter',Helvetica] text-sm text-zinc-700">Failed</span>
+                                    <span className="[font-family:'Inter',Helvetica] font-semibold text-[#e7000b] text-sm">
+                                      {total > 0 ? Math.round((failed / total) * 100) : 0}%
+                                    </span>
+                                  </div>
+                                  <Progress value={total > 0 ? (failed / total) * 100 : 0} className="h-2 bg-zinc-100" indicatorClassName="bg-[#fb2c36]" />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                          {eval_.flags.length > 0 && (
+                            <Card className="border-[#ffc0d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                              <CardContent className="px-6 pt-5 pb-5">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <ShieldAlertIcon className="w-4 h-4 text-[#ff2d78]" />
+                                  <h3 className="[font-family:'Inter',Helvetica] font-semibold text-[#ff2d78] text-sm">
+                                    Security Flags
+                                  </h3>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                  {eval_.flags.map((flag, i) => (
+                                    <div key={i} className={`p-3 rounded-lg border ${
+                                      flag.severity === "High" ? "bg-[#fff0f5] border-[#ffc0d0]" : "bg-[#fff8e1] border-[#fde68a]"
+                                    }`}>
+                                      <div className="flex items-center justify-between mb-1">
+                                        <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-xs px-2 py-0.5 h-auto ${
+                                          flag.severity === "High" ? "bg-[#ffe0eb] text-[#ff2d78]" :
+                                          flag.severity === "Medium" ? "bg-[#fff8e1] text-[#b45309]" :
+                                          "bg-zinc-100 text-zinc-700"
+                                        }`}>
+                                          {flag.severity}
+                                        </Badge>
+                                      </div>
+                                      <p className="[font-family:'Inter',Helvetica] font-normal text-[#52525c] text-xs leading-4">
+                                        {flag.message}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </>
                       )}
-
                     </div>
                   </section>
 
