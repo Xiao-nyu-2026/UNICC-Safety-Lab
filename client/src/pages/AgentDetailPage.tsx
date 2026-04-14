@@ -24,26 +24,29 @@ const agentData: Record<string, {
 }> = {
   "AGT-001": {
     name: "GPT-4-Turbo-Prod", id: "AGT-001", type: "Language Model",
-    status: "Active", statusColor: "bg-[#d0fae5] text-[#004f3b]",
-    safetyScore: 99, scoreColor: "bg-[#00bc7d]", evalCount: 1029, lastEval: "10 mins ago",
-    description: "Production language model endpoint. Handles customer-facing queries and internal tooling assistance.",
+    status: "Flagged", statusColor: "bg-[#ffe2e2] text-[#82181a]",
+    safetyScore: 38, scoreColor: "bg-[#fb2c36]", evalCount: 1029, lastEval: "Yesterday",
+    description: "Production language model endpoint. Flagged after jailbreak attempts succeeded in 4 of 5 test cases — output filter fully bypassed. Deployment blocked pending remediation.",
     recentEvals: [
-      { evalId: "EV-1029", module: "Prompt Injection V2", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 99, date: "Mar 8, 2026" },
+      { evalId: "EV-1029", module: "Jailbreak Attempts", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 38, date: "Apr 13, 2026" },
       { evalId: "EV-1026", module: "Data Exfiltration", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 100, date: "Mar 8, 2026" },
-      { evalId: "EV-1018", module: "Jailbreak Attempts", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 97, date: "Mar 5, 2026" },
+      { evalId: "EV-1018", module: "Prompt Injection V2", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 97, date: "Mar 5, 2026" },
     ],
-    securityFlags: [],
+    securityFlags: [
+      { severity: "High", module: "Jailbreak Attempts", message: "Direct jailbreak via role-play prompt succeeded in 4/5 test cases. OWASP LLM02 violation confirmed." },
+      { severity: "High", module: "Insecure Output", message: "Output filter entirely bypassed; PII leaked in 2 responses. OWASP LLM06 secondary violation." },
+    ],
   },
   "AGT-002": {
     name: "Llama-3-Custom", id: "AGT-002", type: "Fine-tuned Model",
-    status: "Running Eval", statusColor: "bg-zinc-100 text-zinc-900",
-    safetyScore: null, scoreColor: "", evalCount: 412, lastEval: "1 hr ago",
-    description: "Fine-tuned variant of Llama 3 for internal knowledge-base Q&A. Currently under active evaluation.",
+    status: "Approved", statusColor: "bg-[#d0fae5] text-[#004f3b]",
+    safetyScore: 92, scoreColor: "bg-[#00bc7d]", evalCount: 412, lastEval: "Apr 07, 2026",
+    description: "Fine-tuned variant of Llama 3 for internal knowledge-base Q&A. Cleared all NIST AI RMF toxicity and bias controls across 500 test prompts.",
     recentEvals: [
-      { evalId: "EV-1028", module: "Toxicity & Bias", status: "Running", statusColor: "bg-zinc-100 text-zinc-900", score: null, date: "Mar 8, 2026" },
+      { evalId: "EV-1028", module: "Toxicity & Bias", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 92, date: "Apr 07, 2026" },
       { evalId: "EV-1015", module: "Prompt Injection V2", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 91, date: "Mar 3, 2026" },
     ],
-    securityFlags: [{ severity: "Medium", module: "Toxicity & Bias", message: "Evaluation has been running for over 2 hours. Possible timeout." }],
+    securityFlags: [],
   },
   "AGT-003": {
     name: "UNICC-Chatbot-V2", id: "AGT-003", type: "Conversational AI",
@@ -78,11 +81,17 @@ const agentData: Record<string, {
   },
   "AGT-006": {
     name: "Support-Agent-V2", id: "AGT-006", type: "Conversational AI",
-    status: "Inactive", statusColor: "bg-zinc-100 text-zinc-500",
-    safetyScore: 88, scoreColor: "bg-[#00bc7d]", evalCount: 103, lastEval: "5 days ago",
-    description: "Second-generation support agent. Currently inactive — pending approval for re-evaluation.",
-    recentEvals: [{ evalId: "EV-1024", module: "Prompt Injection V2", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 88, date: "Mar 7, 2026" }],
-    securityFlags: [{ severity: "Low", module: "Bias Detection", message: "Pending manual approval before evaluation can proceed." }],
+    status: "Flagged", statusColor: "bg-[#ffe2e2] text-[#82181a]",
+    safetyScore: 22, scoreColor: "bg-[#fb2c36]", evalCount: 103, lastEval: "Apr 01, 2026",
+    description: "Second-generation customer support agent. Deployment halted after PII extraction succeeded in 2 of 3 test scenarios — critical OWASP LLM06 violation confirmed.",
+    recentEvals: [
+      { evalId: "EV-1032", module: "PII Extraction", status: "Failed", statusColor: "bg-[#ffe2e2] text-[#82181a]", score: 22, date: "Apr 01, 2026" },
+      { evalId: "EV-1024", module: "Prompt Injection V2", status: "Passed", statusColor: "bg-[#d0fae5] text-[#004f3b]", score: 88, date: "Mar 7, 2026" },
+    ],
+    securityFlags: [
+      { severity: "High", module: "PII Extraction", message: "PII extraction succeeded in 2 of 3 test scenarios. OWASP LLM06 critical violation — deployment halted." },
+      { severity: "High", module: "Data Privacy", message: "Data privacy controls failed to prevent PII disclosure. Immediate remediation required." },
+    ],
   },
   "AGT-007": {
     name: "Finance-Advisor-LLM", id: "AGT-007", type: "Domain-Specific Model",

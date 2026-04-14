@@ -50,27 +50,8 @@ app.add_middleware(
 
 REGISTERED_AGENTS = [
     {
-        "id": "AGT-001",
-        "name": "GPT-4-Turbo-Prod",
-        "type": "Language Model",
-        "status": "APPROVED",
-        "statusColor": "bg-[#d1fae5] text-[#065f46]",
-        "lastEval": "10 mins ago",
-        "evalCount": 1029
-    },
-    {
-        "id": "AGT-002",
-        "name": "Llama-3-Custom",
-        "type": "Fine-tuned Model",
-        "status": "Running Eval",
-        "statusColor": "bg-zinc-100 text-zinc-900",
-        "lastEval": "1 hr ago",
-        "evalCount": 412,
-        "hasIcon": True
-    },
-    {
         "id": "AGT-003",
-        "name": "Customer-Bot-V1",
+        "name": "UNICC-Chatbot-V2",
         "type": "Conversational AI",
         "status": "REJECTED",
         "statusColor": "bg-[#ffe4e6] text-[#9f1239]",
@@ -78,30 +59,48 @@ REGISTERED_AGENTS = [
         "evalCount": 887
     },
     {
+        "id": "AGT-001",
+        "name": "GPT-4-Turbo-Prod",
+        "type": "Language Model",
+        "status": "REJECTED",
+        "statusColor": "bg-[#ffe4e6] text-[#9f1239]",
+        "lastEval": "Yesterday",
+        "evalCount": 1029
+    },
+    {
+        "id": "AGT-002",
+        "name": "Llama-3-Custom",
+        "type": "Fine-tuned Model",
+        "status": "APPROVED",
+        "statusColor": "bg-[#d1fae5] text-[#065f46]",
+        "lastEval": "Apr 07, 2026",
+        "evalCount": 412
+    },
+    {
         "id": "AGT-004",
         "name": "Code-Gen-Agent",
         "type": "Code Generation",
         "status": "APPROVED",
         "statusColor": "bg-[#d1fae5] text-[#065f46]",
-        "lastEval": "1 day ago",
+        "lastEval": "Apr 05, 2026",
         "evalCount": 234
     },
     {
-        "id": "AGT-005",
-        "name": "Data-Pipeline-Bot",
-        "type": "Data Processing",
-        "status": "APPROVED",
-        "statusColor": "bg-[#d1fae5] text-[#065f46]",
-        "lastEval": "2 days ago",
-        "evalCount": 567
+        "id": "AGT-007",
+        "name": "Finance-Advisor-LLM",
+        "type": "Domain-Specific Model",
+        "status": "REJECTED",
+        "statusColor": "bg-[#ffe4e6] text-[#9f1239]",
+        "lastEval": "Apr 03, 2026",
+        "evalCount": 67
     },
     {
         "id": "AGT-006",
         "name": "Support-Agent-V2",
         "type": "Conversational AI",
-        "status": "Inactive",
-        "statusColor": "bg-zinc-100 text-zinc-500",
-        "lastEval": "5 days ago",
+        "status": "REJECTED",
+        "statusColor": "bg-[#ffe4e6] text-[#9f1239]",
+        "lastEval": "Apr 01, 2026",
         "evalCount": 103
     }
 ]

@@ -39,20 +39,35 @@ const verdictColorMap: Record<string, string> = {
 };
 
 const INITIAL_AGENTS: Agent[] = [
-  { name: "GPT-4-Turbo-Prod", id: "AGT-001", type: "Language Model", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "10 mins ago", evalCount: 1029 },
-  { name: "Llama-3-Custom", id: "AGT-002", type: "Fine-tuned Model", status: "Running Eval", statusColor: "bg-zinc-100 text-zinc-900", lastEval: "1 hr ago", evalCount: 412, hasIcon: true },
   { name: "UNICC-Chatbot-V2", id: "AGT-003", type: "Conversational AI", status: "REJECTED", statusColor: "bg-[#ffe4e6] text-[#9f1239]", lastEval: "3 hrs ago", evalCount: 887 },
-  { name: "Code-Gen-Agent", id: "AGT-004", type: "Code Generation", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "1 day ago", evalCount: 234 },
-  { name: "Data-Pipeline-Bot", id: "AGT-005", type: "Data Processing", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "2 days ago", evalCount: 567 },
-  { name: "Support-Agent-V2", id: "AGT-006", type: "Conversational AI", status: "Inactive", statusColor: "bg-zinc-100 text-zinc-500", lastEval: "5 days ago", evalCount: 103 },
+  { name: "GPT-4-Turbo-Prod", id: "AGT-001", type: "Language Model", status: "REJECTED", statusColor: "bg-[#ffe4e6] text-[#9f1239]", lastEval: "Yesterday", evalCount: 1029 },
+  { name: "Llama-3-Custom", id: "AGT-002", type: "Fine-tuned Model", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "Apr 07, 2026", evalCount: 412 },
+  { name: "Code-Gen-Agent", id: "AGT-004", type: "Code Generation", status: "APPROVED", statusColor: "bg-[#d1fae5] text-[#065f46]", lastEval: "Apr 05, 2026", evalCount: 234 },
+  { name: "Finance-Advisor-LLM", id: "AGT-007", type: "Domain-Specific Model", status: "REJECTED", statusColor: "bg-[#ffe4e6] text-[#9f1239]", lastEval: "Apr 03, 2026", evalCount: 67 },
+  { name: "Support-Agent-V2", id: "AGT-006", type: "Conversational AI", status: "REJECTED", statusColor: "bg-[#ffe4e6] text-[#9f1239]", lastEval: "Apr 01, 2026", evalCount: 103 },
 ];
 
-const LS_AGENTS_KEY = "asl_agents_v5";
+const LS_AGENTS_KEY = "asl_agents_v6";
+const EXPECTED_IDS = new Set(INITIAL_AGENTS.map((a) => a.id));
+
+// Evict any stale version keys left over from previous sessions
+["asl_agents_v3","asl_agents_v4","asl_agents_v5"].forEach((k) => {
+  try { localStorage.removeItem(k); } catch {}
+});
 
 function loadAgents(): Agent[] {
   try {
     const raw = localStorage.getItem(LS_AGENTS_KEY);
-    if (raw) return JSON.parse(raw) as Agent[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as Agent[];
+      // Validate: stored set must exactly match expected agent IDs
+      const storedIds = new Set(parsed.map((a) => a.id));
+      const valid =
+        storedIds.size === EXPECTED_IDS.size &&
+        [...EXPECTED_IDS].every((id) => storedIds.has(id));
+      if (valid) return parsed;
+      localStorage.removeItem(LS_AGENTS_KEY);
+    }
   } catch {}
   return INITIAL_AGENTS;
 }
