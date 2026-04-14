@@ -64,7 +64,7 @@ function expertDotColor(v: string) {
 
 function loadLatestModuleReport(): Record<string, any> | null {
   try {
-    const raw = localStorage.getItem("asl_module_report_v3");
+    const raw = localStorage.getItem("asl_module_report_v4");
     if (!raw) return null;
     const all: Record<string, any> = JSON.parse(raw);
     const entries = Object.entries(all);
@@ -97,15 +97,15 @@ const INITIAL_EVALUATIONS = [
     agentId: "AGT-003",
     module: "Prompt Injection V2",
     target: "UNICC-Chatbot-V2",
-    verdict: "REVIEW",
-    verdictColor: "bg-[#fef3c7] text-[#92400e]",
+    verdict: "REJECT",
+    verdictColor: "bg-[#ffe4e6] text-[#9f1239]",
     date: "Today",
-    reason: { text: "High bias variance detected", color: "text-[#92400e]" },
-    tooltip: "Contextual Arbiter: High bias variance detected; requires manual oversight.",
+    reason: { text: "Prompt injection bypass confirmed — deployment blocked", color: "text-[#9f1239]" },
+    tooltip: "Security Probe: Prompt boundary bypass confirmed in 3/4 adversarial test cases. All three experts voted REJECT — OWASP LLM01 critical violation.",
     experts: [
-      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Prompt boundary bypass possible under adversarial input." },
-      { name: "Governance Workflow", status: "PARTIAL", statusColor: "bg-[#fef3c7] text-[#92400e]", note: "Policy controls partially enforced; 3 edge cases unhandled." },
-      { name: "Risk Arbiter", status: "ESCALATED", statusColor: "bg-[#fef3c7] text-[#92400e]", note: "Escalated for manual review — borderline threshold exceeded." },
+      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Prompt boundary bypass confirmed in 3 of 4 adversarial test cases." },
+      { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Instruction hierarchy violated; policy controls fully bypassed." },
+      { name: "Risk Arbiter", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Critical OWASP LLM01 violation — deployment blocked pending remediation." },
     ],
   },
   {
@@ -213,7 +213,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
 
   const [launching, setLaunching] = useState(false);
-  const LS_EVALS_KEY = "asl_evaluations_v3";
+  const LS_EVALS_KEY = "asl_evaluations_v4";
   const [evaluationsData, setEvaluationsData] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_EVALS_KEY);
@@ -232,7 +232,7 @@ export const DashboardMainSection = (): JSX.Element => {
     return () => clearTimeout(t);
   }, []);
 
-  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v3 ── */
+  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v4 ── */
   const latestEval = evaluationsData.length > 0 ? evaluationsData[0] : null;
   const latestModuleReport = loadLatestModuleReport();
 
@@ -240,7 +240,7 @@ export const DashboardMainSection = (): JSX.Element => {
     if (!latestEval) {
       return { label: col.label, sublabel: col.sublabel, verdict: "IDLE", note: "Waiting for evaluations" };
     }
-    // Primary: read from asl_module_report_v3 expert_a/b/c with recommendation or verdict
+    // Primary: read from asl_module_report_v4 expert_a/b/c with recommendation or verdict
     const reportEx = latestModuleReport?.experts?.[col.key];
     if (reportEx) {
       const v = normalizeVerdict(reportEx.recommendation ?? reportEx.verdict);
@@ -343,8 +343,8 @@ export const DashboardMainSection = (): JSX.Element => {
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
-  const LS_MODULE_META_KEY = "asl_module_meta_v3";
-  const LS_MODULE_REPORT_KEY = "asl_module_report_v3";
+  const LS_MODULE_META_KEY = "asl_module_meta_v4";
+  const LS_MODULE_REPORT_KEY = "asl_module_report_v4";
 
   /* ── Module label → canonical static eval ID map ── */
   const MODULE_ID_TO_EVAL_ID: Record<string, string> = {

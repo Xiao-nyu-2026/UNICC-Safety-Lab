@@ -98,7 +98,7 @@ const MODULE_NAME_TO_ID: Record<string, string> = {
 
 function loadModuleMeta(): Record<string, { lastVerdict: string; lastRun: string; lastRunAgent: string }> {
   try {
-    const raw = localStorage.getItem("asl_module_meta_v3");
+    const raw = localStorage.getItem("asl_module_meta_v4");
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }

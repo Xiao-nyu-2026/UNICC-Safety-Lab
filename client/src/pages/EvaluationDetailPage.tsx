@@ -615,7 +615,7 @@ type DynamicEval = {
 
 function loadDynamicEval(evalId: string): DynamicEval | null {
   try {
-    const raw = localStorage.getItem("asl_evaluations_v3");
+    const raw = localStorage.getItem("asl_evaluations_v4");
     if (!raw) return null;
     const list: DynamicEval[] = JSON.parse(raw);
     return list.find((e) => e.id === evalId) ?? null;
@@ -645,7 +645,7 @@ const SLUG_TO_MODULE: Record<string, string> = Object.fromEntries(
 /* Load the most recent evaluation record for a given module from the global ledger */
 function loadLatestEvalByModule(moduleName: string): DynamicEval | null {
   try {
-    const raw = localStorage.getItem("asl_evaluations_v3");
+    const raw = localStorage.getItem("asl_evaluations_v4");
     if (!raw) return null;
     const list: DynamicEval[] = JSON.parse(raw);
     const matches = list.filter(
@@ -678,7 +678,7 @@ function loadLiveReport(moduleName: string): LiveReport | null {
   try {
     const moduleId = MODULE_NAME_TO_ID[moduleName];
     if (!moduleId) return null;
-    const raw = localStorage.getItem("asl_module_report_v3");
+    const raw = localStorage.getItem("asl_module_report_v4");
     if (!raw) return null;
     const all = JSON.parse(raw);
     return all[moduleId] ?? null;
