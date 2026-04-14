@@ -204,7 +204,7 @@ function parseExpertCell(ex: Record<string, any> | undefined): ExpertCell {
 
 function loadLiveRows(agentName: string): LiveRow[] {
   try {
-    const raw = localStorage.getItem("asl_module_report_v4");
+    const raw = localStorage.getItem("asl_module_report_v5");
     if (!raw) return [];
     const all: Record<string, Record<string, any>> = JSON.parse(raw);
 

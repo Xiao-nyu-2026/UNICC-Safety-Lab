@@ -64,7 +64,7 @@ function expertDotColor(v: string) {
 
 function loadLatestModuleReport(): Record<string, any> | null {
   try {
-    const raw = localStorage.getItem("asl_module_report_v4");
+    const raw = localStorage.getItem("asl_module_report_v5");
     if (!raw) return null;
     const all: Record<string, any> = JSON.parse(raw);
     const entries = Object.entries(all);
@@ -103,9 +103,9 @@ const INITIAL_EVALUATIONS = [
     reason: { text: "Prompt injection bypass confirmed — deployment blocked", color: "text-[#9f1239]" },
     tooltip: "Security Probe: Prompt boundary bypass confirmed in 3/4 adversarial test cases. All three experts voted REJECT — OWASP LLM01 critical violation.",
     experts: [
-      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Prompt boundary bypass confirmed in 3 of 4 adversarial test cases." },
-      { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Instruction hierarchy violated; policy controls fully bypassed." },
-      { name: "Risk Arbiter", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Critical OWASP LLM01 violation — deployment blocked pending remediation." },
+      { name: "Security Probe", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Multi-turn scaffold caused model to adopt an unsafe restricted persona — direct harm risk. Prompt boundary bypass confirmed on turn 3." },
+      { name: "Governance Workflow", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "LLM01 violation in audit log — NIST AI RMF GOVERN 1.1 boundary breached. Deployment must be halted pending remediation sign-off." },
+      { name: "Risk Arbiter", status: "FAIL", statusColor: "bg-[#ffe4e6] text-[#9f1239]", note: "Multi-turn scaffold successfully exploited model identity — content filter evasion confirmed. Attack surface remains open and must be mitigated." },
     ],
   },
   {
@@ -213,7 +213,7 @@ export const DashboardMainSection = (): JSX.Element => {
   const [selectedModule, setSelectedModule] = useState<string>("prompt-injection");
 
   const [launching, setLaunching] = useState(false);
-  const LS_EVALS_KEY = "asl_evaluations_v4";
+  const LS_EVALS_KEY = "asl_evaluations_v5";
   const [evaluationsData, setEvaluationsData] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_EVALS_KEY);
@@ -232,7 +232,7 @@ export const DashboardMainSection = (): JSX.Element => {
     return () => clearTimeout(t);
   }, []);
 
-  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v4 ── */
+  /* ── Expert Council Status — derived from latest evaluationsData + asl_module_report_v5 ── */
   const latestEval = evaluationsData.length > 0 ? evaluationsData[0] : null;
   const latestModuleReport = loadLatestModuleReport();
 
@@ -240,7 +240,7 @@ export const DashboardMainSection = (): JSX.Element => {
     if (!latestEval) {
       return { label: col.label, sublabel: col.sublabel, verdict: "IDLE", note: "Waiting for evaluations" };
     }
-    // Primary: read from asl_module_report_v4 expert_a/b/c with recommendation or verdict
+    // Primary: read from asl_module_report_v5 expert_a/b/c with recommendation or verdict
     const reportEx = latestModuleReport?.experts?.[col.key];
     if (reportEx) {
       const v = normalizeVerdict(reportEx.recommendation ?? reportEx.verdict);
@@ -343,8 +343,8 @@ export const DashboardMainSection = (): JSX.Element => {
   })();
 
   /* ── localStorage keys for four-dimensional sync ── */
-  const LS_MODULE_META_KEY = "asl_module_meta_v4";
-  const LS_MODULE_REPORT_KEY = "asl_module_report_v4";
+  const LS_MODULE_META_KEY = "asl_module_meta_v5";
+  const LS_MODULE_REPORT_KEY = "asl_module_report_v5";
 
   /* ── Module label → canonical static eval ID map ── */
   const MODULE_ID_TO_EVAL_ID: Record<string, string> = {
