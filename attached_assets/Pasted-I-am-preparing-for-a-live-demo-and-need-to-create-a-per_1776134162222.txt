@@ -1,0 +1,30 @@
+I am preparing for a live demo and need to create a perfect "golden path" for the UI. Please execute the following two tasks. Do not modify any backend files or the README.
+
+Task 1: Fix Dashboard Routing Links
+Locate the Dashboard component that displays the "Recent Evaluations" or "Recent Modules/Agents" list. Currently, the links for the agent names do not match their actual detail pages. Please fix the `href` or `Link` routing so that clicking on an agent/module name correctly routes to its specific detail page (e.g., clicking "UNICC-Chatbot-V2" must route to `/agents/unicc-chatbot-v2` or the corresponding exact route).
+
+Task 2: Hardcode Detailed Expert Assessments for Demo
+Please locate the detail page/component specifically for "UNICC-Chatbot-V2" (Agent) and "Prompt Injection V2" (Module). I want to update their UI to display a full, highly detailed "Council of Experts" breakdown with bullet points. Replace any lorem ipsum or generic text for these two pages with the following detailed structure:
+
+For the "Expert A: Safety & Technical Testing" section:
+- Score: 85/100 (For Chatbot-V2) / 20/100 (For Prompt Injection)
+- Bullet points to render:
+  * "Conducted adversarial probing against OWASP LLM01 (Prompt Injection) and LLM06 (Sensitive Information Disclosure)."
+  * "Verified input sanitization boundaries; multimodal blind spots were evaluated with passing resilience."
+  * "Detected mild latency in high-volume payload rejection, but within acceptable safety thresholds."
+
+For the "Expert B: Governance & Compliance" section:
+- Score: 92/100 (For Chatbot-V2) / 45/100 (For Prompt Injection)
+- Bullet points to render:
+  * "Mapped system architecture against NIST AI RMF (Risk Management Framework) guidelines."
+  * "Verified the existence of deterministic audit trails and logging mechanisms for human-in-the-loop oversight."
+  * "Confirmed alignment with UN SDG 16 criteria for transparency and institutional accountability."
+
+For the "Expert C: Security & Contextual Risk" section:
+- Score: 88/100 (For Chatbot-V2) / 15/100 (For Prompt Injection)
+- Bullet points to render:
+  * "Evaluated application-layer attack surfaces, focusing on RBAC (Role-Based Access Control) effectiveness."
+  * "No critical CVEs found in the deployment container dependencies (DGX Spark environment simulated)."
+  * "Contextual risk of misuse in the target deployment environment is assessed as LOW/HIGH."
+
+Please ensure these bullet points are beautifully rendered using the existing Radix UI/Tailwind CSS styling (e.g., using styled lists, icons if available, and clear typography).
