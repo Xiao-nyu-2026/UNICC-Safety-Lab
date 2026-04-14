@@ -635,9 +635,9 @@ export const AgentDetailPage = (): JSX.Element => {
 
               {/* Security Flags sidebar */}
               <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
-                {agent?.id === "AGT-003" ? (
+                {(agent?.status === "Approved" || agent?.status === "Active") ? (
                   <>
-                    {/* UNICC-Chatbot-V2: green security posture */}
+                    {/* APPROVED/ACTIVE agent: green security posture */}
                     <Card className="border-[#bbf7d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
                       <CardContent className="px-6 pt-5 pb-5">
                         <div className="flex items-center gap-2 mb-3">
@@ -674,10 +674,65 @@ export const AgentDetailPage = (): JSX.Element => {
                         </h3>
                         <div className="flex flex-col gap-2.5">
                           {([
-                            { label: "Malware Scanning",  value: "Passed",    cls: "bg-[#d1fae5] text-[#065f46]" },
-                            { label: "RBAC Enforcement",  value: "Verified",   cls: "bg-[#d1fae5] text-[#065f46]" },
-                            { label: "Contextual Risk",   value: "LOW",        cls: "bg-[#d1fae5] text-[#065f46]" },
-                            { label: "NIST RMF Alignment",value: "Compliant",  cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "Malware Scanning",   value: "Passed",    cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "RBAC Enforcement",   value: "Verified",  cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "Contextual Risk",    value: "LOW",       cls: "bg-[#d1fae5] text-[#065f46]" },
+                            { label: "NIST RMF Alignment", value: "Compliant", cls: "bg-[#d1fae5] text-[#065f46]" },
+                          ] as { label: string; value: string; cls: string }[]).map(({ label, value, cls }) => (
+                            <div key={label} className="flex items-center justify-between">
+                              <span className="[font-family:'Inter',Helvetica] text-xs text-[#52525c]">{label}</span>
+                              <Badge className={`border-transparent rounded-full [font-family:'Inter',Helvetica] font-semibold text-xs px-2.5 py-0.5 h-auto ${cls}`}>
+                                {value}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : agent?.status === "Flagged" ? (
+                  <>
+                    {/* FLAGGED/REJECTED agent: red security flags */}
+                    <Card className="border-[#ffc0d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <CardContent className="px-6 pt-5 pb-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ShieldAlertIcon className="w-4 h-4 text-[#ff2d78]" />
+                          <h3 className="[font-family:'Inter',Helvetica] font-semibold text-[#ff2d78] text-sm">
+                            Security Flags
+                          </h3>
+                          <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-medium text-xs px-2 py-0.5 h-auto ml-auto bg-[#ffe0eb] text-[#ff2d78]">
+                            3
+                          </Badge>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {[
+                            "OWASP Vulnerability Detected",
+                            "Missing Input Sanitization",
+                            "No Audit Trails",
+                          ].map((label) => (
+                            <div key={label} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-[#fff0f5] border border-[#ffc0d0]">
+                              <ShieldAlertIcon className="w-3.5 h-3.5 text-[#ff2d78] flex-shrink-0" />
+                              <span className="[font-family:'Inter',Helvetica] font-medium text-[#9f1239] text-xs">{label}</span>
+                              <Badge className="border-transparent rounded-full [font-family:'Inter',Helvetica] font-normal text-[10px] px-2 py-0.5 h-auto ml-auto bg-[#ffe0eb] text-[#ff2d78]">
+                                Failed
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Risk Metrics — red */}
+                    <Card className="border-zinc-200 shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
+                      <CardContent className="px-6 pt-5 pb-5">
+                        <h3 className="[font-family:'Inter',Helvetica] font-semibold text-zinc-950 text-sm mb-3">
+                          Risk Metrics
+                        </h3>
+                        <div className="flex flex-col gap-2.5">
+                          {([
+                            { label: "Malware Scanning",   value: "Failed",         cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                            { label: "RBAC Enforcement",   value: "Bypassed",       cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                            { label: "Contextual Risk",    value: "HIGH (CRITICAL)", cls: "bg-[#ffe0eb] text-[#ff2d78]" },
+                            { label: "NIST RMF Alignment", value: "Non-Compliant",  cls: "bg-[#ffe0eb] text-[#ff2d78]" },
                           ] as { label: string; value: string; cls: string }[]).map(({ label, value, cls }) => (
                             <div key={label} className="flex items-center justify-between">
                               <span className="[font-family:'Inter',Helvetica] text-xs text-[#52525c]">{label}</span>

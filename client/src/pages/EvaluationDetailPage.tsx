@@ -1204,7 +1204,7 @@ export const EvaluationDetailPage = (): JSX.Element => {
 
                     {/* Right: score bar + security flags */}
                     <div className="flex flex-col gap-4 w-[280px] flex-shrink-0">
-                      {eval_.evalId === "EV-1030" ? (
+                      {eval_.status === "Failed" ? (
                         <>
                           {/* Prompt Injection V2 — REJECT hardcoded sidebar */}
                           <Card className="border-[#ffc0d0] shadow-[0px_1px_2px_-1px_#0000001a,0px_1px_3px_#0000001a]">
